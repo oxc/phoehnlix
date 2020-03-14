@@ -1,7 +1,6 @@
-package de.esotechnik.phoehnlix.api
+package de.esotechnik.phoehnlix.model
 
 import org.testng.annotations.Test
-import kotlin.test.Asserter
 import kotlin.test.assertEquals
 
 /**
