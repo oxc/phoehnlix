@@ -1,4 +1,4 @@
-package de.esotechnik.phoehnlix.api
+package de.esotechnik.phoehnlix.model
 
 import kotlin.math.sqrt
 

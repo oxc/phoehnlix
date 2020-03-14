@@ -1,7 +1,7 @@
 package de.esotechnik.phoehnlix.dataservice
 
-import de.esotechnik.phoehnlix.api.ProfileData
-import de.esotechnik.phoehnlix.api.Sex
+import de.esotechnik.phoehnlix.model.ProfileData
+import de.esotechnik.phoehnlix.model.Sex
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.log
