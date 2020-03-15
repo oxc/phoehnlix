@@ -19,5 +19,3 @@ fun String.hexStringChecksum(): Long {
 fun String.hexStringSignature() = hexStringChecksum().toString(16)
 
 fun String.signHexString() = this + hexStringSignature()
-
-fun List<Byte>.toBigInt() = BigInteger(1, this.toByteArray())
