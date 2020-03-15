@@ -1,5 +1,7 @@
 package de.esotechnik.phoehnlix.dataservice
 
+import de.esotechnik.phoehnlix.data.insertNewMeasurement
+import de.esotechnik.phoehnlix.model.ActivityLevel
 import de.esotechnik.phoehnlix.model.ProfileData
 import de.esotechnik.phoehnlix.model.Sex
 import io.ktor.application.Application
@@ -39,13 +41,15 @@ fun Application.module(testing: Boolean = false) {
       val response = when (val request = param.substring(0, 2)) {
         "24" -> {
           val data = DataParser.parseData(param)
-          val profile = ProfileData(191.toFloat(), 35, Sex.Male)
+
+          //val profile = ProfileData(191, 35f, Sex.Male, ActivityLevel.Normal)
+          val profile = ProfileData(165, 34f, Sex.Female, ActivityLevel.Normal)
           log.info(
             """
                         
 Result: 
 ${data.toLogString().replaceIndent("  ")}
-Bernhard BIA: 
+Profile BIA: 
 ${data.calculateBIAResults(profile).toString().replaceIndent("  ")}
                         """.trimIndent()
           )
