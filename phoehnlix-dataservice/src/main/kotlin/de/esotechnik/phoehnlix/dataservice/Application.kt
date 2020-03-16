@@ -54,8 +54,7 @@ private fun Route.dataservice() {
     val response = when (val request = param.substring(0, 2)) {
       "24" -> {
         val data = DataParser.parseData(param)
-        val measurement = insertNewMeasurement(data)
-        this@dataservice.application.log.info("Result: $measurement")
+        insertNewMeasurement(data)
         "A00000000000000001000000000000000000000000000000"
       }
       "22" -> "A20000000000000000000000000000000000000000000000"
