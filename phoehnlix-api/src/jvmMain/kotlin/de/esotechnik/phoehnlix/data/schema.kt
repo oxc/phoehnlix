@@ -10,10 +10,11 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.sql.`java-time`.date
 import org.jetbrains.exposed.sql.`java-time`.timestamp
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * @author Bernhard Frauendienst
@@ -35,7 +36,7 @@ class Scale(id: EntityID<Int>) : IntEntity(id) {
 
 object Profiles: IntIdTable() {
   val name = varchar("name", 255)
-  val sex = enumerationByName("sex", 1, Sex::class)
+  val sex = enumeration("sex", Sex::class)
   val birthday = date("birthday")
   val height = integer("height")
   val activityLevel = enumeration("activity_level", ActivityLevel::class)
@@ -67,8 +68,20 @@ object Measurements: LongIdTable() {
   val timestamp = timestamp("timestamp")
 
   val weight = float("weight")
-  val resistance = float("resistance").nullable()
-  val reactance = float("reactance").nullable()
+  val imp50 = float("imp50").nullable()
+  val imp5 = float("imp5").nullable()
+  val bodyFatPercent = float("body_fat").nullable()
+  val bodyWaterPercent = float("body_water").nullable()
+  val muscleMassPercent = float("muscle_mass").nullable()
+  val bodyMassIndex = float("bmi").nullable()
+  val metabolicRate = integer("metabolic_rate").nullable()
+
+  val profile = optReference("profile", Profiles, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+  // these are just for historic reasons. Perhaps we'll delete them in the future
+  val sex = enumeration("sex", Sex::class).nullable()
+  val age = float("age").nullable()
+  val height = integer("height").nullable()
+  val activityLevel = enumeration("activity_level", ActivityLevel::class).nullable()
 }
 
 class Measurement(id: EntityID<Long>) : LongEntity(id) {
@@ -78,15 +91,34 @@ class Measurement(id: EntityID<Long>) : LongEntity(id) {
 
   var timestamp by Measurements.timestamp
   var weight by Measurements.weight
-  var resistance by Measurements.resistance
-  var reactance by Measurements.reactance
+  var imp50 by Measurements.imp50
+  var imp5 by Measurements.imp5
+
+  var bodyFatPercent by Measurements.bodyFatPercent
+  var bodyWaterPercent by Measurements.bodyWaterPercent
+  var muscleMassPercent by Measurements.muscleMassPercent
+  var bodyMassIndex by Measurements.bodyMassIndex
+  var metabolicRate by Measurements.metabolicRate
+
+  var profile by Profile optionalReferencedOn Measurements.profile
+  var sex by Measurements.sex
+  var age by Measurements.age
+  var height by Measurements.height
+  var activityLevel by Measurements.activityLevel
 }
 
-class ProfileMeasurements: LongIdTable() {
-  val timestamp = timestamp("timestamp")
+fun Database.setupSchema() {
+  transaction {
+    // print sql to std-out
+    addLogger(StdOutSqlLogger)
 
-  val weight = Measurements.float("weight")
-  val resistance = Measurements.float("resistance").nullable()
-  val reactance = Measurements.float("reactance").nullable()
-
+    withDataBaseLock {
+      println("Got lock, setting up schema...")
+      SchemaUtils.createMissingTablesAndColumns(
+        Scales, Profiles, ProfileScales,
+        Measurements
+      )
+      println("Done.")
+    }
+  }
 }

@@ -2,6 +2,7 @@ val logback_version: String by project
 val kotlin_version: String by project
 val testng_version: String by project
 val exposed_version: String by project
+val postgresql_version: String? by project
 
 plugins {
   kotlin("multiplatform")
@@ -32,6 +33,9 @@ kotlin {
         implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
         implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
 
+        postgresql_version?.takeIf { it.isNotBlank() }?.let {
+          runtimeOnly("org.postgresql:postgresql:$it")
+        }
       }
     }
     val jvmTest by getting {

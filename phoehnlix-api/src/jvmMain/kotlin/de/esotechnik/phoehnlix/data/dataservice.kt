@@ -1,14 +1,14 @@
 package de.esotechnik.phoehnlix.data
 
+import de.esotechnik.phoehnlix.model.BIAResults
 import de.esotechnik.phoehnlix.model.MeasurementData
-import de.esotechnik.phoehnlix.model.calculateBIAResults
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * @author Bernhard Frauendienst
  */
 
-fun insertNewMeasurement(data: MeasurementData) {
+fun insertNewMeasurement(data: MeasurementData): Measurement {
   val senderScale = transaction {
     val bytes = data.senderId.bytes.toByteArray()
     val existing = Scale.find { Scales.serial eq bytes }.singleOrNull()
@@ -17,20 +17,38 @@ fun insertNewMeasurement(data: MeasurementData) {
     }
   }
 
-  // TODO: insert measurement if it can directly be associated to a profile?
-  val measurement = transaction {
+  return transaction {
+    // TODO: find correct profile out of multiple, find matching one even if only one profile
+    val selectedProfile = senderScale.connectedProfiles.singleOrNull()
+
+    val biaResults = selectedProfile?.let { data.calculateBIAResults(it.toProfileData(data.timestamp)) }
+
     Measurement.new {
       scale = senderScale
 
       timestamp = data.timestamp
       weight = data.weight
-      resistance = data.biaData?.imp50
-      reactance = data.biaData?.imp5
+      imp50 = data.biaData?.imp50
+      imp5 = data.biaData?.imp5
+
+      setBIAResults(biaResults)
+      setProfile(selectedProfile)
     }
   }
+}
 
-  // TODO: find correct profile out of multiple, check weight even if only one profile
-  val selectedProfile = senderScale.connectedProfiles.singleOrNull() ?: return
+private fun Measurement.setBIAResults(biaResults: BIAResults?) {
+  bodyFatPercent = biaResults?.bodyFatPercent
+  bodyWaterPercent = biaResults?.bodyWaterPercent
+  muscleMassPercent = biaResults?.muscleMassPercent
+  bodyMassIndex = biaResults?.bodyMassIndex
+  metabolicRate = biaResults?.metabolicRate
+}
 
-  val biaResults = data.calculateBIAResults(selectedProfile.toProfileData(data.timestamp))
+private fun Measurement.setProfile(selectedProfile: Profile?) {
+  profile = selectedProfile
+  sex = selectedProfile?.sex
+  age = selectedProfile?.age(timestamp)
+  height = selectedProfile?.height
+  activityLevel = selectedProfile?.activityLevel
 }
