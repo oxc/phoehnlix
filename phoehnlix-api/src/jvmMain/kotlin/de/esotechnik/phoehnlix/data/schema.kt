@@ -82,6 +82,10 @@ object Measurements: LongIdTable() {
   val age = float("age").nullable()
   val height = integer("height").nullable()
   val activityLevel = enumeration("activity_level", ActivityLevel::class).nullable()
+
+  init {
+    uniqueIndex(scale, timestamp, weight)
+  }
 }
 
 class Measurement(id: EntityID<Long>) : LongEntity(id) {
