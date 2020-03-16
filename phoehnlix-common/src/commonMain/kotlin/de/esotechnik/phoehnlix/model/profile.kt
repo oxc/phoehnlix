@@ -13,7 +13,7 @@ enum class ActivityLevel {
 
 data class ProfileData(
   val height: Int,
-  val age: Float,
+  val age: Double,
   val sex: Sex,
   val activityLevel: ActivityLevel
 )

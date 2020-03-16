@@ -9,20 +9,20 @@ import kotlin.test.assertEquals
 internal class NumbersKtTest {
 
   @Test
-  fun `floats with more digits are shortened`() {
+  fun `doubles with more digits are shortened`() {
     assertFormatsTo(12.345, 2, "12.34")
     assertFormatsTo(5.4321, 2, "5.43")
     assertFormatsTo(5.4321, 3, "5.432")
   }
 
   @Test
-  fun `floats with right digits stay the same`() {
+  fun `doubles with right digits stay the same`() {
     assertFormatsTo(12.34, 2, "12.34")
     assertFormatsTo(5.43, 2, "5.43")
   }
 
   @Test
-  fun `floats with less digits are padded`() {
+  fun `doubles with less digits are padded`() {
     assertFormatsTo(12.3, 2, "12.30")
     assertFormatsTo(5.4, 3, "5.400")
     assertFormatsTo(42f, 1, "42.0")

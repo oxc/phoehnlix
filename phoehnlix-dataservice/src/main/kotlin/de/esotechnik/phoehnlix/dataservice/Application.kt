@@ -1,13 +1,16 @@
 package de.esotechnik.phoehnlix.dataservice
 
-import de.esotechnik.phoehnlix.data.Database
 import de.esotechnik.phoehnlix.data.insertNewMeasurement
-import de.esotechnik.phoehnlix.data.setupSchema
-import io.ktor.application.*
+import de.esotechnik.phoehnlix.data.setupDatabase
+import io.ktor.application.Application
+import io.ktor.application.call
 import io.ktor.features.BadRequestException
 import io.ktor.http.ContentType
 import io.ktor.response.respondText
-import io.ktor.routing.*
+import io.ktor.routing.Route
+import io.ktor.routing.get
+import io.ktor.routing.route
+import io.ktor.routing.routing
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getOrFail
 
@@ -17,9 +20,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
-  install(Database.Feature) {
-    setup = ::setupSchema
-  }
+  setupDatabase()
   routing {
     // the scale makes GET requests to absolute urls, like to a proxy
     route("http://bridge1.soehnle.de") {

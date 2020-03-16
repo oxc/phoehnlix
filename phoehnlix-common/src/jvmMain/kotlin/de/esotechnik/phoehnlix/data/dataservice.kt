@@ -2,14 +2,16 @@ package de.esotechnik.phoehnlix.data
 
 import de.esotechnik.phoehnlix.model.BIAResults
 import de.esotechnik.phoehnlix.model.MeasurementData
+import kotlinx.coroutines.Dispatchers
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * @author Bernhard Frauendienst
  */
 
-fun insertNewMeasurement(data: MeasurementData): Measurement {
-  val senderScale = transaction {
+suspend fun insertNewMeasurement(data: MeasurementData): Measurement {
+  val senderScale = newSuspendedTransaction(Dispatchers.IO) {
     val bytes = data.senderId.bytes.toByteArray()
     val existing = Scale.find { Scales.serial eq bytes }.singleOrNull()
     existing ?: Scale.new {
@@ -17,7 +19,7 @@ fun insertNewMeasurement(data: MeasurementData): Measurement {
     }
   }
 
-  return transaction {
+  return newSuspendedTransaction(Dispatchers.IO) {
     // TODO: find correct profile out of multiple, find matching one even if only one profile
     val selectedProfile = senderScale.connectedProfiles.singleOrNull()
 

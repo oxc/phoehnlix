@@ -1,3 +1,5 @@
+enableFeaturePreview("GRADLE_METADATA")
+
 pluginManagement {
   val kotlin_version: String by settings
 
@@ -20,5 +22,9 @@ pluginManagement {
 
 rootProject.name = "phoehnlix"
 
+include("phoehnlix-platform")
 include("phoehnlix-common")
 include("phoehnlix-dataservice")
+include("phoehnlix-apiservice")
+include("phoehnlix-frontend")
+include("phoehnlix-full")
