@@ -9,12 +9,18 @@ import java.time.Instant
 data class MeasurementData(
   val senderId: SenderId,
   val timestamp: Instant,
-  val weight: Float,
+  val weight: Double,
   val biaData: BIAData?
 ) {
   val readableWeight get() = String.format("%.1f kg", weight)
 
-  fun calculateBIAResults(profile: ProfileData) = biaData?.let { calculateBIAResults(it, weight, profile) }
+  fun calculateBIAResults(profile: ProfileData) = biaData?.let {
+    calculateBIAResults(
+      it,
+      weight,
+      profile
+    )
+  }
 
   fun toLogString() = """
         Sender: $senderId

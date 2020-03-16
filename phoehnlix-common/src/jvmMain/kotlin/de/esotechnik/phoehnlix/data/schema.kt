@@ -43,7 +43,7 @@ object Profiles : IntIdTable() {
   val birthday = date("birthday")
   val height = integer("height")
   val activityLevel = enumeration("activity_level", ActivityLevel::class)
-  val targetWeight = float("target_weight")
+  val targetWeight = double("target_weight")
 }
 
 class Profile(id: EntityID<Int>) : IntEntity(id) {
@@ -70,20 +70,20 @@ object Measurements : LongIdTable() {
 
   val timestamp = timestamp("timestamp")
 
-  val weight = float("weight")
-  val imp50 = float("imp50").nullable()
-  val imp5 = float("imp5").nullable()
-  val bodyFatPercent = float("body_fat").nullable()
-  val bodyWaterPercent = float("body_water").nullable()
-  val muscleMassPercent = float("muscle_mass").nullable()
-  val bodyMassIndex = float("bmi").nullable()
-  val metabolicRate = float("metabolic_rate").nullable()
+  val weight = double("weight")
+  val imp50 = double("imp50").nullable()
+  val imp5 = double("imp5").nullable()
+  val bodyFatPercent = double("body_fat").nullable()
+  val bodyWaterPercent = double("body_water").nullable()
+  val muscleMassPercent = double("muscle_mass").nullable()
+  val bodyMassIndex = double("bmi").nullable()
+  val metabolicRate = double("metabolic_rate").nullable()
 
   val profile = optReference("profile_id", Profiles, onDelete = CASCADE, onUpdate = CASCADE)
 
   // these are just for historic reasons. Perhaps we'll delete them in the future
   val sex = enumeration("sex", Sex::class).nullable()
-  val age = float("age").nullable()
+  val age = double("age").nullable()
   val height = integer("height").nullable()
   val activityLevel = enumeration("activity_level", ActivityLevel::class).nullable()
 
@@ -115,7 +115,7 @@ class Measurement(id: EntityID<Long>) : LongEntity(id) {
   var activityLevel by Measurements.activityLevel
 }
 
-fun setupSchema() {
+internal fun setupSchema() {
   transaction {
     // print sql to std-out
     addLogger(StdOutSqlLogger)

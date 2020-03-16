@@ -24,9 +24,9 @@ object WebConnectProtocol {
     val senderId = SenderId(nextBytes(12))
     val _unknown = next(2)
     val timestamp = TIMESTAMP_OFFSET.plusSeconds(next(4).toLong())
-    val weight = next(2).toFloat() / 100
-    val imp50 = next(2).takeUnless { it.signum() == 0 }?.let { it.toFloat() / 10 }
-    val imp5 = next(2).takeUnless { it.signum() == 0 }?.let { it.toFloat() / 10 }
+    val weight = next(2).toDouble() / 100
+    val imp50 = next(2).takeUnless { it.signum() == 0 }?.let { it.toDouble() / 10 }
+    val imp5 = next(2).takeUnless { it.signum() == 0 }?.let { it.toDouble() / 10 }
     val biaData = if (imp50 != null && imp5 != null) {
       BIAData(imp50, imp5)
     } else null
@@ -45,3 +45,6 @@ object WebConnectProtocol {
   }
 }
 
+class Request {
+
+}
