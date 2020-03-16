@@ -3,20 +3,13 @@ package de.esotechnik.phoehnlix.dataservice
 import de.esotechnik.phoehnlix.data.Database
 import de.esotechnik.phoehnlix.data.insertNewMeasurement
 import de.esotechnik.phoehnlix.data.setupSchema
-import de.esotechnik.phoehnlix.model.ActivityLevel
-import de.esotechnik.phoehnlix.model.ProfileData
-import de.esotechnik.phoehnlix.model.Sex
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.call
-import io.ktor.application.log
+import io.ktor.application.*
 import io.ktor.features.BadRequestException
 import io.ktor.http.ContentType
 import io.ktor.response.respondText
 import io.ktor.routing.*
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getOrFail
-import io.ktor.util.pipeline.PipelinePhase
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -24,8 +17,11 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
-  connectDatabase() //.setupSchema()
+  install(Database.Feature) {
+    setup = ::setupSchema
+  }
   routing {
+    // the scale makes GET requests to absolute urls, like to a proxy
     route("http://bridge1.soehnle.de") {
       dataservice()
     }
@@ -33,6 +29,7 @@ fun Application.module(testing: Boolean = false) {
   }
 }
 
+@KtorExperimentalAPI
 private fun Route.dataservice() {
   get("/devicedataservice/dataservice") {
     // http://bridge1.soehnle.de/devicedataservice/dataservice?data=24...601a30c1
@@ -53,11 +50,17 @@ private fun Route.dataservice() {
 
     val response = when (val request = param.substring(0, 2)) {
       "24" -> {
-        val data = DataParser.parseData(param)
+        val data = WebConnectProtocol.parseMeasurementData(param)
         insertNewMeasurement(data)
         "A00000000000000001000000000000000000000000000000"
       }
       "22" -> "A20000000000000000000000000000000000000000000000"
+      "25" -> "A00000000000000001000000000000000000000000000000"
+      "28" -> "A50000000000000001000000000000000000000000000000"
+      "21" -> {
+        val time = WebConnectProtocol.serializeTimestamp()
+        "A100000000000000${time}000000000000000000000000"
+      }
       "29" -> null
       else -> throw BadRequestException("Unknown request type 0x$request")
     }?.let {
@@ -66,14 +69,4 @@ private fun Route.dataservice() {
 
     call.respondText(response ?: "", contentType = ContentType.Text.Plain)
   }
-}
-
-@KtorExperimentalAPI
-fun Application.connectDatabase(): Database {
-  val config = environment.config.config("database")
-  return Database(
-    url = config.property("url").getString(),
-    user = config.propertyOrNull("user")?.getString() ?: "phoehnlix",
-    password = config.property("password").getString()
-  ).connect()
 }

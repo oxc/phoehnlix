@@ -1,5 +1,6 @@
 val logback_version: String by project
 val kotlin_version: String by project
+val ktor_version: String by project
 val testng_version: String by project
 val exposed_version: String by project
 val postgresql_version: String? by project
@@ -32,6 +33,7 @@ kotlin {
         implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
         implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
         implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
+        implementation("io.ktor:ktor-server-core:$ktor_version")
 
         postgresql_version?.takeIf { it.isNotBlank() }?.let {
           runtimeOnly("org.postgresql:postgresql:$it")

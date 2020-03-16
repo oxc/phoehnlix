@@ -11,15 +11,18 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ReferenceOption.*
 import org.jetbrains.exposed.sql.SchemaUtils.withDataBaseLock
 import org.jetbrains.exposed.sql.`java-time`.date
 import org.jetbrains.exposed.sql.`java-time`.timestamp
+import org.jetbrains.exposed.sql.statements.jdbc.JdbcConnectionImpl
+import org.jetbrains.exposed.sql.statements.jdbc.iterate
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * @author Bernhard Frauendienst
  */
-object Scales: IntIdTable() {
+object Scales : IntIdTable() {
   val serial = binary("serial", 12).uniqueIndex() // bridge_id || scale_id
 }
 
@@ -34,7 +37,7 @@ class Scale(id: EntityID<Int>) : IntEntity(id) {
   var connectedProfiles by Profile via ProfileScales
 }
 
-object Profiles: IntIdTable() {
+object Profiles : IntIdTable() {
   val name = varchar("name", 255)
   val sex = enumeration("sex", Sex::class)
   val birthday = date("birthday")
@@ -57,13 +60,13 @@ class Profile(id: EntityID<Int>) : IntEntity(id) {
 }
 
 object ProfileScales : Table() {
-  val profile = reference("profile", Profiles)
-  val scale = reference("scale", Scales)
+  val profile = reference("profile_id", Profiles)
+  val scale = reference("scale_id", Scales)
   override val primaryKey = PrimaryKey(profile, scale)
 }
 
-object Measurements: LongIdTable() {
-  val scale = reference("scale", Scales, onDelete = ReferenceOption.RESTRICT, onUpdate = ReferenceOption.CASCADE)
+object Measurements : LongIdTable() {
+  val scale = reference("scale_id", Scales, onDelete = RESTRICT, onUpdate = CASCADE)
 
   val timestamp = timestamp("timestamp")
 
@@ -74,9 +77,10 @@ object Measurements: LongIdTable() {
   val bodyWaterPercent = float("body_water").nullable()
   val muscleMassPercent = float("muscle_mass").nullable()
   val bodyMassIndex = float("bmi").nullable()
-  val metabolicRate = integer("metabolic_rate").nullable()
+  val metabolicRate = float("metabolic_rate").nullable()
 
-  val profile = optReference("profile", Profiles, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
+  val profile = optReference("profile_id", Profiles, onDelete = CASCADE, onUpdate = CASCADE)
+
   // these are just for historic reasons. Perhaps we'll delete them in the future
   val sex = enumeration("sex", Sex::class).nullable()
   val age = float("age").nullable()
@@ -111,7 +115,7 @@ class Measurement(id: EntityID<Long>) : LongEntity(id) {
   var activityLevel by Measurements.activityLevel
 }
 
-fun Database.setupSchema() {
+fun setupSchema() {
   transaction {
     // print sql to std-out
     addLogger(StdOutSqlLogger)
