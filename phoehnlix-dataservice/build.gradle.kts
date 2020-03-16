@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-  implementation(project(":phoehnlix-api"))
+  implementation(project(":phoehnlix-common"))
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
   implementation("io.ktor:ktor-server-netty:$ktor_version")

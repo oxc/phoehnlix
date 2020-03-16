@@ -14,14 +14,14 @@ data class BIAResults(
   val bodyWaterPercent: Float,
   val muscleMassPercent: Float,
   val bodyMassIndex: Float,
-  val metabolicRate: Int
+  val metabolicRate: Float
 ) {
 
   val readableBodyFatPercent get() = bodyFatPercent.formatDecimalDigits(1) + "%"
   val readableBodyWaterPercent get() = bodyWaterPercent.formatDecimalDigits(1) + "%"
   val readableMuscleMassPercent get() = muscleMassPercent.formatDecimalDigits(1) + "%"
   val readableBMI get() = bodyMassIndex.formatDecimalDigits(1)
-  val readableMetabolicRate get() = metabolicRate.toString()
+  val readableMetabolicRate get() = metabolicRate.formatDecimalDigits(1) + "kcal"
 
   override fun toString() = """
         Fat: $readableBodyFatPercent
@@ -94,6 +94,6 @@ fun calculateBIAResults(biaData: BIAData, weight: Float, profile: ProfileData): 
     bodyWaterPercent = bodyWaterPercent.toFloat(),
     muscleMassPercent = muscleMassPercent.toFloat(),
     bodyMassIndex = bodyMassIndex.toFloat(),
-    metabolicRate = metabolicRate.toInt()
+    metabolicRate = metabolicRate.toFloat()
   )
 }
