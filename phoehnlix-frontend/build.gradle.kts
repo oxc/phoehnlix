@@ -1,5 +1,8 @@
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.COMMONJS
+
 plugins {
   kotlin("multiplatform")
+  kotlin("kapt")
 }
 
 group = "de.esotechnik.phoehnlix"
@@ -14,7 +17,13 @@ repositories {
 kotlin {
   sourceSets {
     jvm()
-    js()
+    js {
+      browser {
+        webpackTask {
+          output.libraryTarget = COMMONJS
+        }
+      }
+    }
     val commonMain by getting {
       dependencies {
         implementation(project(":phoehnlix-common"))
@@ -38,6 +47,12 @@ kotlin {
       }
     }
     val jsMain by getting {
+      dependencies {
+        implementation(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-apiservice"))
+
+        implementation(npm("chart.js", "2.9.3"))
+      }
     }
   }
 }
