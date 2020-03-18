@@ -14,7 +14,11 @@ repositories {
 kotlin {
   sourceSets {
     jvm()
-    js()
+    js {
+      browser {
+      }
+    }
+
     val commonMain by getting {
       dependencies {
         implementation(kotlin("stdlib-common"))
@@ -46,4 +50,10 @@ kotlin {
       }
     }
   }
+}
+
+dependencies {
+  commonMainApi(enforcedPlatform(project(":phoehnlix-platform")))
+  "jsMainApi"(enforcedPlatform(project(":phoehnlix-platform")))
+  "jvmMainApi"(enforcedPlatform(project(":phoehnlix-platform")))
 }

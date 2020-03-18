@@ -12,7 +12,9 @@ repositories {
 kotlin {
   sourceSets {
     jvm()
-    js()
+    js {
+      browser {}
+    }
     val commonMain by getting {
       dependencies {
         api(project(":phoehnlix-common"))
@@ -50,4 +52,10 @@ kotlin {
       }
     }
   }
+}
+
+dependencies {
+  commonMainImplementation(enforcedPlatform(project(":phoehnlix-platform")))
+  "jsMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
+  "jvmMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
 }

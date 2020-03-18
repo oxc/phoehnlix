@@ -2,6 +2,7 @@ enableFeaturePreview("GRADLE_METADATA")
 
 pluginManagement {
   val kotlin_version: String by settings
+  val shadow_version: String by settings
 
   repositories {
     gradlePluginPortal()
@@ -10,6 +11,7 @@ pluginManagement {
     kotlin("jvm") version kotlin_version
     kotlin("multiplatform") version kotlin_version
     kotlin("plugin.serialization") version kotlin_version
+    id("com.github.johnrengelman.shadow") version shadow_version
   }
   resolutionStrategy {
     eachPlugin {
