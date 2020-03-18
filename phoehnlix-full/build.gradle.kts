@@ -17,6 +17,8 @@ repositories {
 }
 
 dependencies {
+  implementation(enforcedPlatform(project(":phoehnlix-platform")))
+
   implementation(project(":phoehnlix-dataservice"))
   implementation(project(":phoehnlix-apiservice"))
   implementation(project(":phoehnlix-frontend"))

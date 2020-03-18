@@ -5,6 +5,7 @@ val kotlin_version: String by project
 plugins {
   application
   kotlin("jvm")
+  id("com.github.johnrengelman.shadow")
 }
 
 group = "de.esotechnik.phoehnlix"
@@ -21,11 +22,13 @@ repositories {
 }
 
 dependencies {
+  api(enforcedPlatform(project(":phoehnlix-platform")))
+
   implementation(project(":phoehnlix-common"))
 
-  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-  implementation("io.ktor:ktor-server-netty:$ktor_version")
-  implementation("ch.qos.logback:logback-classic:$logback_version")
-  implementation("io.ktor:ktor-server-core:$ktor_version")
-  testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+  implementation("io.ktor:ktor-server-netty")
+  implementation("ch.qos.logback:logback-classic")
+  implementation("io.ktor:ktor-server-core")
+  testImplementation("io.ktor:ktor-server-tests")
 }

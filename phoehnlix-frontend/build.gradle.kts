@@ -1,8 +1,7 @@
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.COMMONJS
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target.UMD2
 
 plugins {
   kotlin("multiplatform")
-  kotlin("kapt")
 }
 
 group = "de.esotechnik.phoehnlix"
@@ -20,21 +19,21 @@ kotlin {
     js {
       browser {
         webpackTask {
-          output.libraryTarget = COMMONJS
+          output.libraryTarget = UMD2
         }
       }
     }
     val commonMain by getting {
       dependencies {
         implementation(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-apiservice"))
 
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        implementation("ch.qos.logback:logback-classic")
+        implementation(kotlin("stdlib-common"))
       }
     }
     val jvmMain by getting {
       dependencies {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        implementation(kotlin("stdlib-jdk8"))
         implementation("io.ktor:ktor-server-netty")
         implementation("ch.qos.logback:logback-classic")
         implementation("io.ktor:ktor-server-core")
@@ -48,11 +47,21 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        implementation(project(":phoehnlix-common"))
-        implementation(project(":phoehnlix-apiservice"))
+        api(project(":phoehnlix-common"))
+        api(project(":phoehnlix-apiservice"))
 
+        api(kotlin("stdlib-js"))
+        //implementation("org.jetbrains.kotlinx:kotlinx-html-js")
+
+        implementation(npm("require", "2.4.20"))
         implementation(npm("chart.js", "2.9.3"))
       }
     }
   }
+}
+
+dependencies {
+  commonMainImplementation(enforcedPlatform(project(":phoehnlix-platform")))
+  "jsMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
+  "jvmMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
 }

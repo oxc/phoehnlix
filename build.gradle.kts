@@ -15,18 +15,3 @@ repositories {
 tasks.wrapper {
   distributionType = Wrapper.DistributionType.ALL
 }
-
-allprojects {
-  afterEvaluate {
-    val CONFIG_NAMES = listOf("Api", "Implementation", "RuntimeOnly")
-    dependencies {
-      configurations.all {
-        name.capitalize().let { cname ->
-          if ((cname in CONFIG_NAMES || CONFIG_NAMES.any { cname.endsWith(it) }) && "Metadata" !in cname) {
-            dependencies.add(enforcedPlatform(project(":phoehnlix-platform")))
-          }
-        }
-      }
-    }
-  }
-}
