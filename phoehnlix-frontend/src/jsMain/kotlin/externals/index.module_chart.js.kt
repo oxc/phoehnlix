@@ -1,75 +1,22 @@
 @file:Suppress("INTERFACE_WITH_SUPERCLASS", "OVERRIDING_FINAL_MEMBER", "RETURN_TYPE_MISMATCH_ON_OVERRIDE", "CONFLICTING_OVERLOADS", "EXTERNAL_DELEGATION")
-package de.esotechnik.phoehnlix.externals
 
+import ArrayLike
 import kotlin.js.*
 import kotlin.js.Json
-import org.khronos.webgl.*
 import org.w3c.dom.*
 import org.w3c.dom.events.*
-import org.w3c.dom.parsing.*
-import org.w3c.dom.svg.*
-import org.w3c.dom.url.*
-import org.w3c.fetch.*
-import org.w3c.files.*
-import org.w3c.notifications.*
-import org.w3c.performance.*
-import org.w3c.workers.*
-import org.w3c.xhr.*
-import de.esotechnik.phoehnlix.externals.Chart.Point
-import de.esotechnik.phoehnlix.externals.Chart.`T$5`
-import de.esotechnik.phoehnlix.externals.Chart.ChartOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartConfiguration
-import de.esotechnik.phoehnlix.externals.Chart.ChartData
-import de.esotechnik.phoehnlix.externals.Chart.ChartUpdateProps
-import de.esotechnik.phoehnlix.externals.Chart.ChartRenderProps
-import de.esotechnik.phoehnlix.externals.Chart.ChartArea
-import de.esotechnik.phoehnlix.externals.Chart.ChartLegendItem
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipItem
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipLabelColor
-import de.esotechnik.phoehnlix.externals.Chart.PluginServiceRegistrationOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartDataSets
-import de.esotechnik.phoehnlix.externals.Chart.RadialLinearScale
-import de.esotechnik.phoehnlix.externals.Chart.ChartSize
-import de.esotechnik.phoehnlix.externals.Chart.ChartTitleOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartLegendOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartHoverOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartAnimationOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartElementsOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartLayoutOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartPluginsOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartLegendLabelItem
-import de.esotechnik.phoehnlix.externals.Chart.ChartLegendLabelOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipModel
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipCallback
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipModelBody
-import de.esotechnik.phoehnlix.externals.Chart.`T$4`
-import de.esotechnik.phoehnlix.externals.Chart.ChartPointOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartLineOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartArcOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartRectangleOptions
-import de.esotechnik.phoehnlix.externals.Chart.NestedTickOptions
-import de.esotechnik.phoehnlix.externals.Chart.TickOptions
-import de.esotechnik.phoehnlix.externals.Chart.GridLineOptions
-import de.esotechnik.phoehnlix.externals.Chart.ScaleTitleOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartXAxe
-import de.esotechnik.phoehnlix.externals.Chart.ChartYAxe
-import de.esotechnik.phoehnlix.externals.Chart.TimeScale
-import de.esotechnik.phoehnlix.externals.Chart.CommonAxe
-import de.esotechnik.phoehnlix.externals.Chart.LinearTickOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartScales
-import de.esotechnik.phoehnlix.externals.Chart.LogarithmicTickOptions
-import de.esotechnik.phoehnlix.externals.Chart.TimeDisplayFormat
-import de.esotechnik.phoehnlix.externals.Chart.AngleLineOptions
-import de.esotechnik.phoehnlix.externals.Chart.PointLabelOptions
-import de.esotechnik.phoehnlix.externals.Chart.ChartTooltipsStaticConfiguration
-import de.esotechnik.phoehnlix.externals.Chart.PluginServiceGlobalRegistration
+import Chart.Point
+import Chart.`T$5`
+import Chart.ChartOptions
+import Chart.ChartDataSets
+import Chart.ChartScales
+import Chart.PluginServiceGlobalRegistration
 
 typealias ChartTooltipPositioner = (elements: Array<Any>, eventPosition: Point) -> Point
 
 typealias Scriptable<T> = (ctx: `T$5`) -> T
 
-external interface `T$1` {
+external interface GraphDefaultOptions {
     var global: ChartOptions /* Chart.ChartOptions & Chart.ChartFontOptions & `T$0` */
     @nativeGetter
     operator fun get(key: String): Any?
@@ -77,21 +24,23 @@ external interface `T$1` {
     operator fun set(key: String, value: Any)
 }
 
-external interface `T$2` {
+external interface GraphPlatformOptions {
     var disableCSSInjection: Boolean
 }
 
-external interface `T$3` {
+external interface GraphInstances {
     @nativeGetter
     operator fun get(key: String): Chart?
     @nativeSetter
     operator fun set(key: String, value: Chart)
 }
 
+@JsModule("chart.js")
 external open class Chart {
     constructor(context: String, options: ChartConfiguration)
     constructor(context: CanvasRenderingContext2D, options: ChartConfiguration)
     constructor(context: HTMLCanvasElement, options: ChartConfiguration)
+    constructor(context: ArrayLike<dynamic /* CanvasRenderingContext2D | HTMLCanvasElement */>, options: ChartConfiguration)
     open var config: ChartConfiguration
     open var data: ChartData
     open var destroy: () -> Any
@@ -1142,7 +1091,7 @@ external open class Chart {
             get() = definedExternally
             set(value) = definedExternally
     }
-    interface ChartScales {
+    interface ChartScales<T : TickOptions> {
         var type: String /* 'category' | 'linear' | 'logarithmic' | 'time' | 'radialLinear' | String */
         var display: Boolean?
             get() = definedExternally
@@ -1154,7 +1103,7 @@ external open class Chart {
         var scaleLabel: ScaleTitleOptions?
             get() = definedExternally
             set(value) = definedExternally
-        var ticks: TickOptions?
+        var ticks: T?
             get() = definedExternally
             set(value) = definedExternally
         var xAxes: Array<ChartXAxe>?
@@ -1229,12 +1178,12 @@ external open class Chart {
         var distribution: String /* 'linear' | 'series' */
     }
     interface ChartYAxe : CommonAxe
-    interface LinearScale : ChartScales {
+    interface LinearScale : ChartScales<LinearTickOptions> {
         override var ticks: LinearTickOptions?
             get() = definedExternally
             set(value) = definedExternally
     }
-    interface LogarithmicScale : ChartScales {
+    interface LogarithmicScale : ChartScales<LogarithmicTickOptions> {
         override var ticks: LogarithmicTickOptions?
             get() = definedExternally
             set(value) = definedExternally
@@ -1268,7 +1217,7 @@ external open class Chart {
             get() = definedExternally
             set(value) = definedExternally
     }
-    interface TimeScale : ChartScales {
+    interface TimeScale : ChartScales<TickOptions> {
         var displayFormats: TimeDisplayFormat?
             get() = definedExternally
             set(value) = definedExternally
@@ -1417,12 +1366,12 @@ external open class Chart {
         var Chart: Any
         var pluginService: PluginServiceStatic
         var plugins: PluginServiceStatic
-        var defaults: `T$1`
+        var defaults: GraphDefaultOptions
         var controllers: Json
         var helpers: Json
-        var platform: `T$2`
+        var platform: GraphPlatformOptions
         var Tooltip: ChartTooltipsStaticConfiguration
-        var instances: `T$3`
+        var instances: GraphInstances
     }
 }
 
@@ -1464,8 +1413,8 @@ external interface MetaData {
         get() = definedExternally
         set(value) = definedExternally
     var _view: Model
-    var _xScale: ChartScales
-    var _yScale: ChartScales
+    var _xScale: ChartScales<*>
+    var _yScale: ChartScales<*>
     var hidden: Boolean?
         get() = definedExternally
         set(value) = definedExternally

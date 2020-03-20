@@ -10,6 +10,7 @@ javaPlatform {
 
 val logback_version: String by project
 val kotlin_version: String by project
+val kotlinx_coroutines_version: String by project
 val kotlinx_serialization_version: String by project
 val ktor_version: String by project
 val testng_version: String by project
@@ -31,9 +32,15 @@ dependencies {
     api("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     api("org.jetbrains.exposed:exposed-java-time:$exposed_version")
 
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$kotlinx_coroutines_version")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$kotlinx_coroutines_version")
+
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinx_serialization_version")
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$kotlinx_serialization_version")
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$kotlinx_serialization_version")
+
+    api("com.github.doyaaaaaken:kotlin-csv-jvm:0.7.3")
 
     api("org.postgresql:postgresql:$postgresql_version")
 

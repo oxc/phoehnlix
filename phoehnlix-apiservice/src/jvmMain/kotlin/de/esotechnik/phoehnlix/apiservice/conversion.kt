@@ -22,6 +22,7 @@ fun DbProfile.toProfile() = Profile(
     activityLevel = activityLevel,
     targetWeight = targetWeight
 )
+val ProfileResponse = { it: DbProfile -> it.toProfile() }
 
 fun DbMeasurement.toMeasurement() = ProfileMeasurement(
   id = id.value,
@@ -33,3 +34,4 @@ fun DbMeasurement.toMeasurement() = ProfileMeasurement(
   bodyMassIndex = bodyMassIndex,
   metabolicRate = metabolicRate
 )
+val MeasurementResponse = { it: DbMeasurement -> it.toMeasurement() }

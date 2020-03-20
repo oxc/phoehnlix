@@ -49,16 +49,11 @@ fun calculateBIAResults(biaData: BIAData, weight: Double, profile: ProfileData):
     ((0.47027 / imp50 - 0.24196 / imp5) * height * height + 0.13796 * weight - 0.1152 * age + 5.12 + activityFactor) / weight * 100.0f
   }
 
-  val metabolicRate = run {
-    val activityFactor = when (activityLevel) {
-      VeryLow -> 1.2
-      Low -> 1.3
-      Normal -> 1.5
-      High -> 1.75
-      VeryHigh -> 2.0
-    }
-    (muscleMassPercent * 0.4135 * weight + 369.0) * activityFactor
-  }
+  val metabolicRate = calculateMetabolicRate(
+    activityLevel = activityLevel,
+    weight = weight,
+    muscleMassPercent = muscleMassPercent
+  )
 
   return BIAResults(
     bodyFatPercent = bodyFatPercent.roundToDigits(1),
@@ -67,4 +62,19 @@ fun calculateBIAResults(biaData: BIAData, weight: Double, profile: ProfileData):
     bodyMassIndex = bodyMassIndex.roundToDigits(1),
     metabolicRate = metabolicRate.roundToDigits(1)
   )
+}
+
+fun calculateMetabolicRate(
+  activityLevel: ActivityLevel,
+  weight: Double,
+  muscleMassPercent: Double
+): Double {
+  val activityFactor = when (activityLevel) {
+    VeryLow -> 1.2
+    Low -> 1.3
+    Normal -> 1.5
+    High -> 1.75
+    VeryHigh -> 2.0
+  }
+  return (muscleMassPercent * 0.4135 * weight + 369.0) * activityFactor
 }

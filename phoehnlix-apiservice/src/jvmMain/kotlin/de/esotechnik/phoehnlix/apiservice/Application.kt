@@ -6,15 +6,19 @@ import de.esotechnik.phoehnlix.data.setupDatabase
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.NotFoundException
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.response.respond
+import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.optionalParam
 import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.serialization.DefaultJsonConfiguration
+import io.ktor.serialization.json
 import io.ktor.serialization.serialization
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getOrFail
@@ -32,9 +36,12 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.module(testing: Boolean = false) {
   setupDatabase()
 
+  install(CORS) {
+    header(HttpHeaders.XForwardedFor)
+    header(HttpHeaders.XForwardedProto)
+  }
   install(ContentNegotiation) {
-    serialization(
-      contentType = ContentType.Application.Json,
+    json(
       json = Json(
         DefaultJsonConfiguration.copy(
           prettyPrint = true
@@ -45,32 +52,7 @@ fun Application.module(testing: Boolean = false) {
 
   routing {
     route("/api") {
-      route("/profile") {
-        get {
-          // TOOD: list all profiles
-        }
-        route("/{profile}") {
-          get {
-            val profileId = call.parameters.getOrFail<Int>("profile")
-            val profile = db {
-              DbProfile.findById(profileId)?.toProfile()
-            } ?: throw NotFoundException()
-            call.respond(profile)
-          }
-          get("/measurements") {
-            val profileId = call.parameters.getOrFail<Int>("profile")
-            val measurements = db {
-              Measurement.find { Measurements.profile eq profileId }
-            }.map { it.toMeasurement() }
-            call.respond(measurements)
-          }
-        }
-      }
+      apiservice()
     }
   }
 }
-
-suspend fun <T> db(statement: suspend Transaction.() -> T) =
-  newSuspendedTransaction(Dispatchers.IO) {
-    statement()
-  }

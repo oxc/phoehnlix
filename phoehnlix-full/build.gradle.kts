@@ -1,6 +1,7 @@
 plugins {
   application
   kotlin("jvm")
+  id("com.github.johnrengelman.shadow")
 }
 
 group = "de.esotechnik.phoehnlix"
@@ -17,7 +18,7 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform(project(":phoehnlix-platform")))
+  api(enforcedPlatform(project(":phoehnlix-platform")))
 
   implementation(project(":phoehnlix-dataservice"))
   implementation(project(":phoehnlix-apiservice"))

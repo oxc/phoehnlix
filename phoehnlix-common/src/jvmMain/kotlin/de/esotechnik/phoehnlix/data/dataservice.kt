@@ -47,7 +47,7 @@ private fun Measurement.setBIAResults(biaResults: BIAResults?) {
   metabolicRate = biaResults?.metabolicRate
 }
 
-private fun Measurement.setProfile(selectedProfile: Profile?) {
+internal fun Measurement.setProfile(selectedProfile: Profile?) {
   profile = selectedProfile
   sex = selectedProfile?.sex
   age = selectedProfile?.age(timestamp)
