@@ -13,7 +13,8 @@ kotlin {
   sourceSets {
     jvm()
     js {
-      browser {}
+      browser {
+      }
     }
     val commonMain by getting {
       dependencies {
@@ -21,6 +22,7 @@ kotlin {
 
         implementation(kotlin("stdlib-common"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common")
+        api("io.ktor:ktor-client-core")
       }
     }
     val jvmMain by getting {
@@ -34,6 +36,7 @@ kotlin {
         implementation("ch.qos.logback:logback-classic")
         implementation("io.ktor:ktor-server-core")
         implementation("io.ktor:ktor-serialization")
+        implementation("io.ktor:ktor-client-json-jvm")
       }
     }
     val jvmTest by getting {
@@ -43,19 +46,23 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        api(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-common"))
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
 
-        implementation("io.ktor:ktor-client-json-js")
+        implementation("io.ktor:ktor-client-serialization-js")
       }
     }
   }
 }
 
 dependencies {
-  commonMainImplementation(enforcedPlatform(project(":phoehnlix-platform")))
-  "jsMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
-  "jvmMainImplementation"(enforcedPlatform(project(":phoehnlix-platform")))
+  configurations.all {
+    if (name.endsWith("MainImplementation")
+      || name.endsWith("MainApi")
+      || name.endsWith("MainRuntimeOnly")) {
+      dependencies.add(enforcedPlatform(project(":phoehnlix-platform")))
+    }
+  }
 }

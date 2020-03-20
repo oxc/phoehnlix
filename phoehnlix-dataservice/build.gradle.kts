@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-  api(enforcedPlatform(project(":phoehnlix-platform")))
+  implementation(enforcedPlatform(project(":phoehnlix-platform")))
 
   implementation(project(":phoehnlix-common"))
 

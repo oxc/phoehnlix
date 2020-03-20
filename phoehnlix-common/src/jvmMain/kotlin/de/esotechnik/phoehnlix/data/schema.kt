@@ -66,7 +66,7 @@ object ProfileScales : Table() {
 }
 
 object Measurements : LongIdTable() {
-  val scale = reference("scale_id", Scales, onDelete = RESTRICT, onUpdate = CASCADE)
+  val scale = optReference("scale_id", Scales, onDelete = RESTRICT, onUpdate = CASCADE)
 
   val timestamp = timestamp("timestamp")
 
@@ -81,21 +81,24 @@ object Measurements : LongIdTable() {
 
   val profile = optReference("profile_id", Profiles, onDelete = CASCADE, onUpdate = CASCADE)
 
-  // these are just for historic reasons. Perhaps we'll delete them in the future
+  // these are just for historic consistency. Perhaps we'll delete them in the future
   val sex = enumeration("sex", Sex::class).nullable()
   val age = double("age").nullable()
   val height = integer("height").nullable()
   val activityLevel = enumeration("activity_level", ActivityLevel::class).nullable()
 
+  val notes = text("notes").nullable()
+
   init {
     uniqueIndex(scale, timestamp, weight)
+    index(false, profile, timestamp)
   }
 }
 
 class Measurement(id: EntityID<Long>) : LongEntity(id) {
   companion object : LongEntityClass<Measurement>(Measurements)
 
-  var scale by Scale referencedOn Measurements.scale
+  var scale by Scale optionalReferencedOn Measurements.scale
 
   var timestamp by Measurements.timestamp
   var weight by Measurements.weight
@@ -113,6 +116,8 @@ class Measurement(id: EntityID<Long>) : LongEntity(id) {
   var age by Measurements.age
   var height by Measurements.height
   var activityLevel by Measurements.activityLevel
+
+  var notes by Measurements.notes
 }
 
 internal fun setupSchema() {

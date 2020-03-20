@@ -27,12 +27,15 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         implementation(kotlin("stdlib-jdk8"))
+        implementation(kotlin("reflect"))
 
         api("org.jetbrains.exposed:exposed-core")
         api("org.jetbrains.exposed:exposed-dao")
         implementation("org.jetbrains.exposed:exposed-jdbc")
         implementation("org.jetbrains.exposed:exposed-java-time")
         implementation("io.ktor:ktor-server-core")
+
+        implementation("com.github.doyaaaaaken:kotlin-csv-jvm")
 
         runtimeOnly("org.postgresql:postgresql")
       }
@@ -53,7 +56,11 @@ kotlin {
 }
 
 dependencies {
-  commonMainApi(enforcedPlatform(project(":phoehnlix-platform")))
-  "jsMainApi"(enforcedPlatform(project(":phoehnlix-platform")))
-  "jvmMainApi"(enforcedPlatform(project(":phoehnlix-platform")))
+  configurations.all {
+    if (name.endsWith("MainImplementation")
+      || name.endsWith("MainApi")
+      || name.endsWith("MainRuntimeOnly")) {
+      dependencies.add(enforcedPlatform(project(":phoehnlix-platform")))
+    }
+  }
 }
