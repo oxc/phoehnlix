@@ -452,28 +452,6 @@ external fun endOfYear(date: Number): Date
 
 external fun endOfYesterday(): Date
 
-external interface `T$7` {
-    var locale: Locale?
-        get() = definedExternally
-        set(value) = definedExternally
-    var weekStartsOn: String /* 0 | 1 | 2 | 3 | 4 | 5 | 6 */
-    var firstWeekContainsDate: Number?
-        get() = definedExternally
-        set(value) = definedExternally
-    var useAdditionalWeekYearTokens: Boolean?
-        get() = definedExternally
-        set(value) = definedExternally
-    var useAdditionalDayOfYearTokens: Boolean?
-        get() = definedExternally
-        set(value) = definedExternally
-}
-
-
-external fun format(date: Date, format: String, options: `T$7` = definedExternally): String
-
-
-external fun format(date: Number, format: String, options: `T$7` = definedExternally): String
-
 external interface `T$8` {
     var includeSeconds: Boolean?
         get() = definedExternally

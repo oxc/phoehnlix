@@ -16,8 +16,11 @@ import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getOrFail
 import kotlinx.html.body
 import kotlinx.html.canvas
+import kotlinx.html.div
 import kotlinx.html.h1
+import kotlinx.html.head
 import kotlinx.html.id
+import kotlinx.html.link
 import kotlinx.html.script
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -37,11 +40,12 @@ fun Application.module(testing: Boolean = false) {
     get("/") {
       val jsUrl = call.parameters.get("jsUrl") ?: "/static/js/phoehnlix-frontend.js"
       call.respondHtml {
+        head {
+          link(rel = "stylesheet", href = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap")
+        }
         body {
-          canvas {
-            id = "graph-canvas"
-          }
-          script(src=jsUrl) {}
+          div { id = "root" }
+          script(src = jsUrl) {}
         }
       }
     }

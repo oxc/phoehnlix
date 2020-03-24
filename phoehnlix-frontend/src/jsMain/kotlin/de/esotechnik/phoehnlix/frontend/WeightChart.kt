@@ -218,7 +218,7 @@ private data class ChartMeasurement(
   val metabolicRate: Double? = null
 ) {
   constructor(measurement: ProfileMeasurement) : this(
-    parseISO(measurement.timestamp),
+    measurement.parseTimestamp(),
     measurement.weight,
     measurement.bodyFatPercent,
     measurement.bodyWaterPercent,

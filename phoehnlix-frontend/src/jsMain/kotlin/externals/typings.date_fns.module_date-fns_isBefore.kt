@@ -16,4 +16,3 @@ external fun isBefore(date: Number, dateToCompare: Date): Boolean
 
 @JsName("default")
 external fun isBefore(date: Number, dateToCompare: Number): Boolean
-

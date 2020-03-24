@@ -1,10 +1,13 @@
 import de.esotechnik.phoehnlix.frontend.Application
+import react.dom.*
+import kotlin.browser.document
 
 /**
  * @author Bernhard Frauendienst
  */
 
 fun main() {
-  console.log("Hello Graph.")
-  Application.renderGraph()
+  render(document.getElementById("root")) {
+    child(Application::class) {}
+  }
 }
