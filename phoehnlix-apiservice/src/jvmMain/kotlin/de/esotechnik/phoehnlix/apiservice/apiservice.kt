@@ -34,7 +34,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 @KtorExperimentalAPI
 fun Route.apiservice() {

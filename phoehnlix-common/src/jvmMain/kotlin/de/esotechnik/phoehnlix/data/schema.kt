@@ -20,7 +20,7 @@ import org.jetbrains.exposed.sql.statements.jdbc.iterate
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 object Scales : IntIdTable() {
   val serial = binary("serial", 12).uniqueIndex() // bridge_id || scale_id

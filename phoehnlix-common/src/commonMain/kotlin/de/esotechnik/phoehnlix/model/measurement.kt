@@ -1,7 +1,7 @@
 package de.esotechnik.phoehnlix.model
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 enum class MeasureType {
   Weight,

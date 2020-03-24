@@ -8,7 +8,7 @@ import java.time.Instant
 import java.time.ZoneId
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 fun Profile.toProfileData(timestamp: Instant) = ProfileData(
   height = height,

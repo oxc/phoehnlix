@@ -20,7 +20,7 @@ private const val POINT_RADIUS = 6
 private const val FONT_SIZE = 20
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 class WeightChart(
   ctx: CanvasRenderingContext2D,

@@ -1,7 +1,7 @@
 import de.esotechnik.phoehnlix.frontend.Application
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 
 fun main() {
