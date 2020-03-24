@@ -1,5 +1,9 @@
 package de.esotechnik.phoehnlix.model
 
+import de.esotechnik.phoehnlix.data.Measurement
+import de.esotechnik.phoehnlix.data.Profile
+import de.esotechnik.phoehnlix.data.toBiaData
+import de.esotechnik.phoehnlix.data.toProfileData
 import de.esotechnik.phoehnlix.model.ActivityLevel.*
 import de.esotechnik.phoehnlix.util.roundToDigits
 
@@ -77,4 +81,15 @@ fun calculateMetabolicRate(
     VeryHigh -> 2.0
   }
   return (muscleMassPercent * 0.4135 * weight + 369.0) * activityFactor
+}
+
+fun MeasurementData.calculateBIAResults(profile: ProfileData) = biaData?.let {
+  calculateBIAResults(it, weight, profile)
+}
+
+fun Measurement.calculateBIAResults(fallbackProfile: ProfileData) = toBiaData()?.let {
+  calculateBIAResults(it, weight, toProfileData(fallbackProfile))
+}
+fun Measurement.calculateBIAResults(fallbackProfile: Profile) = toBiaData()?.let {
+  calculateBIAResults(it, weight, toProfileData(fallbackProfile))
 }

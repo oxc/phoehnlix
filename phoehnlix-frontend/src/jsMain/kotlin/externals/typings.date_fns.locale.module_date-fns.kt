@@ -59,7 +59,7 @@ external var cy: Locale
 external var da: Locale
 
 
-external var de: Locale
+//external var de: Locale
 
 
 external var el: Locale

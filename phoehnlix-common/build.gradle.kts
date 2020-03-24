@@ -28,14 +28,15 @@ kotlin {
       dependencies {
         implementation(kotlin("stdlib-jdk8"))
         implementation(kotlin("reflect"))
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
+
+        implementation("ch.qos.logback:logback-classic")
 
         api("org.jetbrains.exposed:exposed-core")
         api("org.jetbrains.exposed:exposed-dao")
         implementation("org.jetbrains.exposed:exposed-jdbc")
         implementation("org.jetbrains.exposed:exposed-java-time")
         implementation("io.ktor:ktor-server-core")
-
-        implementation("com.github.doyaaaaaken:kotlin-csv-jvm")
 
         runtimeOnly("org.postgresql:postgresql")
       }

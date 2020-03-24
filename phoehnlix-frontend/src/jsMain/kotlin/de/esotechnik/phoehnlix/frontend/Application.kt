@@ -36,8 +36,9 @@ object Application {
     val canvas = document.getElementById("graph-canvas") as HTMLCanvasElement
     val ctx = canvas.getContext("2d") as CanvasRenderingContext2D
 
+    val profile = api.profile[1]()
     val measurements = api.profile[1].measurements().sortedBy { it.timestamp }
     console.log("Loaded data: ", measurements)
-    val chart = WeightChart(ctx, measurements)
+    val chart = WeightChart(ctx, measurements, profile.targetWeight)
   }
 }
