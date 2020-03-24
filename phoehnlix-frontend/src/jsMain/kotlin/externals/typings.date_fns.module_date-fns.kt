@@ -73,12 +73,6 @@ external fun addQuarters(date: Date, amount: Number): Date
 external fun addQuarters(date: Number, amount: Number): Date
 
 
-external fun addSeconds(date: Date, amount: Number): Date
-
-
-external fun addSeconds(date: Number, amount: Number): Date
-
-
 external fun addWeeks(date: Date, amount: Number): Date
 
 
@@ -321,18 +315,6 @@ external fun differenceInQuarters(dateLeft: Number, dateRight: Date): Number
 
 
 external fun differenceInQuarters(dateLeft: Number, dateRight: Number): Number
-
-
-external fun differenceInSeconds(dateLeft: Date, dateRight: Date): Number
-
-
-external fun differenceInSeconds(dateLeft: Date, dateRight: Number): Number
-
-
-external fun differenceInSeconds(dateLeft: Number, dateRight: Date): Number
-
-
-external fun differenceInSeconds(dateLeft: Number, dateRight: Number): Number
 
 
 external fun differenceInWeeks(dateLeft: Date, dateRight: Date): Number
@@ -755,17 +737,6 @@ external fun isAfter(date: Number, dateToCompare: Date): Boolean
 external fun isAfter(date: Number, dateToCompare: Number): Boolean
 
 
-external fun isBefore(date: Date, dateToCompare: Date): Boolean
-
-
-external fun isBefore(date: Date, dateToCompare: Number): Boolean
-
-
-external fun isBefore(date: Number, dateToCompare: Date): Boolean
-
-
-external fun isBefore(date: Number, dateToCompare: Number): Boolean
-
 
 external fun isDate(value: Any): Boolean
 
@@ -1130,9 +1101,6 @@ external fun parse(dateString: String, formatString: String, referenceDate: Date
 
 
 external fun parse(dateString: String, formatString: String, referenceDate: Number, options: `T$13` = definedExternally): Date
-
-
-external fun parseISO(argument: String, options: `T$6` = definedExternally): Date
 
 
 external fun parseJSON(argument: String): Date

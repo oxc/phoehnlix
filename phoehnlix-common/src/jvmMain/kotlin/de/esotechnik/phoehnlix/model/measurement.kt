@@ -14,14 +14,6 @@ data class MeasurementData(
 ) {
   val readableWeight get() = String.format("%.1f kg", weight)
 
-  fun calculateBIAResults(profile: ProfileData) = biaData?.let {
-    calculateBIAResults(
-      it,
-      weight,
-      profile
-    )
-  }
-
   fun toLogString() = """
         Sender: $senderId
         Timestamp: $timestamp

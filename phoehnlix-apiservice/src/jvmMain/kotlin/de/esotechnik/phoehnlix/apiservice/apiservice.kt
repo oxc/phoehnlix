@@ -1,19 +1,19 @@
 package de.esotechnik.phoehnlix.apiservice
 
-import de.esotechnik.phoehnlix.data.CsvData
 import de.esotechnik.phoehnlix.data.CsvImport
 import de.esotechnik.phoehnlix.data.Measurement
 import de.esotechnik.phoehnlix.data.Measurements
 import de.esotechnik.phoehnlix.data.Profile
+import de.esotechnik.phoehnlix.data.setBIAResults
 import de.esotechnik.phoehnlix.model.ActivityLevel
+import de.esotechnik.phoehnlix.model.calculateBIAResults
 import de.esotechnik.phoehnlix.util.getValue
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.features.BadRequestException
 import io.ktor.features.MissingRequestParameterException
 import io.ktor.features.NotFoundException
-import io.ktor.features.ParameterConversionException
-import io.ktor.http.Parameters
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
@@ -23,17 +23,15 @@ import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
-import io.ktor.util.DefaultConversionService
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getValue
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.enumFromOrdinal
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.lang.reflect.Type
-import kotlin.reflect.KClass
-import kotlin.reflect.typeOf
 
 /**
  * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
@@ -54,47 +52,72 @@ fun Route.apiservice() {
           Profile.findById(profileId)
         }
       }
-      get("/measurements") {
-        val profileId: Int by call.parameters
-        call.respondDbList(MeasurementResponse) {
-          Measurement
-            .find { Measurements.profile eq profileId }
-            .orderBy( Measurements.timestamp to SortOrder.ASC )
-        }
-      }
-      post("/measurements/import") {
-        var profileId: Int? = null
-        var activityLevel: ActivityLevel? = null
-
-        var csvData: CsvData? = null
-
-        val multipart = call.receiveMultipart()
-        multipart.forEachPart { part ->
-          when (part) {
-            is PartData.FormItem -> {
-              when (part.name) {
-                "profileId" -> profileId = part.getValue()
-                "activityLevel" -> activityLevel = enumFromOrdinal(ActivityLevel::class, part.getValue())
-              }
-            }
-            is PartData.FileItem -> {
-              if (csvData != null) {
-                throw BadRequestException("Only one multipart file supported.")
-              }
-              csvData = CsvImport().readData(part.streamProvider())
-            }
+      route("/measurements") {
+        get {
+          val profileId: Int by call.parameters
+          call.respondDbList(MeasurementResponse) {
+            Measurement
+              .find { Measurements.profile eq profileId }
+              .orderBy(Measurements.timestamp to SortOrder.ASC)
           }
-          part.dispose()
         }
+        post("/import") {
+          val profileId: Int by call.parameters
+          var activityLevel: ActivityLevel? = call.parameters["activityLevel"]
+            ?.let { it.toIntOrNull() }
+            ?.let { enumFromOrdinal(ActivityLevel::class, it) }
 
-        val pid = profileId ?: throw MissingRequestParameterException("profileId")
-        val csv = csvData ?: throw MissingRequestParameterException("csvFile")
+          var csvPart: PartData.FileItem? = null
 
-        val profile = db {
-          // FIXME: check profile permissions
-          Profile.findById(pid) ?: throw NotFoundException()
+          val multipart = call.receiveMultipart()
+          multipart.forEachPart { part ->
+            when (part) {
+              is PartData.FormItem -> {
+                when (part.name) {
+                  //"profileId" -> profileId = part.getValue()
+                  "activityLevel" -> activityLevel = enumFromOrdinal(ActivityLevel::class, part.getValue())
+                }
+              }
+              is PartData.FileItem -> {
+                if (csvPart != null) {
+                  throw BadRequestException("Only one multipart file supported.")
+                }
+                csvPart = part
+                // don't dispose this part
+                return@forEachPart
+              }
+            }
+            part.dispose()
+          }
+
+          val csv = csvPart ?: throw MissingRequestParameterException("csvFile")
+
+          val profile = db {
+            // FIXME: check profile permissions
+            Profile.findById(profileId) ?: throw NotFoundException()
+          }
+          val count = CsvImport.import(csv.streamProvider(), profile, activityLevel)
+          call.respond(HttpStatusCode.Created, "Created $count entries.")
         }
-        csv.import(profile, activityLevel)
+        post("/recalculate") {
+          val profileId: Int by call.parameters
+
+          newSuspendedTransaction {
+            val profile = Profile.findById(profileId) ?: throw NotFoundException()
+            val count = atomic(0)
+            Measurement.find {
+              Measurements.profile eq profileId and
+                Measurements.imp50.isNotNull() and
+                Measurements.imp5.isNotNull()
+            }.forUpdate().forEach { measurement ->
+              measurement.calculateBIAResults(profile)?.let {
+                measurement.setBIAResults(it)
+                count.incrementAndGet()
+              }
+            }
+            call.respond(HttpStatusCode.OK, "Recalculated BIA data for $count entries.")
+          }
+        }
       }
     }
   }
