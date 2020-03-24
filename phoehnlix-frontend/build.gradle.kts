@@ -26,6 +26,12 @@ kotlin {
         }
       }
     }
+    val commonMain by getting {
+      dependencies {
+        api(project(":phoehnlix-apiservice"))
+        api(project(":phoehnlix-common"))
+      }
+    }
     val jvmMain by getting {
       dependencies {
         implementation(kotlin("stdlib-jdk8"))

@@ -15,8 +15,8 @@ object WebConnectProtocol {
   fun parseMeasurementData(raw: String): MeasurementData {
     // ?data=24 xxxxxxxxxxxx xxxxxx xxxxxx 01b8 132af242 23b4 0ee3 109f 0000000000 xxxxxxxx
     // ?data=24 xxxxxxxxxxxx xxxxxx xxxxxx 01b8 132b760e 233c 0ce0 0ee8 0000000000 xxxxxxxx
-    //       ^ request type  ^ scale id 1-3 ^?  ^ timestamp   ^ R  ^ Xc            ^ crc32
-    //          ^ bridge id 1-6     ^ scale id 4-6       ^ weight
+    //       ^ request type  ^ scale id 1-3 ^?  ^ timestamp   ^ imp50              ^ crc32
+    //          ^ bridge id 1-6     ^ scale id 4-6       ^ weight  ^ imp5
     val i = atomic(0)
     fun nextBytes(n: Int) = raw.substring(i.value, i.addAndGet(n * 2)).hexStringBytes()
     fun next(n: Int) = nextBytes(n).toBigInt()
