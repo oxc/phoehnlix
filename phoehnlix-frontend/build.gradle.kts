@@ -61,17 +61,19 @@ kotlin {
 
         implementation("org.jetbrains:kotlin-react:16.13.0-pre.94-kotlin-1.3.70")
         implementation("org.jetbrains:kotlin-react-dom:16.13.0-pre.94-kotlin-1.3.70")
-        implementation(npm("react", "16.13.1"))
-        implementation(npm("react-dom", "16.13.1"))
+        implementation(npm("react", "16.13.0"))
+        implementation(npm("react-is", "16.13.0"))
+        implementation(npm("react-dom", "16.13.0"))
 
-        implementation("org.jetbrains:kotlin-styled:1.0.0-pre.94-kotlin-1.3.70")
-        implementation(npm("styled-components"))
-        implementation(npm("inline-style-prefixer"))
+        implementation("org.jetbrains:kotlin-css-js:1.0.0-pre.94-kotlin-1.3.70")
 
-        implementation(npm("chart.js", "2.9.3"))
-        implementation(npm("chartjs-adapter-date-fns", "1.0.0"))
-        implementation(npm("date-fns", "2.11.0"))
-        implementation(npm("chartjs-plugin-downsample", "1.1.0"))
+        implementation("subroh0508.net.kotlinmaterialui:core:0.3.0")
+        implementation(npm("@material-ui/core", "^4.9.7"))
+
+        implementation(npm("chart.js", "^2.9.3"))
+        implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))
+        implementation(npm("date-fns", "^2.11.0"))
+        implementation(npm("chartjs-plugin-downsample", "^1.1.0"))
       }
     }
   }
