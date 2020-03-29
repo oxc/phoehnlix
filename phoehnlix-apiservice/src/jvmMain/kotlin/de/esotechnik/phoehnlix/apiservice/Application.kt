@@ -11,6 +11,7 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.NotFoundException
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
@@ -37,8 +38,15 @@ fun Application.module(testing: Boolean = false) {
   setupDatabase()
 
   install(CORS) {
-    header(HttpHeaders.XForwardedFor)
-    header(HttpHeaders.XForwardedProto)
+    method(HttpMethod.Options)
+    method(HttpMethod.Get)
+    method(HttpMethod.Post)
+    method(HttpMethod.Put)
+    method(HttpMethod.Delete)
+    method(HttpMethod.Patch)
+    header(HttpHeaders.Authorization)
+    allowCredentials = true
+    anyHost()
   }
   install(ContentNegotiation) {
     json(

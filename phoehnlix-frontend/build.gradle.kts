@@ -20,6 +20,10 @@ kotlin {
     js {
       useCommonJs()
       browser {
+        // https://kotlinlang.org/docs/reference/javascript-dce.html#known-issue-dce-and-ktor
+        dceTask {
+          keep("ktor-ktor-io.\$\$importsForInline\$\$.ktor-ktor-io.io.ktor.utils.io")
+        }
         webpackTask {
           output.libraryTarget = "umd2"
           report = true
@@ -80,8 +84,7 @@ kotlin {
 }
 
 val jvmProcessResources by tasks.withType(ProcessResources::class).getting {
-    // val jsWebpackTaskName = "jsBrowserProductionWebpack"
-    val jsWebpackTaskName = "jsBrowserDevelopmentWebpack"
+    val jsWebpackTaskName = "jsBrowserProductionWebpack"
     // should we also choose "jsBrowserDevelopmentWebpack"? Probably should yield a different jar.
     val jsWebpackTask = tasks.withType(KotlinWebpack::class).named(jsWebpackTaskName)
     from(jsWebpackTask.map { project.files(it.destinationDirectory) }) {
