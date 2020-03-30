@@ -1,5 +1,6 @@
 import de.esotechnik.phoehnlix.frontend.Application
-import react.dom.*
+import de.esotechnik.phoehnlix.frontend.apiProvider
+import react.dom.render
 import kotlin.browser.document
 
 /**
@@ -7,7 +8,11 @@ import kotlin.browser.document
  */
 
 fun main() {
-  render(document.getElementById("root")) {
-    child(Application::class) {}
+  val root = document.getElementById("root")!!
+  val apiUrl = root.getAttribute("data-api-url")!!
+  render(root) {
+    apiProvider(apiUrl) {
+      child(Application::class) {}
+    }
   }
 }
