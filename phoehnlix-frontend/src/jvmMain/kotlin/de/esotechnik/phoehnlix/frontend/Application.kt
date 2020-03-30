@@ -42,9 +42,13 @@ fun Application.module(testing: Boolean = false) {
       call.respondHtml {
         head {
           link(rel = "stylesheet", href = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap")
+          link(rel = "stylesheet", href = "https://fonts.googleapis.com/icon?family=Material+Icons")
         }
         body {
-          div { id = "root" }
+          div {
+            id = "root"
+            attributes["data-api-url"] = "https://phoehnlix.obeliks.de/api"
+          }
           script(src = jsUrl) {}
         }
       }
