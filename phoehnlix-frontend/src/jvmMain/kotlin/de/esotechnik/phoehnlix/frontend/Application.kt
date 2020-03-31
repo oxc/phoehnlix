@@ -21,6 +21,7 @@ import kotlinx.html.h1
 import kotlinx.html.head
 import kotlinx.html.id
 import kotlinx.html.link
+import kotlinx.html.meta
 import kotlinx.html.script
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -41,7 +42,9 @@ fun Application.module(testing: Boolean = false) {
       val jsUrl = call.parameters.get("jsUrl") ?: "/static/js/phoehnlix-frontend.js"
       call.respondHtml {
         head {
+          meta(name = "viewport", content = "minimum-scale=1, initial-scale=1, width=device-width")
           link(rel = "stylesheet", href = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap")
+          link(rel = "stylesheet", href = "https://fonts.googleapis.com/css?family=Days+One&display=swap")
           link(rel = "stylesheet", href = "https://fonts.googleapis.com/icon?family=Material+Icons")
         }
         body {
