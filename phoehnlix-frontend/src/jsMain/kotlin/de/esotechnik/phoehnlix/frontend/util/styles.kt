@@ -1,9 +1,12 @@
+@file:Suppress("NOTHING_TO_INLINE")
 package de.esotechnik.phoehnlix.frontend.util
 
 import kotlinx.css.CSSBuilder
+import kotlinx.css.Color
 import kotlinx.css.CssValue
 import kotlinx.css.LinearDimension
 import kotlinx.css.RuleSet
+import kotlinx.css.hyphenize
 import kotlinx.css.toCustomProperty
 import kotlinx.html.Tag
 import react.Component
@@ -31,35 +34,19 @@ fun Tag.style(handler: RuleSet) {
 }
 // </copied>
 
-fun <T: CssValue> CSSBuilder.customProperty(name: String? = null, ctor: (String) -> T, initialValue: T? = null)
-  = CustomPropertyDelegateProvider(this, name, ctor, initialValue)
-fun CSSBuilder.customProperty(name: String? = null, initialValue: LinearDimension? = null) = customProperty(name, ::LinearDimension, initialValue)
+class CustomPropertyDelegate<T : CssValue>(private val ctor: (String) -> T) {
+  operator fun getValue(cssBuilder: CSSBuilder, property: KProperty<*>): T {
+    return ctor(property.name.hyphenize().toCustomProperty())
+  }
 
-class CustomPropertyDelegateProvider<T : CssValue>(
-  private val cssBuilder: CSSBuilder,
-  private val varName: String?,
-  private val varCtor: (String) -> T,
-  private val initialValue: T?
-){
-  operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): CustomPropertyDelegate<T> {
-    val delegate = CustomPropertyDelegate(cssBuilder, varName ?: property.name, varCtor)
-    if (initialValue != null) {
-      delegate.setValue(thisRef, property, initialValue)
-    }
-    return delegate
+  operator fun setValue(cssBuilder: CSSBuilder, property: KProperty<*>, value: T) {
+    cssBuilder.setCustomProperty(property.name.hyphenize(), value)
   }
 }
-
-class CustomPropertyDelegate<T : CssValue>(
-  private val cssBuilder: CSSBuilder,
-  private val varName: String,
-  private val varCtor: (String) -> T
-) {
-  operator fun getValue(receiver: Any?, property: KProperty<*>) =
-    varCtor(varName.toCustomProperty())
-  operator fun setValue(receiver: Any?, property: KProperty<*>, value: CssValue) =
-    cssBuilder.setCustomProperty(varName, value)
-}
+private val customColorDelegate = CustomPropertyDelegate(::Color)
+val Color.Companion.customProperty get() = customColorDelegate
+private val customLinearDimensionDelegate = CustomPropertyDelegate(::LinearDimension)
+val LinearDimension.Companion.customProperty get() = customLinearDimensionDelegate
 
 fun RProps.styleSet(name: String): String
   = asDynamic()["classes"][name] as String?

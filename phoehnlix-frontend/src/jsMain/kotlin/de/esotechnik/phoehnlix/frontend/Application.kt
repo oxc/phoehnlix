@@ -2,27 +2,25 @@ package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.apiservice.model.Profile
 import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
-import de.esotechnik.phoehnlix.frontend.dashboard.measurementList
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.css.CSSBuilder
 import kotlinx.css.Color
-import kotlinx.html.js.onClickFunction
-import materialui.components.appbar.appBar
-import materialui.components.appbar.enums.AppBarPosition.*
-import materialui.components.button.enums.ButtonColor.inherit
-import materialui.components.icon.icon
-import materialui.components.iconbutton.iconButton
-import materialui.components.toolbar.toolbar
-import materialui.components.typography.enums.TypographyVariant.h6
-import materialui.components.typography.typography
+import kotlinx.css.backgroundColor
+import kotlinx.css.color
+import materialui.components.cssbaseline.cssBaseline
 import materialui.styles.createMuiTheme
-import materialui.styles.muitheme.MuiTheme
+import materialui.styles.mixins.options.toolbar
+import materialui.styles.muitheme.options.MuiThemeOptions
+import materialui.styles.muitheme.options.mixins
 import materialui.styles.muitheme.options.palette
+import materialui.styles.palette.main
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.palette.options.main
 import materialui.styles.palette.options.primary
+import materialui.styles.palette.paper
 import react.RBuilder
 import react.RComponent
 import react.RProps
@@ -39,37 +37,11 @@ interface AppState : RState {
 class Application : RComponent<RProps, AppState>() {
 
   override fun RBuilder.render() {
-    themeProvider(theme) {
-      appBar {
-        attrs.position = static
-        toolbar {
-          iconButton {
-            attrs["edge"] = "start"
-            attrs.color = inherit
-            attrs["aria-label"] = "menu"
-            icon {
-              +"menu"
-            }
-          }
-          typography {
-
-            attrs.variant = h6
-
-          }
-          iconButton {
-            icon {
-              +"eye"
-            }
-            attrs {
-              onClickFunction = { event ->
-              }
-            }
-          }
+    cssBaseline {
+      themeProvider(defaultTheme) {
+        dashboardPage {
+          attrs.profile = state.profile
         }
-      }
-
-      dashboardPage {
-        attrs.profile = state.profile
       }
     }
   }
@@ -89,10 +61,27 @@ class Application : RComponent<RProps, AppState>() {
       useApiContext<Application>()
     }
 
-    private val theme: MuiTheme = createMuiTheme {
+    private fun MuiThemeOptions.baseTheme() {
       palette {
         primary {
-          main = Color("#2196f3")
+          main = Color("#b52319")
+        }
+      }
+    }
+
+    val defaultTheme = createMuiTheme {
+      palette {
+        primary {
+          main = Color("#b52319")
+        }
+      }
+    }
+
+    val whiteToolbarTheme = createMuiTheme {
+      mixins {
+        toolbar = CSSBuilder().apply {
+          backgroundColor = defaultTheme.palette.background.paper
+          color = defaultTheme.palette.primary.main
         }
       }
     }

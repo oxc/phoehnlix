@@ -6,23 +6,12 @@ import date_fns.differenceInSeconds
 import date_fns.isBefore
 import date_fns.locale.de
 import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
+import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
-import de.esotechnik.phoehnlix.frontend.util.customProperty
+import de.esotechnik.phoehnlix.frontend.title
+import de.esotechnik.phoehnlix.model.MeasureType
+import de.esotechnik.phoehnlix.model.MeasureType.*
 import de.esotechnik.phoehnlix.util.roundToDigits
-import kotlinx.css.Color
-import kotlinx.css.FontWeight
-import kotlinx.css.TextAlign
-import kotlinx.css.backgroundColor
-import kotlinx.css.borderRadius
-import kotlinx.css.color
-import kotlinx.css.fontWeight
-import kotlinx.css.height
-import kotlinx.css.lineHeight
-import kotlinx.css.pct
-import kotlinx.css.properties.lh
-import kotlinx.css.px
-import kotlinx.css.textAlign
-import kotlinx.css.width
 import kotlinx.html.id
 import materialui.styles.StylesSet
 import materialui.styles.childWithStyles
@@ -46,11 +35,11 @@ external val chartsJsAdapterDateFns: dynamic
 @JsModule("chartjs-plugin-downsample")
 external val chartjsPluginDownsample: dynamic
 
-private const val POINT_RADIUS = 6
-private const val FONT_SIZE = 20
+private const val POINT_RADIUS = 3
 
 interface MeasurementChartProps : RProps {
   var measurements: List<ProfileMeasurement>
+  var measureTypes: List<MeasureType>
   var targetWeight: Double?
   var targetDatapointCount: Int
   var downsampleMethod: DownsampleMethod
@@ -58,8 +47,9 @@ interface MeasurementChartProps : RProps {
 
 interface MeasurementChartState : RState {
   var entries: List<ChartMeasurement>
-  var chart: Chart
 }
+
+private val MEASURE_TYPES = values().toList()
 
 /**
  * @author Bernhard Frauendienst
@@ -69,6 +59,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
     MeasurementChartComponent::class) {
     init {
       defaultProps = new {
+        measureTypes = MEASURE_TYPES
         targetDatapointCount = 13
         downsampleMethod = DownsampleMethod.Simple
       }
@@ -76,18 +67,13 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
       // make sure dependencies are loaded
       val adapter = chartsJsAdapterDateFns
       val downsamplePlugin = chartjsPluginDownsample
-      Chart.defaults.global.asDynamic().defaultFontSize =
-        FONT_SIZE
     }
 
     private val styleSets: StylesSet.() -> Unit = {
     }
 
     fun RBuilder.render(handler: RHandler<MeasurementChartProps>): ReactElement =
-      childWithStyles(
-        MeasurementChartComponent::class,
-        MeasurementChartComponent.styleSets
-      ) {
+      childWithStyles(MeasurementChartComponent::class, styleSets) {
         this.handler()
       }
   }
@@ -124,96 +110,54 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
 
   private fun createChart() {
     val entries = state.entries.takeIf { it.isNotEmpty() } ?: return
-    state.chart = Chart(ctx, new {
+    val measureTypes = props.measureTypes
+    val datasetPoints = measureTypes.associateWith { emptyArray<Chart.ChartPoint>() }
+    entries.forEach { entry ->
+      val timestamp = entry.timestamp
+      measureTypes.forEach { type ->
+        datasetPoints[type]!!.add(entry[type], timestamp)
+      }
+    }
+    val datasetConfigs = measureTypes.mapTo(mutableListOf()) { measureType ->
+      new<Chart.ChartDataSets> {
+        type = "line"
+        label = measureType.title
+        data = datasetPoints[measureType]
+        yAxisID = when (measureType) {
+          Weight -> "weight"
+          MetabolicRate -> "calories"
+          else -> "percent"
+        }
+        borderColor = measureType.color
+        pointBackgroundColor = borderColor
+        fill = false
+        pointRadius = POINT_RADIUS
+      }
+    }
+    props.targetWeight?.let { targetWeight ->
+      val datasetPos = datasetConfigs.indexOfFirst { it.yAxisID == "weight" } + 1
+      if (datasetPos == 0) return@let
+
+      val targetWeights = emptyArray<Chart.ChartPoint>()
+      targetWeights.add(targetWeight, entries.first().timestamp)
+      targetWeights.add(targetWeight, entries.last().timestamp)
+      datasetConfigs.add(datasetPos, new {
+        type = "line"
+        label = "Zielgewicht"
+        data = targetWeights
+        yAxisID = "weight"
+        borderColor = Weight.color
+        pointBackgroundColor = borderColor
+        fill = false
+        pointRadius = 0
+        pointStyle = "line"
+      })
+    }
+
+    val chart = Chart(ctx, new {
       type = "line"
       data = new {
-        val weights = emptyArray<Chart.ChartPoint>()
-        val targetWeights = emptyArray<Chart.ChartPoint>()
-        val bodyFatPercent = emptyArray<Chart.ChartPoint>()
-        val bodyWaterPercent = emptyArray<Chart.ChartPoint>()
-        val muscleMassPercent = emptyArray<Chart.ChartPoint>()
-        val bodyMassIndex = emptyArray<Chart.ChartPoint>()
-        val metabolicRate = emptyArray<Chart.ChartPoint>()
-
-        entries.forEach { entry ->
-          val timestamp = entry.timestamp
-          weights.add(entry.weight, timestamp)
-          bodyFatPercent.add(entry.bodyFatPercent, timestamp)
-          bodyWaterPercent.add(entry.bodyWaterPercent, timestamp)
-          muscleMassPercent.add(entry.muscleMassPercent, timestamp)
-          bodyMassIndex.add(entry.bodyMassIndex, timestamp)
-          metabolicRate.add(entry.metabolicRate, timestamp)
-        }
-        props.targetWeight?.let { targetWeight ->
-          targetWeights.add(targetWeight, entries.first().timestamp)
-          targetWeights.add(targetWeight, entries.last().timestamp)
-        }
-        datasets = arrayOf(
-          new {
-            type = "line"
-            label = "Gewicht"
-            data = weights
-            yAxisID = "weight"
-            borderColor = "#cd2129" // "#a32530"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          }, new {
-            type = "line"
-            label = "Zielgewicht"
-            data = targetWeights
-            yAxisID = "weight"
-            borderColor = "#cd2129" // "#a32530"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = 0
-            pointStyle = "line"
-          }, new {
-            type = "line"
-            label = "Fett%"
-            data = bodyFatPercent
-            yAxisID = "percent"
-            borderColor = "#faa21e" // "#c6a92e"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          },
-          new {
-            label = "Wasser%"
-            data = bodyWaterPercent
-            yAxisID = "percent"
-            borderColor = "#2395cb" // "#44a6ab"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          },
-          new {
-            label = "Muskel%"
-            data = muscleMassPercent
-            yAxisID = "percent"
-            borderColor = "#a408a4" // "#aa0a7c"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          },
-          new {
-            label = "BMI"
-            data = bodyMassIndex
-            yAxisID = "percent"
-            borderColor = "#76b525" // "#5896ce"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          },
-          new {
-            label = "Kalorien"
-            data = metabolicRate
-            yAxisID = "calories"
-            pointBackgroundColor = borderColor
-            fill = false
-            pointRadius = POINT_RADIUS
-          }
-        )
+        datasets = datasetConfigs.toTypedArray()
       }
       options = new {
         scales = new<Chart.ChartScales<*>> {
@@ -314,6 +258,15 @@ data class ChartMeasurement(
     measurement.bodyMassIndex,
     measurement.metabolicRate
   )
+}
+
+private operator fun ChartMeasurement.get(measureType: MeasureType) = when (measureType) {
+  Weight -> weight
+  BodyFatPercent -> bodyFatPercent
+  BodyWaterPercent -> bodyWaterPercent
+  MuscleMassPercent -> muscleMassPercent
+  BodyMassIndex -> bodyMassIndex
+  MetabolicRate -> metabolicRate
 }
 
 enum class DownsampleMethod {
