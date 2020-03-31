@@ -9,6 +9,7 @@ import kotlinx.css.RuleSet
 import kotlinx.css.hyphenize
 import kotlinx.css.toCustomProperty
 import kotlinx.html.Tag
+import materialui.styles.muitheme.MuiTheme
 import react.Component
 import react.RProps
 import react.dom.jsStyle
@@ -63,3 +64,6 @@ class StyleSetDelegateProvider(private val props: RProps) {
 class StyleSetDelegate(private val classNames: String) {
   operator fun getValue(receiver: Any?, property: KProperty<*>) = classNames
 }
+
+// for use with childWithStyles(withTheme=true)
+val RProps.theme get() = asDynamic()["theme"].unsafeCast<MuiTheme>()
