@@ -9,12 +9,15 @@ import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.title
+import de.esotechnik.phoehnlix.frontend.util.theme
 import de.esotechnik.phoehnlix.model.MeasureType
 import de.esotechnik.phoehnlix.model.MeasureType.*
 import de.esotechnik.phoehnlix.util.roundToDigits
 import kotlinx.html.id
 import materialui.styles.StylesSet
 import materialui.styles.childWithStyles
+import materialui.styles.muitheme.MuiTheme
+import materialui.styles.palette.primary
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
 import react.RBuilder
@@ -35,7 +38,8 @@ external val chartsJsAdapterDateFns: dynamic
 @JsModule("chartjs-plugin-downsample")
 external val chartjsPluginDownsample: dynamic
 
-private const val POINT_RADIUS = 3
+private const val POINT_RADIUS = 6
+private const val FONT_SIZE = 20
 
 interface MeasurementChartProps : RProps {
   var measurements: List<ProfileMeasurement>
@@ -73,7 +77,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
     }
 
     fun RBuilder.render(handler: RHandler<MeasurementChartProps>): ReactElement =
-      childWithStyles(MeasurementChartComponent::class, styleSets) {
+      childWithStyles(MeasurementChartComponent::class, styleSets, withTheme = true) {
         this.handler()
       }
   }
@@ -90,6 +94,10 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
   }
 
   override fun MeasurementChartState.init(props: MeasurementChartProps) {
+    val theme = props.theme
+    Chart.defaults.global.asDynamic().defaultFontFamily = theme.typography.fontFamily
+    Chart.defaults.global.asDynamic().defaultFontColor = theme.palette.text.primary
+
     entries = props.measurements.map(::ChartMeasurement).run {
       when (props.downsampleMethod) {
         DownsampleMethod.Simple -> downsampleSimple(props.targetDatapointCount)
@@ -207,8 +215,8 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
                 labelString = "kcal"
               }
               ticks = new {
-                suggestedMin = 3000
-                suggestedMax = 6000
+                suggestedMin = 1500
+                suggestedMax = 3000
               }
               gridLines = new {
                 display = false
