@@ -71,8 +71,9 @@ kotlin {
 
         implementation("org.jetbrains:kotlin-css-js:1.0.0-pre.94-kotlin-1.3.70")
 
-        implementation("subroh0508.net.kotlinmaterialui:core:0.3.0")
-        implementation(npm("@material-ui/core", "^4.9.7"))
+        implementation("subroh0508.net.kotlinmaterialui:core:0.3.3-SNAPSHOT")
+        implementation("subroh0508.net.kotlinmaterialui:lab:0.3.0-SNAPSHOT")
+        implementation(npm("@material-ui/core", "^4.9.8"))
 
         implementation(npm("chart.js", "^2.9.3"))
         implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))

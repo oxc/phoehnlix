@@ -30,5 +30,7 @@ dependencies {
   implementation("io.ktor:ktor-server-netty")
   implementation("ch.qos.logback:logback-classic")
   implementation("io.ktor:ktor-server-core")
+  implementation("io.ktor:ktor-client-apache")
+  implementation("io.ktor:ktor-client-logging-jvm")
   testImplementation("io.ktor:ktor-server-tests")
 }
