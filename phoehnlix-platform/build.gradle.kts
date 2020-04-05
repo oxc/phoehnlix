@@ -33,6 +33,7 @@ dependencies {
     api("org.jetbrains.exposed:exposed-java-time:$exposed_version")
 
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core-jdk8:$kotlinx_coroutines_version")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$kotlinx_coroutines_version")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$kotlinx_coroutines_version")
 

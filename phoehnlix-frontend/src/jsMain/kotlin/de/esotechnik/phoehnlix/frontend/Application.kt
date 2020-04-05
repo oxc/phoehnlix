@@ -17,9 +17,13 @@ import materialui.styles.muitheme.options.MuiThemeOptions
 import materialui.styles.muitheme.options.mixins
 import materialui.styles.muitheme.options.palette
 import materialui.styles.palette.main
+import materialui.styles.palette.options.contrastText
+import materialui.styles.palette.options.dark
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.palette.options.main
 import materialui.styles.palette.options.primary
+import materialui.styles.palette.options.secondary
+import materialui.styles.palette.options.text
 import materialui.styles.palette.paper
 import react.RBuilder
 import react.RComponent
@@ -71,8 +75,17 @@ class Application : RComponent<RProps, AppState>() {
 
     val defaultTheme = createMuiTheme {
       palette {
+        text {
+          primary = Color("#757575")
+
+        }
         primary {
           main = Color("#b52319")
+        }
+        secondary {
+          main = Color("#A6A6A6")
+          dark = Color("#626262")
+          contrastText = Color.white
         }
       }
     }

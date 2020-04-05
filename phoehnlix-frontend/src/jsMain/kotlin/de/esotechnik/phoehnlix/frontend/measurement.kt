@@ -11,10 +11,10 @@ fun ProfileMeasurement.parseTimestamp() = date_fns.parseISO(timestamp)
 
 val MeasureType.title get() = when (this) {
   Weight -> "Gewicht"
-  BodyFatPercent -> "Fett%" // "#c6a92e"
-  BodyWaterPercent -> "Wasser%" // "#44a6ab"
-  MuscleMassPercent -> "Muskel%" // "#aa0a7c"
-  BodyMassIndex -> "BMI" // "#5896ce"
+  BodyFatPercent -> "Fett"
+  BodyWaterPercent -> "Wasser"
+  MuscleMassPercent -> "Muskel"
+  BodyMassIndex -> "BMI"
   MetabolicRate -> "Kalorien"
 }
 

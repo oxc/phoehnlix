@@ -6,6 +6,7 @@ import date_fns.differenceInSeconds
 import date_fns.isBefore
 import date_fns.locale.de
 import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
+import de.esotechnik.phoehnlix.apiservice.model.get
 import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.title
@@ -200,7 +201,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
                 labelString = "%"
               }
               ticks = new {
-                min = 0
+                min = 10
                 suggestedMax = 60
               }
               gridLines = new {
@@ -219,7 +220,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
                 suggestedMax = 3000
               }
               gridLines = new {
-                display = false
+                drawOnChartArea = false
               }
             }
           )
@@ -249,32 +250,14 @@ fun RBuilder.measurementChart(handler: RHandler<MeasurementChartProps>) = with(
 
 data class ChartMeasurement(
   val timestamp: Date,
-  val weight: Double,
-
-  val bodyFatPercent: Double? = null,
-  val bodyWaterPercent: Double? = null,
-  val muscleMassPercent: Double? = null,
-  val bodyMassIndex: Double? = null,
-  val metabolicRate: Double? = null
+  val values: Map<MeasureType, Double?> = mapOf()
 ) {
   constructor(measurement: ProfileMeasurement) : this(
     measurement.parseTimestamp(),
-    measurement.weight,
-    measurement.bodyFatPercent,
-    measurement.bodyWaterPercent,
-    measurement.muscleMassPercent,
-    measurement.bodyMassIndex,
-    measurement.metabolicRate
+    MEASURE_TYPES.associateWith { measurement[it] }
   )
-}
 
-private operator fun ChartMeasurement.get(measureType: MeasureType) = when (measureType) {
-  Weight -> weight
-  BodyFatPercent -> bodyFatPercent
-  BodyWaterPercent -> bodyWaterPercent
-  MuscleMassPercent -> muscleMassPercent
-  BodyMassIndex -> bodyMassIndex
-  MetabolicRate -> metabolicRate
+  operator fun get(measureType: MeasureType): Double? = values[measureType]
 }
 
 enum class DownsampleMethod {
@@ -303,10 +286,8 @@ private fun List<ChartMeasurement>.downsampleSimple(targetDatapointCount: Int): 
   // lazy hack: add a "terminal" entry that will be finalize the last bucket and then be ignored
   asSequence().plus(
     ChartMeasurement(
-      timestamp = addSeconds(
-        end,
-        2 * bucketSize
-      ), weight = Double.NaN
+      timestamp = addSeconds(end, 2 * bucketSize),
+      values = mapOf(Weight to Double.NaN)
     )
   )
     .forEachIndexed { index, measurement ->
@@ -315,12 +296,9 @@ private fun List<ChartMeasurement>.downsampleSimple(targetDatapointCount: Int): 
         val bucketEntries = subList(bucketStartIndex, index)
         buckets += ChartMeasurement(
           timestamp = bucketTime,
-          weight = bucketEntries.averageBy { it.weight }!!,
-          bodyFatPercent = bucketEntries.averageNotNullBy { it.bodyFatPercent },
-          bodyWaterPercent = bucketEntries.averageNotNullBy { it.bodyWaterPercent },
-          muscleMassPercent = bucketEntries.averageNotNullBy { it.muscleMassPercent },
-          bodyMassIndex = bucketEntries.averageNotNullBy { it.bodyMassIndex },
-          metabolicRate = bucketEntries.averageNotNullBy { it.metabolicRate }
+          values = MEASURE_TYPES.associateWith { type ->
+            bucketEntries.averageNotNullBy { it[type] }
+          }
         )
         // setup next bucket
         bucketTime = addSeconds(bucketTime, bucketSize)
@@ -339,7 +317,6 @@ private fun Array<Chart.ChartPoint>.add(value: Any?, timestamp: Date) {
   })
 }
 
-fun <T : Any> Iterable<T>.averageBy(selector: (T) -> Double) = map(selector).average().takeUnless { it.isNaN() }?.roundToDigits(1)
 fun <T : Any> Iterable<T>.averageNotNullBy(selector: (T) -> Double?) = mapNotNull(selector).average().takeUnless { it.isNaN() }?.roundToDigits(1)
 
 inline fun <T : Any> new(init: T.() -> Unit) = js("{}").unsafeCast<T>().apply(init)

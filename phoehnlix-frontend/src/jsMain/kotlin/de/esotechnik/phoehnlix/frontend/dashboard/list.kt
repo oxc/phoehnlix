@@ -76,7 +76,7 @@ class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
                 +(format(timestamp, "HH.mm", formatOptions) + " Uhr")
               }
             }
-            bullets(entry, MEASURE_TYPES, props) { classes, content ->
+            bullets(entry, MEASURE_TYPES, props) { _, classes, content ->
               tdCell(TableCellStyle.root to bulletCell) {
                 div(classes) {
                   content()

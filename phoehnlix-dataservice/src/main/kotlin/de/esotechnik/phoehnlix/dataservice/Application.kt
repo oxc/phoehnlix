@@ -3,9 +3,20 @@ package de.esotechnik.phoehnlix.dataservice
 import de.esotechnik.phoehnlix.data.insertNewMeasurement
 import de.esotechnik.phoehnlix.data.setupDatabase
 import io.ktor.application.Application
+import io.ktor.application.application
 import io.ktor.application.call
+import io.ktor.application.log
+import io.ktor.client.HttpClient
+import io.ktor.client.features.logging.DEFAULT
+import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.features.logging.Logger
+import io.ktor.client.features.logging.Logging
+import io.ktor.client.request.get
 import io.ktor.features.BadRequestException
 import io.ktor.http.ContentType
+import io.ktor.http.takeFrom
+import io.ktor.request.ApplicationRequest
+import io.ktor.request.uri
 import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.get
@@ -68,6 +79,31 @@ private fun Route.dataservice() {
       it.signHexString() + "\n"
     }
 
+    val upstreamResponse = upstreamRequest(call.request, param)
+    application.log.info("""Handled WebConnect request:
+      |  Bridge Request:     $param
+      |  Our Response:       ${response?.trim() ?: ""}
+      |  Upstream Response:  ${upstreamResponse.trim()}
+    """.replaceIndentByMargin())
+
     call.respondText(response ?: "", contentType = ContentType.Text.Plain)
+  }
+}
+
+suspend fun upstreamRequest(request: ApplicationRequest, data: String): String {
+  val httpClient = HttpClient {
+    install(Logging) {
+      logger = Logger.DEFAULT
+      level = LogLevel.ALL
+    }
+  }
+  return httpClient.get {
+    url.takeFrom(request.uri)
+    url {
+      // We have to use the IP, because the hostname should resolve to us in this net
+      host = "213.174.39.77"
+    }
+    headers.clear()
+    headers.appendAll(request.headers)
   }
 }

@@ -51,16 +51,16 @@ import react.dom.sup
  */
 fun RElementBuilder<RProps>.bullets(
   entry: ProfileMeasurement, measureTypes: List<MeasureType>,
-  component: RBuilder.(classNames: String, content: RBuilder.() -> Unit) -> ReactElement
+  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
 ) = bullets(entry, measureTypes, attrs, component)
 
 fun RBuilder.bullets(
   entry: ProfileMeasurement, measureTypes: List<MeasureType>, props: RProps,
-  component: RBuilder.(classNames: String, content: RBuilder.() -> Unit) -> ReactElement
+  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
 ) {
   val measurementBullet by props.styleSets
   measureTypes.forEach { type ->
-    component("$measurementBullet ${type.cssClass}") {
+    component(type, "$measurementBullet ${type.cssClass}") {
       span {
         val value = entry[type]
         if (value != null) {
@@ -90,15 +90,15 @@ fun StylesSet.makeBulletStyles(diameter: LinearDimension, fontSize: LinearDimens
     textAlign = TextAlign.center
     verticalAlign = VerticalAlign.baseline
     fontWeight = FontWeight.bold
-    "& sup" {
+    descendants("sup") {
       fontWeight = FontWeight.normal
       lineHeight = 0.px.lh
     }
     MeasureType.values().forEach { type ->
-      "&.${type.cssClass}" {
+      +type.cssClass {
         measurementColor = Color(type.color)
         if ((type.unit?.length ?: 0) > 2) {
-          "& sup" {
+          descendants("sup") {
             display = Display.block
             marginTop = -fontSize
             verticalAlign = VerticalAlign.top
