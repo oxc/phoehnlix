@@ -65,5 +65,5 @@ class StyleSetDelegate(private val classNames: String) {
   operator fun getValue(receiver: Any?, property: KProperty<*>) = classNames
 }
 
-// for use with childWithStyles(withTheme=true)
+// for use with withStyles(withTheme=true)
 val RProps.theme get() = asDynamic()["theme"].unsafeCast<MuiTheme>()

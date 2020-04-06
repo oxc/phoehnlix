@@ -16,7 +16,7 @@ import react.createContext
 import react.createElement
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 
 val ApiContext = createContext<ApiClient>()

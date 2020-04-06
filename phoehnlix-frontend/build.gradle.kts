@@ -57,6 +57,7 @@ kotlin {
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
+        implementation("org.jetbrains:kotlin-extensions:1.0.1-pre.94-kotlin-1.3.70")
 
         //implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")

@@ -50,12 +50,12 @@ import react.dom.sup
  * @author Bernhard Frauendienst
  */
 fun RElementBuilder<RProps>.bullets(
-  entry: ProfileMeasurement, measureTypes: List<MeasureType>,
+  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>,
   component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
 ) = bullets(entry, measureTypes, attrs, component)
 
 fun RBuilder.bullets(
-  entry: ProfileMeasurement, measureTypes: List<MeasureType>, props: RProps,
+  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>, props: RProps,
   component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
 ) {
   val measurementBullet by props.styleSets
@@ -78,10 +78,11 @@ fun RBuilder.bullets(
 
 fun StylesSet.makeBulletStyles(diameter: LinearDimension, fontSize: LinearDimension) {
   "measurementBullet" {
+    circleDiameter = diameter
+
     overflow = Overflow.hidden
     color = Color.white
     backgroundColor = measurementColor
-    circleDiameter = diameter
     width = circleDiameter
     height = circleDiameter
     borderRadius = 50.pct
@@ -111,4 +112,4 @@ fun StylesSet.makeBulletStyles(diameter: LinearDimension, fontSize: LinearDimens
 }
 
 
-private val MeasureType.cssClass get() = name.decapitalize().hyphenize()
+val MeasureType.cssClass get() = name.decapitalize().hyphenize()

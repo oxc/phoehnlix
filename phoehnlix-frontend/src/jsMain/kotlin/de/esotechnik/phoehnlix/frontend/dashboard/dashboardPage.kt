@@ -6,25 +6,30 @@ import date_fns.locale.de
 import de.esotechnik.phoehnlix.apiservice.model.Profile
 import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.api
+import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.dashboard.DashboardViewType.*
 import de.esotechnik.phoehnlix.frontend.logoMenu
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.title
 import de.esotechnik.phoehnlix.frontend.useApiContext
+import de.esotechnik.phoehnlix.frontend.util.circleDiameter
+import de.esotechnik.phoehnlix.frontend.util.measurementColor
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.model.MeasureType
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.css.Align
+import kotlinx.css.Color
 import kotlinx.css.Display
 import kotlinx.css.FlexDirection
 import kotlinx.css.JustifyContent
 import kotlinx.css.TextAlign
-import kotlinx.css.alignContent
 import kotlinx.css.alignItems
+import kotlinx.css.backgroundColor
+import kotlinx.css.boxShadow
+import kotlinx.css.color
 import kotlinx.css.display
 import kotlinx.css.em
 import kotlinx.css.flexDirection
@@ -36,44 +41,43 @@ import kotlinx.css.marginLeft
 import kotlinx.css.marginRight
 import kotlinx.css.marginTop
 import kotlinx.css.padding
-import kotlinx.css.paddingTop
+import kotlinx.css.properties.BoxShadows
 import kotlinx.css.px
 import kotlinx.css.textAlign
-import kotlinx.css.vh
 import kotlinx.css.vw
 import kotlinx.css.width
 import kotlinx.html.H2
-import kotlinx.html.H6
+import kotlinx.html.Tag
 import kotlinx.html.js.onClickFunction
-import materialui.components.button.enums.ButtonColor
-import materialui.components.icon.icon
-import materialui.components.iconbutton.iconButton
 import materialui.components.button.button
+import materialui.components.button.enums.ButtonColor
 import materialui.components.button.enums.ButtonVariant
 import materialui.components.buttongroup.buttonGroup
+import materialui.components.buttongroup.enums.ButtonGroupStyle
+import materialui.components.icon.icon
+import materialui.components.iconbutton.enums.IconButtonStyle
+import materialui.components.iconbutton.iconButton
 import materialui.components.paper.paper
 import materialui.components.typography.enums.TypographyAlign
 import materialui.components.typography.enums.TypographyStyle
 import materialui.components.typography.enums.TypographyVariant
 import materialui.components.typography.typography
-import materialui.lab.components.skeleton.enums.SkeletonAnimation
 import materialui.lab.components.skeleton.enums.SkeletonStyle
 import materialui.lab.components.skeleton.enums.SkeletonVariant
 import materialui.lab.components.skeleton.skeleton
 import materialui.styles.StylesSet
-import materialui.styles.childWithStyles
+import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
 import react.RHandler
 import react.RProps
 import react.RState
 import react.dom.div
-import react.dom.span
 import react.setState
 import kotlin.collections.List
 
 /**
- * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
+ * @author Bernhard Frauendienst
  */
 interface DashboardProps : RProps {
   var profile: Profile?
@@ -82,6 +86,8 @@ interface DashboardProps : RProps {
 interface DashboardState : RState {
   var view: DashboardViewType
   var measurements: List<ProfileMeasurement>
+  var measureTypes: List<MeasureType>
+  var visibleMeasureTypes: Set<MeasureType>
 }
 
 enum class DashboardViewType {
@@ -93,6 +99,8 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     view = Loading
 
     measurements = listOf()
+    measureTypes = MeasureType.values().asList()
+    visibleMeasureTypes = measureTypes.toSet()
   }
 
   override fun componentDidMount() {
@@ -128,21 +136,20 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     logoMenu {
       iconButton {
         attrs {
+          attrs["edge"] = "end"
           color = ButtonColor.inherit
           onClickFunction = {
             setState {
               view = when (state.view) {
-                Graph -> Loading // should be List
+                Graph -> List
                 else -> Graph
               }
             }
           }
-          /*
-          disabled = when (state.view) {
+          (this as Tag).disabled = when (state.view) {
             Graph, List -> false
             else -> true
           }
-           */
         }
         icon {
           +"visibility"
@@ -163,8 +170,6 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     }
   }
 
-  private val measureTypes = MeasureType.values().toList()
-
   private fun RBuilder.graphSkeletonFragment() {
     val skeletonContainer by styleSets
     val skeletonHeadline by styleSets
@@ -174,13 +179,13 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     val skeletonTimeButton by styleSets
     val skeletonGraph by styleSets
 
-    div (skeletonContainer) {
+    div(skeletonContainer) {
       skeleton(SkeletonStyle.root to skeletonHeadline) {
         attrs.variant = SkeletonVariant.text
       }
     }
     div(skeletonContainer) {
-      repeat(measureTypes.size) {
+      repeat(state.measureTypes.size) {
         div(skeletonBulletContainer) {
           skeleton(SkeletonStyle.root to skeletonBulletCaption) {
             attrs.variant = SkeletonVariant.text
@@ -205,43 +210,62 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         attrs.variant = SkeletonVariant.rect
       }
     }
-  }
-
-  private fun RBuilder.graphFragment() {
-    state.measurements.last().let { entry ->
-      val timestamp = entry.parseTimestamp()
-      val formatOptions = new<FormatOptions> {
-        locale = de
-      }
-      val graphHeadline by styleSets
-      val bulletGroup by styleSets
-      val bulletContainer by styleSets
-      val bulletCaption by styleSets
-
-      typography(TypographyStyle.root to graphHeadline, factory = { H2(mapOf(), it) }) {
-        attrs.variant = TypographyVariant.subtitle1
-        attrs.align = TypographyAlign.center
-        +"Ihre Messwerte vom "
-        +format(timestamp, "dd.MM.yyyy", formatOptions)
-      }
-      div(bulletGroup) {
-        bullets(entry, measureTypes, props) { measureType, classes, content ->
-          div(bulletContainer) {
-            typography(TypographyStyle.root to bulletCaption) {
-              attrs.variant = TypographyVariant.caption
-              +measureType.title
-            }
-            div(classes) {
-              content()
-            }
+    div(skeletonContainer) {
+      repeat(state.measureTypes.size) {
+        div(skeletonBulletContainer) {
+          skeleton(SkeletonStyle.root to skeletonBulletCaption) {
+            attrs.variant = SkeletonVariant.text
+          }
+          skeleton(SkeletonStyle.root to skeletonBullet) {
+            attrs.variant = SkeletonVariant.circle
           }
         }
       }
     }
-    buttonGroup {
+  }
+
+  private fun RBuilder.graphFragment() {
+    val graphHeadline by styleSets
+    val bulletGroup by styleSets
+    val bulletContainer by styleSets
+    val bulletCaption by styleSets
+    val timeButton by styleSets
+    val graphContainer by styleSets
+    val toggleButton by styleSets
+    val unchecked by styleSets
+
+    val measureTypes = state.measureTypes
+    val visibleMeasureTypes = state.visibleMeasureTypes
+    val latest = state.measurements.last()
+
+    typography(TypographyStyle.root to graphHeadline, factory = { H2(mapOf(), it) }) {
+      attrs.variant = TypographyVariant.subtitle1
+      attrs.align = TypographyAlign.center
+
+      val timestamp = latest.parseTimestamp()
+      val formatOptions = new<FormatOptions> {
+        locale = de
+      }
+
+      +"Ihre Messwerte vom "
+      +format(timestamp, "dd.MM.yyyy", formatOptions)
+    }
+    div(bulletGroup) {
+      bullets(latest, measureTypes, props) { measureType, classes, content ->
+        div(bulletContainer) {
+          typography(TypographyStyle.root to bulletCaption) {
+            attrs.variant = TypographyVariant.caption
+            +measureType.title
+          }
+          div(classes) {
+            content()
+          }
+        }
+      }
+    }
+    buttonGroup(ButtonGroupStyle.groupedContained to timeButton) {
       attrs {
         fullWidth = true
-        color = ButtonColor.secondary
         variant = ButtonVariant.contained
       }
       button {
@@ -260,11 +284,55 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         +"…"
       }
     }
-    measurementChart {
-      attrs.measureTypes = measureTypes
-      attrs.measurements = state.measurements
-      attrs.targetWeight = props.profile?.targetWeight
+    div(graphContainer) {
+      measurementChart {
+        attrs.measureTypes = measureTypes
+        attrs.visibleMeasureTypes = visibleMeasureTypes
+        attrs.measurements = state.measurements
+        attrs.targetWeight = props.profile?.targetWeight
+      }
     }
+    div(bulletGroup) {
+      measureTypes.forEach { measureType ->
+        div(bulletContainer) {
+          typography(TypographyStyle.root to bulletCaption) {
+            attrs.variant = TypographyVariant.caption
+            +measureType.title
+          }
+
+          val uncheckedClass = if (measureType !in visibleMeasureTypes) unchecked else ""
+          iconButton(IconButtonStyle.root to "$toggleButton ${measureType.cssClass} $uncheckedClass") {
+            attrs {
+              onClickFunction = {
+                toggleVisibleType(measureType)
+              }
+            }
+            icon {
+              +when (measureType) {
+                MeasureType.Weight -> "speed"
+                MeasureType.BodyFatPercent -> "scatter_plot"
+                MeasureType.BodyWaterPercent -> "waves"
+                MeasureType.MuscleMassPercent -> "fitness_center"
+                MeasureType.BodyMassIndex -> "image_aspect_ratio"
+                MeasureType.MetabolicRate -> "whatshot"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private fun toggleVisibleType(measureType: MeasureType) {
+    setState(partialState = new {
+        visibleMeasureTypes = state.visibleMeasureTypes.withElementToggled(measureType)
+    })
+  }
+
+  private fun <T> Set<T>.withElementToggled(element: T): Set<T> = if (element in this) {
+    this - element
+  } else {
+    this + element
   }
 
   private fun RBuilder.listFragment() {
@@ -276,6 +344,8 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
   companion object {
 
     private val styleSets: StylesSet.() -> Unit = {
+      val diameter = 100.vw.div(MeasureType.values().size + 1)
+      // graph
       "graphHeadline" {
         textAlign = TextAlign.center
         marginTop = 5.px
@@ -293,9 +363,42 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
       "bulletCaption" {
 
       }
-      val diameter = 100.vw.div(MeasureType.values().size + 1)
       makeBulletStyles(diameter = diameter, fontSize = 16.px)
+      "timeButton" {
+        boxShadow = BoxShadows.none
+        color = Color.white
+        backgroundColor = Color("#A6A6A6")
+        hover {
+          boxShadow = BoxShadows.none
+          backgroundColor = Color("#626262")
+        }
+      }
+      "graphContainer" {
+        padding(10.px, 0.px)
+      }
+      "toggleButton" {
+        circleDiameter = diameter
+        width = circleDiameter
+        height = circleDiameter
+        backgroundColor = measurementColor
+        color = Color.white
+        MeasureType.values().forEach { type ->
+          +type.cssClass {
+            measurementColor = Color(type.color)
+          }
+        }
+        hover {
+          backgroundColor = measurementColor
+          color = Color.white
+        }
+        "&\$unchecked" {
+          backgroundColor = Color("#EAEAEA")
+          color = Color("#A8A8A8")
+        }
+      }
+      "unchecked" {}
 
+      // skeleton
       "skeletonContainer" {
         display = Display.flex
         justifyContent = JustifyContent.spaceEvenly
@@ -338,8 +441,10 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
       useApiContext<DashboardComponent>()
     }
 
+    private val styledComponent = withStyles(DashboardComponent::class, styleSets)
+
     fun RBuilder.render(handler: RHandler<DashboardProps>) =
-      childWithStyles(DashboardComponent::class, styleSets, handler = handler)
+      styledComponent(handler)
   }
 }
 

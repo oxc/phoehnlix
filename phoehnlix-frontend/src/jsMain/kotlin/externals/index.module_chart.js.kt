@@ -43,12 +43,12 @@ external open class Chart {
     constructor(context: ArrayLike<dynamic /* CanvasRenderingContext2D | HTMLCanvasElement */>, options: ChartConfiguration)
     open var config: ChartConfiguration
     open var data: ChartData
-    open var destroy: () -> Any
-    open var update: (__0: ChartUpdateProps) -> Any
-    open var render: (__0: ChartRenderProps) -> Any
-    open var stop: () -> Chart
-    open var resize: () -> Chart
-    open var clear: () -> Chart
+    fun destroy(): Any
+    fun update(__0: ChartUpdateProps = definedExternally): Any
+    fun render(__0: ChartRenderProps = definedExternally): Any
+    fun stop(): Chart
+    fun resize(): Chart
+    fun clear(): Chart
     open var toBase64Image: () -> String
     open var generateLegend: () -> Any
     open var getElementAtEvent: (e: Any) -> dynamic
