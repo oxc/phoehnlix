@@ -14,17 +14,22 @@ import de.esotechnik.phoehnlix.frontend.util.theme
 import de.esotechnik.phoehnlix.model.MeasureType
 import de.esotechnik.phoehnlix.model.MeasureType.*
 import de.esotechnik.phoehnlix.util.roundToDigits
+import kotlinext.js.Object
 import kotlinx.html.id
 import materialui.styles.StylesSet
-import materialui.styles.childWithStyles
-import materialui.styles.muitheme.MuiTheme
 import materialui.styles.palette.primary
+import materialui.styles.withStyles
+import org.w3c.dom.BOTTOM
 import org.w3c.dom.CanvasRenderingContext2D
+import org.w3c.dom.CanvasTextAlign
 import org.w3c.dom.HTMLCanvasElement
+import org.w3c.dom.CanvasTextBaseline
+import org.w3c.dom.LEFT
+import org.w3c.dom.RIGHT
 import react.RBuilder
-import react.RComponent
 import react.RHandler
 import react.RProps
+import react.RPureComponent
 import react.RState
 import react.RStatics
 import react.ReactElement
@@ -39,12 +44,10 @@ external val chartsJsAdapterDateFns: dynamic
 @JsModule("chartjs-plugin-downsample")
 external val chartjsPluginDownsample: dynamic
 
-private const val POINT_RADIUS = 6
-private const val FONT_SIZE = 20
-
 interface MeasurementChartProps : RProps {
   var measurements: List<ProfileMeasurement>
   var measureTypes: List<MeasureType>
+  var visibleMeasureTypes: Set<MeasureType>
   var targetWeight: Double?
   var targetDatapointCount: Int
   var downsampleMethod: DownsampleMethod
@@ -59,12 +62,13 @@ private val MEASURE_TYPES = values().toList()
 /**
  * @author Bernhard Frauendienst
  */
-class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<MeasurementChartProps, MeasurementChartState>(props) {
+class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<MeasurementChartProps, MeasurementChartState>(props) {
   companion object : RStatics<MeasurementChartProps, MeasurementChartState, MeasurementChartComponent, Nothing>(
     MeasurementChartComponent::class) {
     init {
       defaultProps = new {
         measureTypes = MEASURE_TYPES
+        visibleMeasureTypes = MEASURE_TYPES.toSet()
         targetDatapointCount = 13
         downsampleMethod = DownsampleMethod.Simple
       }
@@ -77,13 +81,15 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
     private val styleSets: StylesSet.() -> Unit = {
     }
 
+    private val styledComponent = withStyles(MeasurementChartComponent::class, styleSets, withTheme = true)
+
     fun RBuilder.render(handler: RHandler<MeasurementChartProps>): ReactElement =
-      childWithStyles(MeasurementChartComponent::class, styleSets, withTheme = true) {
-        this.handler()
-      }
+      styledComponent(handler)
   }
 
   private val canvasRef = createRef<HTMLCanvasElement>()
+
+  private var chartInstance: Chart? = null
 
   override fun RBuilder.render() {
     div {
@@ -107,19 +113,47 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
     }
   }
 
-  override fun componentDidMount() {
-    createChart()
-  }
+  override fun componentDidMount() = createChart()
 
   override fun componentDidUpdate(prevProps: MeasurementChartProps, prevState: MeasurementChartState, snapshot: Any) {
-    createChart()
+    if (!applyInplaceUpdate(prevProps, prevState)) {
+      destroyChart()
+      createChart()
+    }
   }
 
+  private fun applyInplaceUpdate(prevProps: MeasurementChartProps, prevState: MeasurementChartState): Boolean {
+    console.log("Trying to apply inplace update (%o, %o) -> (%o, %o)", prevProps, prevState, props, state)
+    val chartInstance = this.chartInstance ?: return false.also { console.log("no chart instance.") }
+    if (state !== prevState) return false.also { console.log("state changed.") }
+    if (props === prevProps) return true // shouldn't happen
+    if (props.downsampleMethod != prevProps.downsampleMethod) return false.also { console.log("downsample changed.") }
+    if (props.measureTypes != prevProps.measureTypes) return false.also { console.log("measureTypes changed.") }
+    if (props.targetDatapointCount != prevProps.targetDatapointCount) return false.also { console.log("targetDatapointCount changed.") }
+    if (props.measurements != prevProps.measurements) return false.also { console.log("measurements changed.") }
+    if (props.targetWeight != prevProps.targetWeight) return false.also { console.log("targetWeight changed.") }
+    if (props.visibleMeasureTypes != prevProps.visibleMeasureTypes) {
+      chartInstance.data.datasets?.forEach { dataset ->
+        dataset.hidden = dataset.measureType !in props.visibleMeasureTypes
+      }
+    }
+    chartInstance.update(new { duration = 0 })
+    return true
+  }
+
+  override fun componentWillUnmount() = destroyChart()
+
   private val ctx get() = canvasRef.current!!.getContext("2d") as CanvasRenderingContext2D
+
+  private fun destroyChart() {
+    chartInstance?.destroy()
+    chartInstance = null
+  }
 
   private fun createChart() {
     val entries = state.entries.takeIf { it.isNotEmpty() } ?: return
     val measureTypes = props.measureTypes
+    val visibleMeasureTypes = props.visibleMeasureTypes
     val datasetPoints = measureTypes.associateWith { emptyArray<Chart.ChartPoint>() }
     entries.forEach { entry ->
       val timestamp = entry.timestamp
@@ -129,46 +163,52 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
     }
     val datasetConfigs = measureTypes.mapTo(mutableListOf()) { measureType ->
       new<Chart.ChartDataSets> {
+        this.measureType = measureType
+        hidden = measureType !in visibleMeasureTypes
         type = "line"
         label = measureType.title
         data = datasetPoints[measureType]
-        yAxisID = when (measureType) {
-          Weight -> "weight"
-          MetabolicRate -> "calories"
-          else -> "percent"
-        }
+        yAxisID = measureType.yAxisId
         borderColor = measureType.color
         pointBackgroundColor = borderColor
         fill = false
-        pointRadius = POINT_RADIUS
+        borderWidth = 2
+        pointRadius = 2
       }
     }
-    props.targetWeight?.let { targetWeight ->
-      val datasetPos = datasetConfigs.indexOfFirst { it.yAxisID == "weight" } + 1
-      if (datasetPos == 0) return@let
-
-      val targetWeights = emptyArray<Chart.ChartPoint>()
-      targetWeights.add(targetWeight, entries.first().timestamp)
-      targetWeights.add(targetWeight, entries.last().timestamp)
-      datasetConfigs.add(datasetPos, new {
-        type = "line"
-        label = "Zielgewicht"
-        data = targetWeights
-        yAxisID = "weight"
-        borderColor = Weight.color
-        pointBackgroundColor = borderColor
-        fill = false
-        pointRadius = 0
-        pointStyle = "line"
-      })
+    if (Weight in measureTypes) {
+      props.targetWeight?.let { targetWeight ->
+        val targetWeights = emptyArray<Chart.ChartPoint>()
+        targetWeights.add(targetWeight, entries.first().timestamp)
+        targetWeights.add(targetWeight, entries.last().timestamp)
+        datasetConfigs.add(new {
+          measureType = Weight
+          hidden = Weight !in visibleMeasureTypes
+          type = "line"
+          label = "Zielgewicht"
+          data = targetWeights
+          yAxisID = "weight"
+          borderColor = Weight.color
+          pointBackgroundColor = borderColor
+          fill = false
+          borderWidth = 2
+          pointRadius = 0
+          pointStyle = "line"
+        })
+      }
     }
 
-    val chart = Chart(ctx, new {
+    this.chartInstance = Chart(ctx, new {
       type = "line"
       data = new {
         datasets = datasetConfigs.toTypedArray()
       }
       options = new {
+        layout = new {
+          padding = new<Chart.ChartLayoutPaddingObject> {
+            top = 30
+          }
+        }
         scales = new<Chart.ChartScales<*>> {
           xAxes = arrayOf(new<Chart.ChartXAxe> {
             type = "time"
@@ -183,7 +223,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
               type = "linear"
               position = "left"
               scaleLabel = new {
-                display = true
                 labelString = "kg"
               }
               props.targetWeight?.let { targetWeight ->
@@ -197,7 +236,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
               type = "linear"
               position = "right"
               scaleLabel = new {
-                display = true
                 labelString = "%"
               }
               ticks = new {
@@ -212,7 +250,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
               type = "linear"
               position = "right"
               scaleLabel = new {
-                display = true
                 labelString = "kcal"
               }
               ticks = new {
@@ -220,16 +257,14 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
                 suggestedMax = 3000
               }
               gridLines = new {
+                drawBorder = false
                 drawOnChartArea = false
               }
             }
           )
         }
         legend = new {
-          position = "bottom"
-          labels = new {
-            usePointStyle = true
-          }
+          display = false
         }
         if (props.downsampleMethod == DownsampleMethod.LTTB) {
           asDynamic().downsample = new<dynamic> {
@@ -238,9 +273,68 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RComponent<Measu
           }
         }
       }
+      plugins = arrayOf(
+        TopAxisLabelPlugin.plugin
+      )
     })
   }
+
 }
+
+private val MeasureType.yAxisId get() = when (this) {
+  Weight -> "weight"
+  MetabolicRate -> "calories"
+  else -> "percent"
+}
+
+object TopAxisLabelPlugin {
+  fun afterDatasetsDraw(chart: dynamic, options: dynamic) {
+    val helpers = Chart.helpers.asDynamic()
+    val defaults = Chart.defaults.asDynamic()
+
+    for (scaleId in Object.keys(chart.scales)) {
+      val scale = chart.scales[scaleId]
+      val scaleLabel = scale.options.scaleLabel
+      if (scale.isHorizontal() || scaleLabel.display) {
+        continue
+      }
+
+      val scaleLabelFontColor = helpers.valueOrDefault(scaleLabel.fontColor, defaults.global.defaultFontColor)
+      val scaleLabelFont = helpers.options._parseFont(scaleLabel)
+      val scaleLabelPadding = helpers.options.toPadding(scaleLabel.padding)
+
+      val y = scale.top - scale.paddingTop - scaleLabelPadding.bottom
+      val x: dynamic
+      val align: CanvasTextAlign
+
+      if (scale.position == "left") {
+        x = (scale.right + scale._labelItems[0].x) / 2
+        align = CanvasTextAlign.RIGHT
+      } else {
+        x = (scale.left + scale._labelItems[0].x) / 2
+        align = CanvasTextAlign.LEFT
+      }
+
+      val ctx = scale.ctx.unsafeCast<CanvasRenderingContext2D>()
+      ctx.save()
+      ctx.textAlign = align
+      ctx.textBaseline = CanvasTextBaseline.BOTTOM
+      ctx.fillStyle = scaleLabelFontColor // render in correct colour
+      ctx.font = scaleLabelFont.string
+      ctx.fillText(scaleLabel.labelString, x, y)
+      ctx.restore()
+    }
+  }
+
+  val plugin: Chart.PluginServiceRegistrationOptions = new<dynamic> {
+    afterDatasetsDraw = ::afterDatasetsDraw
+  }.unsafeCast<Chart.PluginServiceRegistrationOptions>()
+}
+
+var Chart.ChartDataSets.measureType: MeasureType
+  get() = asDynamic().measureType
+  set(value) { asDynamic().measureType = value }
+
 
 fun RBuilder.measurementChart(handler: RHandler<MeasurementChartProps>) = with(
   MeasurementChartComponent

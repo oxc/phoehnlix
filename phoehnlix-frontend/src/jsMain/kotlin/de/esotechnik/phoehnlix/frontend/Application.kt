@@ -82,11 +82,6 @@ class Application : RComponent<RProps, AppState>() {
         primary {
           main = Color("#b52319")
         }
-        secondary {
-          main = Color("#A6A6A6")
-          dark = Color("#626262")
-          contrastText = Color.white
-        }
       }
     }
 
