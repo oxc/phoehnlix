@@ -45,6 +45,7 @@ external val chartsJsAdapterDateFns: dynamic
 external val chartjsPluginDownsample: dynamic
 
 interface MeasurementChartProps : RProps {
+  var skipUpdate: Boolean
   var measurements: List<ChartMeasurement>
   var measureTypes: List<MeasureType>
   var visibleMeasureTypes: Set<MeasureType>
@@ -110,7 +111,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
   override fun componentDidMount() = createChart()
 
   override fun componentDidUpdate(prevProps: MeasurementChartProps, prevState: MeasurementChartState, snapshot: Any) {
-    if (!applyInplaceUpdate(prevProps, prevState)) {
+    if (!applyInplaceUpdate(prevProps, prevState) && !props.skipUpdate) {
       destroyChart()
       createChart()
     }

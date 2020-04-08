@@ -9,10 +9,13 @@ import de.esotechnik.phoehnlix.frontend.util.circleDiameter
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.model.MeasureType
 import kotlinx.css.Color
+import kotlinx.css.TextAlign
 import kotlinx.css.backgroundColor
 import kotlinx.css.padding
+import kotlinx.css.paddingLeft
 import kotlinx.css.paddingRight
 import kotlinx.css.px
+import kotlinx.css.textAlign
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
 import materialui.components.table.TableProps
@@ -82,20 +85,22 @@ class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
 private val styledComponent = withStyles(MeasurementListComponent::class, {
   "root" {
     circleDiameter = 40.px
+    backgroundColor = Color("#E6E6E6")
   }
   "bulletRow" {
     children("td") {
-      padding(vertical = 2.px)
-      nthOfType("2") {
-        paddingRight = 10.px
+      padding(2.px)
+      textAlign = TextAlign.center
+      firstOfType {
+        backgroundColor = Color.white
+        padding(horizontal = 10.px)
       }
-      !firstOfType {
-        padding(horizontal = 2.px)
-        backgroundColor = Color("#E6E6E6")
+      nthOfType("2") {
+        paddingLeft = 10.px
       }
     }
   }
-  makeBulletStyles(fontSize = 12.px)
+  makeBulletStyles()
 })
 
 fun RBuilder.measurementList(handler: RHandler<MeasurementListProps>) =
