@@ -17,10 +17,13 @@ import materialui.styles.muitheme.options.MuiThemeOptions
 import materialui.styles.muitheme.options.mixins
 import materialui.styles.muitheme.options.palette
 import materialui.styles.palette.main
+import materialui.styles.palette.options.background
 import materialui.styles.palette.options.contrastText
 import materialui.styles.palette.options.dark
+import materialui.styles.palette.options.default
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.palette.options.main
+import materialui.styles.palette.options.paper
 import materialui.styles.palette.options.primary
 import materialui.styles.palette.options.secondary
 import materialui.styles.palette.options.text
@@ -65,14 +68,6 @@ class Application : RComponent<RProps, AppState>() {
       useApiContext<Application>()
     }
 
-    private fun MuiThemeOptions.baseTheme() {
-      palette {
-        primary {
-          main = Color("#b52319")
-        }
-      }
-    }
-
     val defaultTheme = createMuiTheme {
       palette {
         text {
@@ -86,6 +81,11 @@ class Application : RComponent<RProps, AppState>() {
     }
 
     val whiteToolbarTheme = createMuiTheme {
+      palette {
+        background {
+          default = paper
+        }
+      }
       mixins {
         toolbar = CSSBuilder().apply {
           backgroundColor = defaultTheme.palette.background.paper

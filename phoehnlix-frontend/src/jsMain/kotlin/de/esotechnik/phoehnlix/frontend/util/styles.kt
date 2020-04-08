@@ -9,10 +9,14 @@ import kotlinx.css.RuleSet
 import kotlinx.css.hyphenize
 import kotlinx.css.toCustomProperty
 import kotlinx.html.Tag
+import materialui.styles.StylesSet
 import materialui.styles.muitheme.MuiTheme
+import materialui.styles.withStyles
 import react.Component
+import react.RClass
 import react.RProps
 import react.dom.jsStyle
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 /**

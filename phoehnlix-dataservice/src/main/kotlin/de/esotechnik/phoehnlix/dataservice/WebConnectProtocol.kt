@@ -3,6 +3,7 @@ package de.esotechnik.phoehnlix.dataservice
 import de.esotechnik.phoehnlix.model.*
 import de.esotechnik.phoehnlix.util.toBigInt
 import kotlinx.atomicfu.atomic
+import java.math.BigInteger
 import java.time.Instant
 
 private val REQUEST_24: Byte = 0x24

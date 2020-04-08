@@ -76,10 +76,8 @@ fun RBuilder.bullets(
   }
 }
 
-fun StylesSet.makeBulletStyles(diameter: LinearDimension, fontSize: LinearDimension) {
+fun StylesSet.makeBulletStyles(fontSize: LinearDimension) {
   "measurementBullet" {
-    circleDiameter = diameter
-
     overflow = Overflow.hidden
     color = Color.white
     backgroundColor = measurementColor

@@ -16,6 +16,9 @@ repositories {
 
 kotlin {
   sourceSets {
+    all {
+      languageSettings.enableLanguageFeature("NewInference")
+    }
     jvm()
     js {
       useCommonJs()
