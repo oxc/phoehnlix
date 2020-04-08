@@ -15,6 +15,7 @@ import de.esotechnik.phoehnlix.frontend.util.measurementColor
 import de.esotechnik.phoehnlix.frontend.util.memoizeOne
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.model.MeasureType
+import kotlinx.atomicfu.atomic
 import kotlinx.css.Align
 import kotlinx.css.Color
 import kotlinx.css.Display
@@ -58,7 +59,6 @@ import materialui.components.typography.enums.TypographyAlign
 import materialui.components.typography.enums.TypographyStyle
 import materialui.components.typography.enums.TypographyVariant
 import materialui.components.typography.typography
-import materialui.styles.StylesSet
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
@@ -73,7 +73,7 @@ import react.setState
  */
 
 interface GraphProps : RProps {
-  var requestMoreData: (dateRange: DateRange) -> Boolean
+  var requestMoreData: (dateRange: DateRange, callback: (willUpdate: Boolean) -> Unit) -> Unit
   var profile: Profile?
   var measurements: List<ProfileMeasurement>
   var measureTypes: List<MeasureType>
@@ -81,11 +81,13 @@ interface GraphProps : RProps {
 
 interface GraphState : RState {
   var selectedRange: DateRange
+  var targetDatapointCount: Int
   var visibleMeasureTypes: Set<MeasureType>
+  var waitingForData: Boolean
 }
 
-enum class DashboardDateRange(val dateRange: DateRange) {
-  Week(Weeks(1)), Month(Months(1)), HalfYear(Months(6)), Year(Years(1)), Custom(Everything)
+enum class DashboardDateRange(val dateRange: DateRange, val dataPointCount: Int) {
+  Week(Weeks(1), 7), Month(Months(1), 10), HalfYear(Months(6), 13), Year(Years(1), 13), Custom(Everything, 13)
 }
 
 fun DateRange.toDashboardDateRange(): DashboardDateRange {
@@ -101,12 +103,14 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
   override fun GraphState.init(props: GraphProps) {
     visibleMeasureTypes = props.measureTypes.toSet() - MeasureType.MetabolicRate
     selectedRange = DashboardDateRange.Week.dateRange
+    targetDatapointCount = DashboardDateRange.Week.dataPointCount
   }
 
   private val availableMeasurements by memoizeOne({ it.map(::ChartMeasurement)}) { this.props.measurements }
   private val selectedMeasurements by memoizeOne({ p1, p2 -> p1.select(p2) },
     { availableMeasurements }, { state.selectedRange })
 
+  private val waitingForData by memoizeOne({ atomic(false) }) { availableMeasurements }
 
   override fun RBuilder.render() {
     val root by styleSets
@@ -177,10 +181,12 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
       }
       div(graphContainer) {
         measurementChart {
+          attrs.skipUpdate = waitingForData.value
           attrs.measureTypes = measureTypes
           attrs.visibleMeasureTypes = visibleMeasureTypes
           attrs.measurements = selectedMeasurements
           attrs.targetWeight = props.profile?.targetWeight
+          attrs.targetDatapointCount = state.targetDatapointCount
         }
       }
       div(bulletGroup) {
@@ -217,10 +223,13 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
 
   private fun handleRangeChange(range: DashboardDateRange) {
     val dateRange = range.dateRange
-    setState {
-      selectedRange = dateRange
+    props.requestMoreData(dateRange) { willUpdate ->
+      if (willUpdate) waitingForData.getAndSet(true)
+      setState {
+        selectedRange = dateRange
+        targetDatapointCount = range.dataPointCount
+      }
     }
-    props.requestMoreData(dateRange)
   }
 
   private fun toggleVisibleType(measureType: MeasureType) {
@@ -254,7 +263,7 @@ private fun <T> Set<T>.withElementToggled(element: T): Set<T> = if (element in t
   this + element
 }
 
-private val styleSets: StylesSet.() -> Unit = {
+private val styledComponent = withStyles(GraphFragment::class, {
   "root" {
     circleDiameter = 100.vw.div(MeasureType.values().size + 1)
   }
@@ -276,8 +285,8 @@ private val styleSets: StylesSet.() -> Unit = {
   "bulletCaption" {
 
   }
-  makeBulletStyles(fontSize = 16.px)
-  val tabHeight = 36.px
+  makeBulletStyles()
+  val tabHeight = 32.px
   "timeButtonContainer" {
     minHeight = tabHeight
     marginRight = (-1).px // counter the margin of the first button
@@ -324,8 +333,6 @@ private val styleSets: StylesSet.() -> Unit = {
 
   "unchecked" {}
   "selected" {}
-}
-
-private val styledComponent = withStyles(GraphFragment::class, styleSets)
+})
 
 fun RBuilder.graphFragment(handler: RHandler<GraphProps>) = styledComponent(handler)

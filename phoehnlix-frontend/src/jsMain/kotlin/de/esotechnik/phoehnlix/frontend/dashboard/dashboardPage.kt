@@ -12,6 +12,7 @@ import de.esotechnik.phoehnlix.frontend.logoMenu
 import de.esotechnik.phoehnlix.frontend.useApiContext
 import de.esotechnik.phoehnlix.frontend.util.isAfter
 import de.esotechnik.phoehnlix.frontend.util.isBefore
+import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.frontend.util.subYears
 import de.esotechnik.phoehnlix.model.MeasureType
 import kotlinx.coroutines.CoroutineName
@@ -19,11 +20,15 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.css.backgroundColor
+import kotlinx.css.height
+import kotlinx.css.vh
 import kotlinx.html.Tag
 import kotlinx.html.js.onClickFunction
 import materialui.components.button.enums.ButtonColor
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
+import materialui.components.paper.enums.PaperStyle
+import materialui.components.paper.paper
 import materialui.components.typography.typography
 import materialui.styles.palette.paper
 import materialui.styles.withStyles
@@ -108,13 +113,11 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     val mainScope = MainScope() + CoroutineName("Dashboard")
     mainScope.launch {
       val (from, _) = dateRange.getRange()
-      // we always load until now, so we have the newest for the bullets
-      console.log("Loading measurements starting from %s", from)
+      // we always load with open-ended to, so we have the newest for the bullets
       val measurements = api.profile[profile.id].measurements(
         from = from?.toISOString()
       ).sortedBy { it.timestamp }
       setState {
-        console.log("Got %s measurements, starting at %s", measurements.size, measurements.firstOrNull()?.timestamp)
         this.measurements = measurements
         this.selectedSince = from
         this.selectedRange = dateRange
@@ -147,56 +150,61 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         }
       }
     }
-    when (state.view) {
-      Graph -> graphFragment {
-        attrs {
-          profile = props.profile
-          measureTypes = MEASURE_TYPES
-          measurements = state.measurements
-          requestMoreData = ::onMoreDataRequested
+    paper {
+      attrs.elevation = 0
+      when (state.view) {
+        Graph -> graphFragment {
+          attrs {
+            profile = props.profile
+            measureTypes = MEASURE_TYPES
+            measurements = state.measurements
+            requestMoreData = ::onMoreDataRequested
+          }
         }
-      }
-      List -> {
-        measurementList {
-          attrs.measurements = state.measurements.asReversed()
+        List -> {
+          measurementList {
+            attrs.measurements = state.measurements.asReversed()
+          }
         }
-      }
-      Empty -> {
-        typography {
-          +"Keine Messwerte vorhanden."
+        Empty -> {
+          typography {
+            +"Keine Messwerte vorhanden."
+          }
         }
+        Loading -> graphSkeletonFragment(MEASURE_TYPES.size)
       }
-      Loading -> graphSkeletonFragment(MEASURE_TYPES.size)
     }
   }
 
 
-  private fun onMoreDataRequested(dateRange: DateRange): Boolean {
+  private fun onMoreDataRequested(dateRange: DateRange, callback: (Boolean) -> Unit) {
     val selectedRange = state.selectedRange
     if (selectedRange == Everything) {
-      return false
+      return callback(false)
     }
 
     val (from, _) = dateRange.getRange()
     if (from == null) {
-      loadData(Everything)
-      return true
+      return callback(true).also {
+        loadData(Everything)
+      }
     }
     if (state.selectedSince?.isBefore(from) == true) {
-      return false
+      return callback(false)
     }
-    if (Date().subYears(1).isBefore(from)) {
-      loadData(Days(370)) // load a bit more than a year
-    } else {
-      loadData(Everything)
+    return callback(true).also {
+      if (Date().subYears(1).isBefore(from)) {
+        loadData(Days(370)) // load a bit more than a year
+      } else {
+        loadData(Everything)
+      }
     }
-    return true
   }
 }
 
 private val styledComponent = withStyles(DashboardComponent::class, {
   "root" {
-    backgroundColor = theme.palette.background.paper
+
   }
 })
 
