@@ -5,23 +5,27 @@ import date_fns.format
 import date_fns.locale.de
 import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
+import de.esotechnik.phoehnlix.frontend.util.circleDiameter
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.model.MeasureType
+import kotlinx.css.Color
+import kotlinx.css.backgroundColor
 import kotlinx.css.padding
+import kotlinx.css.paddingRight
 import kotlinx.css.px
+import materialui.components.icon.icon
+import materialui.components.iconbutton.iconButton
 import materialui.components.table.TableProps
 import materialui.components.table.table
 import materialui.components.tablebody.tableBody
-import materialui.components.tablecell.enums.TableCellStyle
 import materialui.components.tablecell.tdCell
+import materialui.components.tablerow.enums.TableRowStyle
 import materialui.components.tablerow.tableRow
-import materialui.styles.StylesSet
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
 import react.RHandler
 import react.RState
-import react.ReactElement
 import react.dom.div
 import react.dom.span
 
@@ -37,16 +41,19 @@ interface MeasurementListProps : TableProps {
 
 class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
   override fun RBuilder.render() {
-    val bulletCell by styleSets
-    table {
+    val root by styleSets
+    val bulletRow by styleSets
+
+    val formatOptions = new<FormatOptions> {
+      locale = de
+    }
+
+    table(root) {
       tableBody {
         props.measurements.forEach { entry ->
-          tableRow {
+          tableRow(TableRowStyle.root to bulletRow) {
             tdCell {
               val timestamp = entry.parseTimestamp()
-              val formatOptions = new<FormatOptions> {
-                locale = de
-              }
               +format(timestamp, "EE dd.MM.yyyy", formatOptions)
               +"\n"
               span {
@@ -54,10 +61,15 @@ class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
               }
             }
             bullets(entry, MEASURE_TYPES, props) { _, classes, content ->
-              tdCell(TableCellStyle.root to bulletCell) {
+              tdCell {
                 div(classes) {
                   content()
                 }
+              }
+            }
+            tdCell {
+              iconButton {
+                icon { +"more_vert" }
               }
             }
           }
@@ -65,24 +77,26 @@ class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
       }
     }
   }
+}
 
-  companion object {
-    private val styleSets: StylesSet.() -> Unit = {
-      "bulletCell" {
-        padding(2.px)
-      }
-      makeBulletStyles(diameter = 50.px, fontSize = 14.px)
-    }
-
-    private val styledComponent = withStyles(MeasurementListComponent::class, styleSets)
-
-    fun RBuilder.render(handler: RHandler<MeasurementListProps>): ReactElement =
-      styledComponent(handler)
+private val styledComponent = withStyles(MeasurementListComponent::class, {
+  "root" {
+    circleDiameter = 40.px
   }
-}
+  "bulletRow" {
+    children("td") {
+      padding(vertical = 2.px)
+      nthOfType("2") {
+        paddingRight = 10.px
+      }
+      !firstOfType {
+        padding(horizontal = 2.px)
+        backgroundColor = Color("#E6E6E6")
+      }
+    }
+  }
+  makeBulletStyles(fontSize = 12.px)
+})
 
-fun RBuilder.measurementList(handler: RHandler<MeasurementListProps>) = with(
-  MeasurementListComponent
-) {
-  render(handler)
-}
+fun RBuilder.measurementList(handler: RHandler<MeasurementListProps>) =
+  styledComponent(handler)

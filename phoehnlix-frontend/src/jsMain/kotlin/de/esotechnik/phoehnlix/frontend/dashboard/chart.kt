@@ -10,11 +10,11 @@ import de.esotechnik.phoehnlix.apiservice.model.get
 import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.title
+import de.esotechnik.phoehnlix.frontend.util.entrySequence
 import de.esotechnik.phoehnlix.frontend.util.theme
 import de.esotechnik.phoehnlix.model.MeasureType
 import de.esotechnik.phoehnlix.model.MeasureType.*
 import de.esotechnik.phoehnlix.util.roundToDigits
-import kotlinext.js.Object
 import kotlinx.html.id
 import materialui.styles.StylesSet
 import materialui.styles.palette.primary
@@ -45,7 +45,7 @@ external val chartsJsAdapterDateFns: dynamic
 external val chartjsPluginDownsample: dynamic
 
 interface MeasurementChartProps : RProps {
-  var measurements: List<ProfileMeasurement>
+  var measurements: List<ChartMeasurement>
   var measureTypes: List<MeasureType>
   var visibleMeasureTypes: Set<MeasureType>
   var targetWeight: Double?
@@ -54,7 +54,6 @@ interface MeasurementChartProps : RProps {
 }
 
 interface MeasurementChartState : RState {
-  var entries: List<ChartMeasurement>
 }
 
 private val MEASURE_TYPES = values().toList()
@@ -74,7 +73,9 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       }
 
       // make sure dependencies are loaded
+      @Suppress("UNUSED")
       val adapter = chartsJsAdapterDateFns
+      @Suppress("UNUSED")
       val downsamplePlugin = chartjsPluginDownsample
     }
 
@@ -104,13 +105,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
     val theme = props.theme
     Chart.defaults.global.asDynamic().defaultFontFamily = theme.typography.fontFamily
     Chart.defaults.global.asDynamic().defaultFontColor = theme.palette.text.primary
-
-    entries = props.measurements.map(::ChartMeasurement).run {
-      when (props.downsampleMethod) {
-        DownsampleMethod.Simple -> downsampleSimple(props.targetDatapointCount)
-        else -> this
-      }
-    }
   }
 
   override fun componentDidMount() = createChart()
@@ -123,7 +117,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
   }
 
   private fun applyInplaceUpdate(prevProps: MeasurementChartProps, prevState: MeasurementChartState): Boolean {
-    console.log("Trying to apply inplace update (%o, %o) -> (%o, %o)", prevProps, prevState, props, state)
     val chartInstance = this.chartInstance ?: return false.also { console.log("no chart instance.") }
     if (state !== prevState) return false.also { console.log("state changed.") }
     if (props === prevProps) return true // shouldn't happen
@@ -151,7 +144,15 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
   }
 
   private fun createChart() {
-    val entries = state.entries.takeIf { it.isNotEmpty() } ?: return
+    val entries = props.measurements.run {
+      when (props.downsampleMethod) {
+        DownsampleMethod.Simple -> downsampleSimple(props.targetDatapointCount)
+        else -> this
+      }
+    }
+    if (entries.isEmpty()) {
+      return
+    }
     val measureTypes = props.measureTypes
     val visibleMeasureTypes = props.visibleMeasureTypes
     val datasetPoints = measureTypes.associateWith { emptyArray<Chart.ChartPoint>() }
@@ -222,6 +223,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
               id = "weight"
               type = "linear"
               position = "left"
+              display = "auto"
               scaleLabel = new {
                 labelString = "kg"
               }
@@ -235,11 +237,12 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
               id = "percent"
               type = "linear"
               position = "right"
+              display = "auto"
               scaleLabel = new {
                 labelString = "%"
               }
               ticks = new {
-                min = 10
+                suggestedMin = 10
                 suggestedMax = 60
               }
               gridLines = new {
@@ -249,6 +252,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
               id = "calories"
               type = "linear"
               position = "right"
+              display = "auto"
               scaleLabel = new {
                 labelString = "kcal"
               }
@@ -274,11 +278,10 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
         }
       }
       plugins = arrayOf(
-        TopAxisLabelPlugin.plugin
+        TopYAxisLabelPlugin.plugin
       )
     })
   }
-
 }
 
 private val MeasureType.yAxisId get() = when (this) {
@@ -287,15 +290,14 @@ private val MeasureType.yAxisId get() = when (this) {
   else -> "percent"
 }
 
-object TopAxisLabelPlugin {
+object TopYAxisLabelPlugin {
   fun afterDatasetsDraw(chart: dynamic, options: dynamic) {
     val helpers = Chart.helpers.asDynamic()
     val defaults = Chart.defaults.asDynamic()
 
-    for (scaleId in Object.keys(chart.scales)) {
-      val scale = chart.scales[scaleId]
+    for ((_, scale) in entrySequence(chart.scales)) {
       val scaleLabel = scale.options.scaleLabel
-      if (scale.isHorizontal() || scaleLabel.display) {
+      if (!scale._isVisible() || scale.isHorizontal() || scaleLabel.display) {
         continue
       }
 

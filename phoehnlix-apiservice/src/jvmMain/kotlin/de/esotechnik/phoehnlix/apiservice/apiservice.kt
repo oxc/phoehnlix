@@ -24,14 +24,17 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
-import io.ktor.util.getValue
+import io.ktor.util.getOrFail
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.enumFromOrdinal
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.compoundAnd
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import java.time.Instant
 
 /**
  * @author Bernhard Frauendienst
@@ -47,24 +50,32 @@ fun Route.apiservice() {
     }
     route("/{profileId}") {
       get {
-        val profileId: Int by call.parameters
+        val profileId = call.profileId()
         call.respondDb(ProfileResponse) {
-          Profile.findById(profileId)
+          loadProfile(profileId)
         }
       }
       route("/measurements") {
         get {
-          val profileId: Int by call.parameters
+          val profileId = call.profileId()
+          val from = call.request.queryParameters["from"]?.toInstant()
+          val to = call.request.queryParameters["to"]?.toInstant()
           call.respondDbList(MeasurementResponse) {
             Measurement
-              .find { Measurements.profile eq profileId }
+              .find {
+                listOfNotNull(
+                  Measurements.profile eq profileId,
+                  from?.let { Measurements.timestamp greaterEq it },
+                  to?.let { Measurements.timestamp lessEq it }
+                ).compoundAnd()
+              }
               .orderBy(Measurements.timestamp to SortOrder.ASC)
           }
         }
         post("/import") {
-          val profileId: Int by call.parameters
+          val profileId = call.profileId()
           var activityLevel: ActivityLevel? = call.parameters["activityLevel"]
-            ?.let { it.toIntOrNull() }
+            ?.toIntOrNull()
             ?.let { enumFromOrdinal(ActivityLevel::class, it) }
 
           var csvPart: PartData.FileItem? = null
@@ -93,20 +104,18 @@ fun Route.apiservice() {
           val csv = csvPart ?: throw MissingRequestParameterException("csvFile")
 
           val profile = db {
-            // FIXME: check profile permissions
-            Profile.findById(profileId) ?: throw NotFoundException()
+            loadProfile(profileId)
           }
           val count = CsvImport.import(csv.streamProvider(), profile, activityLevel)
           call.respond(HttpStatusCode.Created, "Created $count entries.")
         }
         post("/recalculate") {
-          val profileId: Int by call.parameters
-
+          val profileId = call.profileId()
           newSuspendedTransaction {
-            val profile = Profile.findById(profileId) ?: throw NotFoundException()
+            val profile = loadProfile(profileId)
             val count = atomic(0)
             Measurement.find {
-              Measurements.profile eq profileId and
+              Measurements.profile eq profile.id and
                 Measurements.imp50.isNotNull() and
                 Measurements.imp5.isNotNull()
             }.forUpdate().forEach { measurement ->
@@ -122,6 +131,26 @@ fun Route.apiservice() {
     }
   }
 }
+
+private fun String?.toInstant(): Instant {
+  return Instant.parse(this)
+}
+
+@KtorExperimentalAPI
+suspend fun ApplicationCall.profileId(): Int {
+  val rawId = parameters.getOrFail("profileId")
+  if (rawId == "me") {
+    TODO("Get current logged in user")
+  }
+  val profileId = rawId.toIntOrNull() ?: throw BadRequestException("Invalid profileId $rawId")
+  // TODO: check permission
+  return profileId
+}
+
+suspend fun loadProfile(profileId: Int): Profile {
+  return Profile.findById(profileId) ?: throw NotFoundException()
+}
+
 
 suspend fun <T, A> ApplicationCall.respondDb(converter: (T) -> A, statement: suspend Transaction.() -> T?) {
   respond(db { statement() }?.let {

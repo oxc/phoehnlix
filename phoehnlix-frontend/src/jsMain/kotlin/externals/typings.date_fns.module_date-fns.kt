@@ -511,12 +511,6 @@ external interface `T$10` {
 }
 
 
-external fun formatISO(date: Date, options: `T$10` = definedExternally): String
-
-
-external fun formatISO(date: Number, options: `T$10` = definedExternally): String
-
-
 external fun formatISO9075(date: Date, options: `T$10` = definedExternally): String
 
 
@@ -701,19 +695,6 @@ external fun getYear(date: Date): Number
 
 
 external fun getYear(date: Number): Number
-
-
-external fun isAfter(date: Date, dateToCompare: Date): Boolean
-
-
-external fun isAfter(date: Date, dateToCompare: Number): Boolean
-
-
-external fun isAfter(date: Number, dateToCompare: Date): Boolean
-
-
-external fun isAfter(date: Number, dateToCompare: Number): Boolean
-
 
 
 external fun isDate(value: Any): Boolean
@@ -1315,12 +1296,6 @@ external fun subBusinessDays(date: Date, amount: Number): Date
 external fun subBusinessDays(date: Number, amount: Number): Date
 
 
-external fun subDays(date: Date, amount: Number): Date
-
-
-external fun subDays(date: Number, amount: Number): Date
-
-
 external fun subHours(date: Date, amount: Number): Date
 
 
@@ -1345,12 +1320,6 @@ external fun subMinutes(date: Date, amount: Number): Date
 external fun subMinutes(date: Number, amount: Number): Date
 
 
-external fun subMonths(date: Date, amount: Number): Date
-
-
-external fun subMonths(date: Number, amount: Number): Date
-
-
 external fun subQuarters(date: Date, amount: Number): Date
 
 
@@ -1361,18 +1330,6 @@ external fun subSeconds(date: Date, amount: Number): Date
 
 
 external fun subSeconds(date: Number, amount: Number): Date
-
-
-external fun subWeeks(date: Date, amount: Number): Date
-
-
-external fun subWeeks(date: Number, amount: Number): Date
-
-
-external fun subYears(date: Date, amount: Number): Date
-
-
-external fun subYears(date: Number, amount: Number): Date
 
 
 external fun toDate(argument: Date): Date
