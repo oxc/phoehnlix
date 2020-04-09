@@ -90,10 +90,12 @@ private val styledComponent = withStyles(MeasurementListComponent::class, {
   "bulletRow" {
     children("td") {
       padding(2.px)
-      textAlign = TextAlign.center
       firstOfType {
         backgroundColor = Color.white
         padding(horizontal = 10.px)
+      }
+      !firstOfType {
+        textAlign = TextAlign.center
       }
       nthOfType("2") {
         paddingLeft = 10.px
