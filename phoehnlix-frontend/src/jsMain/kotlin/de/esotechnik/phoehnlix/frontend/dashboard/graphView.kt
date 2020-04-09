@@ -297,6 +297,7 @@ private val styledComponent = withStyles(GraphFragment::class, {
   "timeButton" {
     marginRight = 1.px // fake "border"
     minHeight = tabHeight
+    padding(vertical = 4.px)
     opacity = 1
     color = Color.white
     fontWeight = FontWeight.normal

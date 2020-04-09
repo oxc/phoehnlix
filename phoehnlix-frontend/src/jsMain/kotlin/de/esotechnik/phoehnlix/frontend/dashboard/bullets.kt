@@ -86,7 +86,7 @@ fun StylesSet.makeBulletStyles() {
     height = circleDiameter
     borderRadius = 50.pct
     lineHeight = circleDiameter.lh
-    val fontSize = circleDiameter / 3.5
+    val fontSize = circleDiameter / 5 + 4.px
     this.fontSize = fontSize
     textAlign = TextAlign.center
     verticalAlign = VerticalAlign.baseline
