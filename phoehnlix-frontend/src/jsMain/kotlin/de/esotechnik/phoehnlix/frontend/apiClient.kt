@@ -3,6 +3,7 @@ package de.esotechnik.phoehnlix.frontend
 import de.esotechnik.phoehnlix.apiservice.client.ApiClient
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.js.Js
+import io.ktor.client.features.defaultRequest
 import io.ktor.client.features.json.Json
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import kotlinx.html.RP
@@ -22,13 +23,7 @@ import react.createElement
 val ApiContext = createContext<ApiClient>()
 
 fun RBuilder.apiProvider(url: String, handler: RHandler<RProviderProps<ApiClient>>) {
-  val httpClient = HttpClient(Js) {
-    Json {
-      serializer = KotlinxSerializer()
-    }
-  }
-
-  val client = ApiClient(httpClient, url)
+  val client = ApiClient(Js, url, null)
 
   ApiContext.Provider(client, handler)
 }

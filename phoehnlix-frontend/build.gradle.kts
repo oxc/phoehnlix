@@ -35,17 +35,22 @@ kotlin {
     }
     val commonMain by getting {
       dependencies {
-        api(project(":phoehnlix-apiservice"))
-        api(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-common"))
       }
     }
     val jvmMain by getting {
       dependencies {
+        implementation(project(":phoehnlix-apiservice"))
+
         implementation(kotlin("stdlib-jdk8"))
         implementation("io.ktor:ktor-server-netty")
         implementation("ch.qos.logback:logback-classic")
         implementation("io.ktor:ktor-server-core")
         implementation("io.ktor:ktor-html-builder")
+        implementation("io.ktor:ktor-auth")
+        implementation("io.ktor:ktor-client-apache")
+        implementation("io.ktor:ktor-client-json-jvm")
+        implementation("io.ktor:ktor-client-serialization-jvm")
       }
     }
     val jvmTest by getting {
@@ -55,8 +60,8 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        api(project(":phoehnlix-apiservice"))
-        api(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-apiservice"))
+        implementation(project(":phoehnlix-common"))
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
@@ -64,8 +69,6 @@ kotlin {
 
         //implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")
-        implementation("io.ktor:ktor-client-json-js")
-        implementation("io.ktor:ktor-client-serialization-js")
 
         implementation("org.jetbrains:kotlin-react:16.13.0-pre.94-kotlin-1.3.70")
         implementation("org.jetbrains:kotlin-react-dom:16.13.0-pre.94-kotlin-1.3.70")

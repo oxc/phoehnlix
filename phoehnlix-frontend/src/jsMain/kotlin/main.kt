@@ -9,7 +9,7 @@ import kotlin.browser.document
 
 fun main() {
   val root = document.getElementById("root")!!
-  val apiUrl = root.getAttribute("data-api-url")!!
+  val apiHost = root.getAttribute("data-api-host")!!
   render(root) {
     apiProvider(apiUrl) {
       child(Application::class) {}
