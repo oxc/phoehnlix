@@ -121,7 +121,11 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         this.measurements = measurements
         this.selectedSince = from
         this.selectedRange = dateRange
-        this.view = if (measurements.isEmpty()) Empty else Graph
+        this.view = when {
+          measurements.isEmpty() -> Empty
+          state.view == List -> List
+          else -> Graph
+        }
       }
     }
   }
@@ -163,7 +167,12 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         }
         List -> {
           measurementList {
-            attrs.measurements = state.measurements.asReversed()
+            attrs {
+              measurements = state.measurements.asReversed()
+              requestMoreData = if (state.selectedRange != Everything) {
+                { loadData(Everything) }
+              } else null
+            }
           }
         }
         Empty -> {
@@ -175,7 +184,6 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
       }
     }
   }
-
 
   private fun onMoreDataRequested(dateRange: DateRange, callback: (Boolean) -> Unit) {
     val selectedRange = state.selectedRange

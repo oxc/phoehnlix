@@ -6,30 +6,52 @@ import date_fns.locale.de
 import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
+import de.esotechnik.phoehnlix.frontend.util.style
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.model.MeasureType
 import kotlinx.css.Color
+import kotlinx.css.Display
+import kotlinx.css.Position
 import kotlinx.css.TextAlign
 import kotlinx.css.backgroundColor
+import kotlinx.css.display
+import kotlinx.css.left
+import kotlinx.css.margin
 import kotlinx.css.padding
 import kotlinx.css.paddingLeft
 import kotlinx.css.paddingRight
+import kotlinx.css.pct
+import kotlinx.css.position
 import kotlinx.css.px
 import kotlinx.css.textAlign
+import kotlinx.css.top
+import kotlinx.html.DIV
+import kotlinx.html.js.onClickFunction
+import materialui.components.button.button
+import materialui.components.circularprogress.CircularProgressElementBuilder
+import materialui.components.circularprogress.circularProgress
+import materialui.components.circularprogress.enums.CircularProgressStyle
+import materialui.components.circularprogress.enums.CircularProgressVariant
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
 import materialui.components.table.TableProps
 import materialui.components.table.table
 import materialui.components.tablebody.tableBody
 import materialui.components.tablecell.tdCell
+import materialui.components.tablefooter.tableFooter
 import materialui.components.tablerow.enums.TableRowStyle
 import materialui.components.tablerow.tableRow
 import materialui.styles.withStyles
+import org.w3c.dom.HTMLElement
+import org.w3c.dom.Node
 import react.RBuilder
 import react.RComponent
 import react.RHandler
 import react.RState
+import react.ReactElement
+import react.createRef
 import react.dom.div
+import react.dom.jsStyle
 import react.dom.span
 
 /**
@@ -39,6 +61,7 @@ import react.dom.span
 private val MEASURE_TYPES = MeasureType.values().toList()
 
 interface MeasurementListProps : TableProps {
+  var requestMoreData: (() -> Unit)?
   var measurements: List<ProfileMeasurement>
 }
 
@@ -78,6 +101,37 @@ class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
           }
         }
       }
+      props.requestMoreData?.let { requestMoreData ->
+        val loadMoreProgress by styleSets
+
+        tableFooter {
+          tableRow {
+            tdCell {
+              attrs {
+                colSpan = (MEASURE_TYPES.size + 2).toString()
+              }
+              button {
+                val progressRef = createRef<HTMLElement>()
+                attrs {
+                  fullWidth = true
+                  onClickFunction = {
+                    this.disabled = true
+                    progressRef.current!!.style.display = "block"
+                    requestMoreData()
+                  }
+                }
+                circularProgress(CircularProgressStyle.root to loadMoreProgress) {
+                  ref = progressRef
+                  attrs {
+                    size(24)
+                  }
+                }
+                +"Alle Einträge anzeigen"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -103,6 +157,13 @@ private val styledComponent = withStyles(MeasurementListComponent::class, {
     }
   }
   makeBulletStyles()
+  "loadMoreProgress" {
+    display = Display.none
+    position = Position.absolute
+    top = 50.pct
+    left = 50.pct
+    margin(top = (-12).px, left = (-12).px)
+  }
 })
 
 fun RBuilder.measurementList(handler: RHandler<MeasurementListProps>) =
