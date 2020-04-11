@@ -1,6 +1,6 @@
 package de.esotechnik.phoehnlix.frontend
 
-import de.esotechnik.phoehnlix.apiservice.model.Profile
+import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope

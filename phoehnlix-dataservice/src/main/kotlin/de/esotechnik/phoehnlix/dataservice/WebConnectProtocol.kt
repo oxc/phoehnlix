@@ -1,9 +1,9 @@
 package de.esotechnik.phoehnlix.dataservice
 
-import de.esotechnik.phoehnlix.model.*
+import de.esotechnik.phoehnlix.api.model.MeasurementData
+import de.esotechnik.phoehnlix.api.model.SenderId
 import de.esotechnik.phoehnlix.util.toBigInt
 import kotlinx.atomicfu.atomic
-import java.math.BigInteger
 import java.time.Instant
 
 private val REQUEST_24: Byte = 0x24
@@ -28,15 +28,13 @@ object WebConnectProtocol {
     val weight = next(2).toDouble() / 100
     val imp50 = next(2).takeUnless { it.signum() == 0 }?.let { it.toDouble() / 10 }
     val imp5 = next(2).takeUnless { it.signum() == 0 }?.let { it.toDouble() / 10 }
-    val biaData = if (imp50 != null && imp5 != null) {
-      BIAData(imp50, imp5)
-    } else null
 
     return MeasurementData(
       senderId = senderId,
-      timestamp = timestamp,
+      timestamp = timestamp.toString(),
       weight = weight,
-      biaData = biaData
+      imp50 = imp50,
+      imp5 = imp5
     )
   }
 

@@ -18,7 +18,8 @@ kotlin {
     }
     val commonMain by getting {
       dependencies {
-        api(project(":phoehnlix-common"))
+        api(project(":phoehnlix-util"))
+        api(project(":phoehnlix-api"))
 
         implementation(kotlin("stdlib-common"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common")
@@ -29,7 +30,8 @@ kotlin {
     }
     val jvmMain by getting {
       dependencies {
-        api(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-util"))
+        api(project(":phoehnlix-api"))
 
         implementation(kotlin("stdlib-jdk8"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
@@ -40,7 +42,7 @@ kotlin {
         implementation("io.ktor:ktor-serialization")
         implementation("io.ktor:ktor-auth")
         implementation("io.ktor:ktor-client-json-jvm")
-        runtimeOnly("io.ktor:ktor-client-serialization-jvm")
+        implementation("io.ktor:ktor-client-serialization-jvm")
       }
     }
     val jvmTest by getting {
@@ -50,13 +52,14 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        implementation(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-util"))
+        api(project(":phoehnlix-api"))
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
 
         implementation("io.ktor:ktor-client-json-js")
-        runtimeOnly("io.ktor:ktor-client-serialization-js")
+        implementation("io.ktor:ktor-client-serialization-js")
       }
     }
   }

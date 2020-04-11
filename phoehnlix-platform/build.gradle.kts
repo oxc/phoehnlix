@@ -19,9 +19,11 @@ val postgresql_version: String by project
 
 dependencies {
   constraints {
-    api(project(":phoehnlix-common"))
-    api(project(":phoehnlix-dataservice"))
+    api(project(":phoehnlix-util"))
+    api(project(":phoehnlix-api"))
+    api(project(":phoehnlix-apiclient"))
     api(project(":phoehnlix-apiservice"))
+    api(project(":phoehnlix-dataservice"))
     api(project(":phoehnlix-frontend"))
     api(project(":phoehnlix-full"))
 

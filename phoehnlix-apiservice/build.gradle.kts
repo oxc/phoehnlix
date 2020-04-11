@@ -1,5 +1,5 @@
 plugins {
-  kotlin("multiplatform")
+  kotlin("jvm")
   kotlin("plugin.serialization")
 }
 
@@ -9,65 +9,31 @@ repositories {
   maven { url = uri("https://kotlin.bintray.com/ktor") }
 }
 
-kotlin {
-  sourceSets {
-    jvm()
-    js {
-      browser {
-      }
-    }
-    val commonMain by getting {
-      dependencies {
-        api(project(":phoehnlix-common"))
-
-        implementation(kotlin("stdlib-common"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common")
-        api("io.ktor:ktor-client-core")
-        implementation("io.ktor:ktor-client-json")
-        implementation("io.ktor:ktor-client-serialization")
-      }
-    }
-    val jvmMain by getting {
-      dependencies {
-        api(project(":phoehnlix-common"))
-
-        implementation(kotlin("stdlib-jdk8"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
-
-        implementation("io.ktor:ktor-server-netty")
-        implementation("ch.qos.logback:logback-classic")
-        implementation("io.ktor:ktor-server-core")
-        implementation("io.ktor:ktor-serialization")
-        implementation("io.ktor:ktor-auth")
-        implementation("io.ktor:ktor-client-json-jvm")
-        runtimeOnly("io.ktor:ktor-client-serialization-jvm")
-      }
-    }
-    val jvmTest by getting {
-      dependencies {
-        implementation("io.ktor:ktor-server-tests")
-      }
-    }
-    val jsMain by getting {
-      dependencies {
-        implementation(project(":phoehnlix-common"))
-
-        implementation(kotlin("stdlib-js"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
-
-        implementation("io.ktor:ktor-client-json-js")
-        runtimeOnly("io.ktor:ktor-client-serialization-js")
-      }
-    }
-  }
-}
-
 dependencies {
-  configurations.all {
-    if (name.endsWith("MainImplementation")
-      || name.endsWith("MainApi")
-      || name.endsWith("MainRuntimeOnly")) {
-      dependencies.add(enforcedPlatform(project(":phoehnlix-platform")))
-    }
-  }
+  implementation(enforcedPlatform(project(":phoehnlix-platform")))
+
+  implementation(project(":phoehnlix-util"))
+  api(project(":phoehnlix-api"))
+
+  implementation(kotlin("stdlib-jdk8"))
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
+
+  implementation("io.ktor:ktor-server-netty")
+  implementation("ch.qos.logback:logback-classic")
+  implementation("io.ktor:ktor-server-core")
+  implementation("io.ktor:ktor-serialization")
+  implementation("io.ktor:ktor-auth")
+  implementation("io.ktor:ktor-client-apache")
+  implementation("io.ktor:ktor-client-json-jvm")
+  runtimeOnly("io.ktor:ktor-client-serialization-jvm")
+
+  api("org.jetbrains.exposed:exposed-core")
+  api("org.jetbrains.exposed:exposed-dao")
+  implementation("org.jetbrains.exposed:exposed-jdbc")
+  implementation("org.jetbrains.exposed:exposed-java-time")
+  implementation("io.ktor:ktor-server-core")
+
+  runtimeOnly("org.postgresql:postgresql")
+
+  testImplementation("io.ktor:ktor-server-tests")
 }

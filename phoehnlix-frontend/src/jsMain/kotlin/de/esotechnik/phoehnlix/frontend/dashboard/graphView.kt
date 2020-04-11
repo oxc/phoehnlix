@@ -3,8 +3,6 @@ package de.esotechnik.phoehnlix.frontend.dashboard
 import date_fns.FormatOptions
 import date_fns.format
 import date_fns.locale.de
-import de.esotechnik.phoehnlix.apiservice.model.Profile
-import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.title
@@ -14,7 +12,9 @@ import de.esotechnik.phoehnlix.frontend.util.isBefore
 import de.esotechnik.phoehnlix.frontend.util.measurementColor
 import de.esotechnik.phoehnlix.frontend.util.memoizeOne
 import de.esotechnik.phoehnlix.frontend.util.styleSets
-import de.esotechnik.phoehnlix.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.Profile
+import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import kotlinx.atomicfu.atomic
 import kotlinx.css.Align
 import kotlinx.css.Color
@@ -83,7 +83,6 @@ interface GraphState : RState {
   var selectedRange: DateRange
   var targetDatapointCount: Int
   var visibleMeasureTypes: Set<MeasureType>
-  var waitingForData: Boolean
 }
 
 enum class DashboardDateRange(val dateRange: DateRange, val dataPointCount: Int) {

@@ -1,20 +1,12 @@
 package de.esotechnik.phoehnlix.frontend
 
-import de.esotechnik.phoehnlix.apiservice.client.ApiClient
-import io.ktor.client.HttpClient
+import de.esotechnik.phoehnlix.api.client.ApiClient
 import io.ktor.client.engine.js.Js
-import io.ktor.client.features.defaultRequest
-import io.ktor.client.features.json.Json
-import io.ktor.client.features.json.serializer.KotlinxSerializer
-import kotlinx.html.RP
 import react.RBuilder
 import react.RComponent
 import react.RHandler
-import react.RProps
 import react.RProviderProps
-import react.RState
 import react.createContext
-import react.createElement
 
 /**
  * @author Bernhard Frauendienst

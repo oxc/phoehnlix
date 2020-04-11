@@ -4,8 +4,6 @@ import date_fns.subDays
 import date_fns.subMonths
 import date_fns.subWeeks
 import date_fns.subYears
-import de.esotechnik.phoehnlix.apiservice.model.Profile
-import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.api
 import de.esotechnik.phoehnlix.frontend.dashboard.DashboardViewType.*
 import de.esotechnik.phoehnlix.frontend.logoMenu
@@ -14,7 +12,9 @@ import de.esotechnik.phoehnlix.frontend.util.isAfter
 import de.esotechnik.phoehnlix.frontend.util.isBefore
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.frontend.util.subYears
-import de.esotechnik.phoehnlix.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.Profile
+import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
