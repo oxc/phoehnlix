@@ -3,12 +3,11 @@ package de.esotechnik.phoehnlix.frontend.dashboard
 import date_fns.FormatOptions
 import date_fns.format
 import date_fns.locale.de
-import de.esotechnik.phoehnlix.apiservice.model.ProfileMeasurement
+import de.esotechnik.phoehnlix.api.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
-import de.esotechnik.phoehnlix.frontend.util.style
 import de.esotechnik.phoehnlix.frontend.util.styleSets
-import de.esotechnik.phoehnlix.model.MeasureType
 import kotlinx.css.Color
 import kotlinx.css.Display
 import kotlinx.css.Position
@@ -19,19 +18,15 @@ import kotlinx.css.left
 import kotlinx.css.margin
 import kotlinx.css.padding
 import kotlinx.css.paddingLeft
-import kotlinx.css.paddingRight
 import kotlinx.css.pct
 import kotlinx.css.position
 import kotlinx.css.px
 import kotlinx.css.textAlign
 import kotlinx.css.top
-import kotlinx.html.DIV
 import kotlinx.html.js.onClickFunction
 import materialui.components.button.button
-import materialui.components.circularprogress.CircularProgressElementBuilder
 import materialui.components.circularprogress.circularProgress
 import materialui.components.circularprogress.enums.CircularProgressStyle
-import materialui.components.circularprogress.enums.CircularProgressVariant
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
 import materialui.components.table.TableProps
@@ -43,15 +38,12 @@ import materialui.components.tablerow.enums.TableRowStyle
 import materialui.components.tablerow.tableRow
 import materialui.styles.withStyles
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.Node
 import react.RBuilder
 import react.RComponent
 import react.RHandler
 import react.RState
-import react.ReactElement
 import react.createRef
 import react.dom.div
-import react.dom.jsStyle
 import react.dom.span
 
 /**

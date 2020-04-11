@@ -25,8 +25,10 @@ pluginManagement {
 rootProject.name = "phoehnlix"
 
 include("phoehnlix-platform")
-include("phoehnlix-common")
-include("phoehnlix-dataservice")
+include("phoehnlix-util")
+include("phoehnlix-api")
+include("phoehnlix-apiclient")
 include("phoehnlix-apiservice")
+include("phoehnlix-dataservice")
 include("phoehnlix-frontend")
 include("phoehnlix-full")

@@ -1,7 +1,7 @@
 package de.esotechnik.phoehnlix.frontend
 
-import de.esotechnik.phoehnlix.model.MeasureType
-import de.esotechnik.phoehnlix.model.MeasureType.*
+import de.esotechnik.phoehnlix.api.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.MeasureType.*
 
 /**
  * @author Bernhard Frauendienst

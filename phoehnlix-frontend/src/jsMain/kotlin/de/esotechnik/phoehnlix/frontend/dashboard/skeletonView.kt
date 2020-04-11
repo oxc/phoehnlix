@@ -2,7 +2,7 @@ package de.esotechnik.phoehnlix.frontend.dashboard
 
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
 import de.esotechnik.phoehnlix.frontend.util.styleSets
-import de.esotechnik.phoehnlix.model.MeasureType
+import de.esotechnik.phoehnlix.api.model.MeasureType
 import kotlinx.css.Align
 import kotlinx.css.Display
 import kotlinx.css.FlexDirection

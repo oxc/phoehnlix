@@ -35,12 +35,12 @@ kotlin {
     }
     val commonMain by getting {
       dependencies {
-        implementation(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-util"))
       }
     }
     val jvmMain by getting {
       dependencies {
-        implementation(project(":phoehnlix-apiservice"))
+        implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-jdk8"))
         implementation("io.ktor:ktor-server-netty")
@@ -60,8 +60,8 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        implementation(project(":phoehnlix-apiservice"))
-        implementation(project(":phoehnlix-common"))
+        implementation(project(":phoehnlix-util"))
+        implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")

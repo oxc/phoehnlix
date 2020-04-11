@@ -1,12 +1,13 @@
 package de.esotechnik.phoehnlix.dataservice
 
-import de.esotechnik.phoehnlix.data.insertNewMeasurement
-import de.esotechnik.phoehnlix.data.setupDatabase
+import de.esotechnik.phoehnlix.api.client.ApiClient
 import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
 import io.ktor.application.application
 import io.ktor.application.call
 import io.ktor.application.log
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.logging.DEFAULT
 import io.ktor.client.features.logging.LogLevel
 import io.ktor.client.features.logging.Logger
@@ -31,7 +32,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
-  setupDatabase()
+
   routing {
     // the scale makes GET requests to absolute urls, like to a proxy
     route("http://bridge1.soehnle.de") {
@@ -63,7 +64,7 @@ private fun Route.dataservice() {
     val response = when (val request = param.substring(0, 2)) {
       "24" -> {
         val data = WebConnectProtocol.parseMeasurementData(param)
-        insertNewMeasurement(data)
+        call.apiClient().measurement.post(data)
         "A00000000000000001000000000000000000000000000000"
       }
       "22" -> "A20000000000000000000000000000000000000000000000"
@@ -106,4 +107,12 @@ suspend fun upstreamRequest(request: ApplicationRequest, data: String): String {
     headers.clear()
     headers.appendAll(request.headers)
   }
+}
+
+@KtorExperimentalAPI
+fun ApplicationCall.apiClient(): ApiClient {
+  val config = application.environment.config
+  val apiUrl = config.property("phoehnlix.apiUrl").getString()
+  val apiKey = config.property("phoehnlix.apiKey").getString()
+  return ApiClient(Apache, apiUrl, apiKey)
 }
