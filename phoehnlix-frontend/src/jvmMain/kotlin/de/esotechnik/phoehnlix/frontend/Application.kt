@@ -3,6 +3,7 @@ package de.esotechnik.phoehnlix.frontend
 import de.esotechnik.phoehnlix.api.client.ApiClient
 import de.esotechnik.phoehnlix.api.invoke
 import de.esotechnik.phoehnlix.api.model.OAuth2Token
+import de.esotechnik.phoehnlix.ktor.setupForwardedFor
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -19,11 +20,13 @@ import io.ktor.features.CallLogging
 import io.ktor.features.origin
 import io.ktor.html.respondHtml
 import io.ktor.http.HttpMethod
+import io.ktor.http.URLProtocol
 import io.ktor.http.content.resource
 import io.ktor.http.content.static
 import io.ktor.http.content.staticBasePackage
 import io.ktor.request.host
 import io.ktor.request.port
+import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.route
 import io.ktor.routing.routing
@@ -46,6 +49,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
+  setupForwardedFor()
   install(CallLogging)
 
   setupOAuth()
@@ -122,9 +126,12 @@ fun Application.setupOAuth() {
     defaultScopes = listOf(
       "profile",
       "openid",
-      "https://www.googleapis.com/auth/fitness.body.write",
-      "https://www.googleapis.com/auth/fitness.body.read"
-    )
+      "https://www.googleapis.com/auth/user.birthday.read",
+      "https://www.googleapis.com/auth/fitness.body.write"
+    ),
+    authorizeUrlInterceptor = {
+      parameters.append("access_type","offline")
+    }
   )
 
   install(Authentication) {
@@ -132,14 +139,14 @@ fun Application.setupOAuth() {
       client = HttpClient(Apache)
       providerLookup = { googleOauthProvider }
       urlProvider = {
-        redirectUrl("/login")
+        redirectUrl("/login/google")
       }
     }
   }
 }
 
 private fun ApplicationCall.redirectUrl(path: String): String {
-  val defaultPort = if (request.origin.scheme == "http") 80 else 443
+  val defaultPort = URLProtocol.byName[request.origin.scheme]?.defaultPort ?: 443
   val hostPort = request.host() + request.port().let { port -> if (port == defaultPort) "" else ":$port" }
   val protocol = request.origin.scheme
   return "$protocol://$hostPort$path"

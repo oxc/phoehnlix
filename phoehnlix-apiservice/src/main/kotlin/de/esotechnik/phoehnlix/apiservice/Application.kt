@@ -1,6 +1,7 @@
 package de.esotechnik.phoehnlix.apiservice
 
 import de.esotechnik.phoehnlix.apiservice.data.setupDatabase
+import de.esotechnik.phoehnlix.ktor.setupForwardedFor
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.features.CORS
@@ -20,6 +21,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
+  setupForwardedFor()
   setupDatabase()
 
   install(CORS) {

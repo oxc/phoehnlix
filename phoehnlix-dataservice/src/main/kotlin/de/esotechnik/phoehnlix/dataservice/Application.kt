@@ -1,6 +1,7 @@
 package de.esotechnik.phoehnlix.dataservice
 
 import de.esotechnik.phoehnlix.api.client.ApiClient
+import de.esotechnik.phoehnlix.ktor.setupForwardedFor
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
 import io.ktor.application.application
@@ -32,6 +33,7 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
+  setupForwardedFor()
 
   routing {
     // the scale makes GET requests to absolute urls, like to a proxy

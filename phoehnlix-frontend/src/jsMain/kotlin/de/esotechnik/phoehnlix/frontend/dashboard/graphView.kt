@@ -118,6 +118,7 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
     val bulletContainer by styleSets
     val bulletCaption by styleSets
     val timeButtonContainer by styleSets
+    val timeButtonFlexContainer by styleSets
     val timeButton by styleSets
     val timeButtonIndicator by styleSets
     val graphContainer by styleSets
@@ -157,6 +158,7 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
       }
       tabs(
         TabsStyle.root to timeButtonContainer,
+        TabsStyle.flexContainer to timeButtonFlexContainer,
         TabsStyle.indicator to timeButtonIndicator
       ) {
         attrs {
@@ -288,6 +290,8 @@ private val styledComponent = withStyles(GraphFragment::class, {
   val tabHeight = 32.px
   "timeButtonContainer" {
     minHeight = tabHeight
+  }
+  "timeButtonFlexContainer" {
     marginRight = (-1).px // counter the margin of the first button
   }
   "timeButtonIndicator" {

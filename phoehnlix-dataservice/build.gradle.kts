@@ -24,6 +24,7 @@ repositories {
 dependencies {
   implementation(enforcedPlatform(project(":phoehnlix-platform")))
 
+  implementation(project(":phoehnlix-common"))
   api(project(":phoehnlix-api"))
   implementation(project(":phoehnlix-apiclient"))
   implementation(project(":phoehnlix-util"))
