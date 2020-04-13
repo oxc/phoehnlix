@@ -13,6 +13,7 @@ dependencies {
   implementation(enforcedPlatform(project(":phoehnlix-platform")))
 
   implementation(project(":phoehnlix-util"))
+  implementation(project(":phoehnlix-common"))
   api(project(":phoehnlix-api"))
 
   implementation(kotlin("stdlib-jdk8"))
@@ -23,9 +24,11 @@ dependencies {
   implementation("io.ktor:ktor-server-core")
   implementation("io.ktor:ktor-serialization")
   implementation("io.ktor:ktor-auth")
+  implementation("io.ktor:ktor-auth-jwt")
   implementation("io.ktor:ktor-client-apache")
   implementation("io.ktor:ktor-client-json-jvm")
-  runtimeOnly("io.ktor:ktor-client-serialization-jvm")
+  implementation("io.ktor:ktor-client-serialization-jvm")
+  implementation("io.ktor:ktor-client-logging-jvm")
 
   api("org.jetbrains.exposed:exposed-core")
   api("org.jetbrains.exposed:exposed-dao")

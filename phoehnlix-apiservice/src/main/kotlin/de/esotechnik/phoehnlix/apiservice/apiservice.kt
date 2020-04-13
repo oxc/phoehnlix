@@ -14,13 +14,19 @@ import de.esotechnik.phoehnlix.apiservice.util.toInstant
 import de.esotechnik.phoehnlix.apiservice.util.getValue
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.auth.Authentication
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.json.Json
+import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.features.logging.DEFAULT
+import io.ktor.client.features.logging.LogLevel
+import io.ktor.client.features.logging.Logger
+import io.ktor.client.features.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.features.BadRequestException
+import io.ktor.features.CallLogging
 import io.ktor.features.MissingRequestParameterException
 import io.ktor.features.NotFoundException
 import io.ktor.http.HttpStatusCode
@@ -39,12 +45,16 @@ import io.ktor.util.getOrFail
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.enumFromOrdinal
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.compoundAnd
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.slf4j.LoggerFactory
+import java.time.LocalDate
+
+private val log = LoggerFactory.getLogger("de.esotechnik.phoehnlix.apiservice")
 
 /**
  * @author Bernhard Frauendienst
@@ -147,11 +157,49 @@ fun Route.apiservice() {
     call.respond(HttpStatusCode.Created, "New measurement created")
   }
   post("login/google") {
-    val oAuth2Token = call.receive<OAuth2Token>()
+    val oauth2Token = call.receive<OAuth2Token>()
 
-    val json = HttpClient(Apache).get<JsonElement>("https://www.googleapis.com/userinfo/v2/me") {
-      header("Authorization", "Bearer ${oAuth2Token.accessToken}")
+    val http = HttpClient(Apache) {
+      install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.ALL
+      }
+      Json {
+        serializer = KotlinxSerializer()
+      }
     }
+
+    val accessToken = oauth2Token.accessToken
+    val accessTokenInfo = http.get<JsonObject>("https://oauth2.googleapis.com/tokeninfo") {
+      parameter("access_token", accessToken)
+    }
+    log.info("Access token info: $accessTokenInfo")
+
+    val userInfo = http.get<String>("https://www.googleapis.com/oauth2/v3/userinfo") {
+      header("Authorization", "Bearer $accessToken")
+    }
+    log.info("Got userinfo from Google: $userInfo")
+
+    val birthdayInfo = http.get<JsonObject>("https://people.googleapis.com/v1/people/me") {
+      header("Authorization", "Bearer $accessToken")
+      parameter("personFields", "birthdays")
+    }
+    val birthday = birthdayInfo["birthdays"]?.let { birthdays ->
+      birthdays.jsonArray.filterIsInstance<JsonObject>().firstOrNull {
+        it["date"]?.jsonObject?.let { date ->
+          "day" in date && "month" in date && "year" in date
+        } ?: false
+      }?.let {
+        val date = it["date"]!!.jsonObject
+        val year = date["year"]!!.primitive.int
+        val month = date["month"]!!.primitive.int
+        val day = date["day"]!!.primitive.int
+        LocalDate.of(year, month, day)
+      }
+    }
+    log.info("User birthday is $birthday")
+
+    // TODO: load/create user, create JWT token
 
     call.respond(PhoehnlixApiToken())
   }
@@ -179,7 +227,10 @@ suspend fun <T, A> ApplicationCall.respondDb(converter: (T) -> A, statement: sus
   } ?: throw NotFoundException())
 }
 
-suspend fun <T, A> ApplicationCall.respondDbList(converter: (T) -> A, statement: suspend Transaction.() -> Iterable<T>) {
+suspend fun <T, A> ApplicationCall.respondDbList(
+  converter: (T) -> A,
+  statement: suspend Transaction.() -> Iterable<T>
+) {
   respond(db { statement() }.map {
     converter(it)
   })

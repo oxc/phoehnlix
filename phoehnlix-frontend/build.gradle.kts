@@ -40,6 +40,7 @@ kotlin {
     }
     val jvmMain by getting {
       dependencies {
+        implementation(project(":phoehnlix-common"))
         implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-jdk8"))

@@ -26,6 +26,7 @@ rootProject.name = "phoehnlix"
 
 include("phoehnlix-platform")
 include("phoehnlix-util")
+include("phoehnlix-common")
 include("phoehnlix-api")
 include("phoehnlix-apiclient")
 include("phoehnlix-apiservice")
