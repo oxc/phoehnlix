@@ -1,0 +1,22 @@
+package de.esotechnik.phoehnlix.apiservice.util
+
+import io.ktor.application.ApplicationCall
+import io.ktor.http.Parameters
+import io.ktor.util.pipeline.PipelineContext
+
+/**
+ * @author Bernhard Frauendienst
+ */
+internal class ParameterOverridingContext(
+  pipelineContext: PipelineContext<Unit, ApplicationCall>,
+  parameters: Parameters
+) : PipelineContext<Unit, ApplicationCall> by pipelineContext {
+
+  override val context = ParameterOverridingApplicationCall(pipelineContext.context, parameters)
+}
+
+internal class ParameterOverridingApplicationCall(
+  applicationCall: ApplicationCall,
+  override val parameters: Parameters
+) : ApplicationCall by applicationCall {
+}

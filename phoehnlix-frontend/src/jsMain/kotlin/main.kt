@@ -10,9 +10,12 @@ import kotlin.browser.document
 fun main() {
   val root = document.getElementById("root")!!
   val apiUrl = root.getAttribute("data-api-url")!!
+  val googleClientId = root.getAttribute("data-google-clientId")!!
   render(root) {
     apiProvider(apiUrl) {
-      child(Application::class) {}
+      child(Application::class) {
+        attrs.googleClientId = googleClientId
+      }
     }
   }
 }
