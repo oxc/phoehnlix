@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   kotlin("jvm")
   kotlin("plugin.serialization")
@@ -39,4 +41,8 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql")
 
   testImplementation("io.ktor:ktor-server-tests")
+}
+
+tasks.withType<KotlinCompile>().all {
+  kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
 }

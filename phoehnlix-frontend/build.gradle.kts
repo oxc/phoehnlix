@@ -18,6 +18,7 @@ kotlin {
   sourceSets {
     all {
       languageSettings.enableLanguageFeature("NewInference")
+      languageSettings.useExperimentalAnnotation("kotlin.OptIn")
     }
     jvm()
     js {
@@ -36,22 +37,18 @@ kotlin {
     val commonMain by getting {
       dependencies {
         implementation(project(":phoehnlix-util"))
+        implementation(project(":phoehnlix-api"))
       }
     }
     val jvmMain by getting {
       dependencies {
         implementation(project(":phoehnlix-common"))
-        implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-jdk8"))
         implementation("io.ktor:ktor-server-netty")
         implementation("ch.qos.logback:logback-classic")
         implementation("io.ktor:ktor-server-core")
         implementation("io.ktor:ktor-html-builder")
-        implementation("io.ktor:ktor-auth")
-        implementation("io.ktor:ktor-client-apache")
-        implementation("io.ktor:ktor-client-json-jvm")
-        implementation("io.ktor:ktor-client-serialization-jvm")
       }
     }
     val jvmTest by getting {
@@ -65,6 +62,7 @@ kotlin {
         implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-js"))
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
         implementation("org.jetbrains:kotlin-extensions:1.0.1-pre.94-kotlin-1.3.70")
 
@@ -79,8 +77,8 @@ kotlin {
 
         implementation("org.jetbrains:kotlin-css-js:1.0.0-pre.94-kotlin-1.3.70")
 
-        implementation("subroh0508.net.kotlinmaterialui:core:0.3.3-SNAPSHOT")
-        implementation("subroh0508.net.kotlinmaterialui:lab:0.3.0-SNAPSHOT")
+        implementation("subroh0508.net.kotlinmaterialui:core:0.3.4-SNAPSHOT")
+        implementation("subroh0508.net.kotlinmaterialui:lab:0.3.1-SNAPSHOT")
         implementation(npm("@material-ui/core", "^4.9.8"))
 
         implementation(npm("chart.js", "^2.9.3"))

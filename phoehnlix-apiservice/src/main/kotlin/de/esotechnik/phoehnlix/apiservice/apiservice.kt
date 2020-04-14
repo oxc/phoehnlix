@@ -1,17 +1,19 @@
 package de.esotechnik.phoehnlix.apiservice
 
+import de.esotechnik.phoehnlix.api.google.LoginRequest
 import de.esotechnik.phoehnlix.api.model.ActivityLevel
 import de.esotechnik.phoehnlix.api.model.MeasurementData
-import de.esotechnik.phoehnlix.api.model.OAuth2Token
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
+import de.esotechnik.phoehnlix.apiservice.auth.createGoogleOAuth2Provider
+import de.esotechnik.phoehnlix.apiservice.auth.oauth2RequestAccessToken
 import de.esotechnik.phoehnlix.apiservice.data.CsvImport
 import de.esotechnik.phoehnlix.apiservice.data.Measurement
 import de.esotechnik.phoehnlix.apiservice.data.Measurements
 import de.esotechnik.phoehnlix.apiservice.data.Profile
 import de.esotechnik.phoehnlix.apiservice.data.insertNewMeasurement
 import de.esotechnik.phoehnlix.apiservice.data.setBIAResults
-import de.esotechnik.phoehnlix.apiservice.util.toInstant
 import de.esotechnik.phoehnlix.apiservice.util.getValue
+import de.esotechnik.phoehnlix.apiservice.util.toInstant
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.client.HttpClient
@@ -26,17 +28,20 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.features.BadRequestException
-import io.ktor.features.CallLogging
 import io.ktor.features.MissingRequestParameterException
 import io.ktor.features.NotFoundException
+import io.ktor.features.origin
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLProtocol
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
+import io.ktor.request.ApplicationRequest
 import io.ktor.request.receive
 import io.ktor.request.receiveMultipart
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import io.ktor.routing.application
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
@@ -156,8 +161,9 @@ fun Route.apiservice() {
     insertNewMeasurement(data)
     call.respond(HttpStatusCode.Created, "New measurement created")
   }
+  val googleOAuthProvider = application.createGoogleOAuth2Provider()
   post("login/google") {
-    val oauth2Token = call.receive<OAuth2Token>()
+    val code = call.receive<LoginRequest>().code
 
     val http = HttpClient(Apache) {
       install(Logging) {
@@ -169,39 +175,43 @@ fun Route.apiservice() {
       }
     }
 
-    val accessToken = oauth2Token.accessToken
-    val accessTokenInfo = http.get<JsonObject>("https://oauth2.googleapis.com/tokeninfo") {
-      parameter("access_token", accessToken)
-    }
-    log.info("Access token info: $accessTokenInfo")
-
-    val userInfo = http.get<String>("https://www.googleapis.com/oauth2/v3/userinfo") {
-      header("Authorization", "Bearer $accessToken")
-    }
-    log.info("Got userinfo from Google: $userInfo")
-
-    val birthdayInfo = http.get<JsonObject>("https://people.googleapis.com/v1/people/me") {
-      header("Authorization", "Bearer $accessToken")
-      parameter("personFields", "birthdays")
-    }
-    val birthday = birthdayInfo["birthdays"]?.let { birthdays ->
-      birthdays.jsonArray.filterIsInstance<JsonObject>().firstOrNull {
-        it["date"]?.jsonObject?.let { date ->
-          "day" in date && "month" in date && "year" in date
-        } ?: false
-      }?.let {
-        val date = it["date"]!!.jsonObject
-        val year = date["year"]!!.primitive.int
-        val month = date["month"]!!.primitive.int
-        val day = date["day"]!!.primitive.int
-        LocalDate.of(year, month, day)
+    oauth2RequestAccessToken(code, http, Dispatchers.IO, googleOAuthProvider, "https://phoehnlix.obeliks.de".also {
+      log.info("Redirect_uri: $it")
+    }) { response ->
+      val accessToken = response.accessToken
+      val accessTokenInfo = http.get<JsonObject>("https://oauth2.googleapis.com/tokeninfo") {
+        parameter("access_token", accessToken)
       }
+      log.info("Access token info: $accessTokenInfo")
+
+      val userInfo = http.get<String>("https://www.googleapis.com/oauth2/v3/userinfo") {
+        header("Authorization", "Bearer $accessToken")
+      }
+      log.info("Got userinfo from Google: $userInfo")
+
+      val birthdayInfo = http.get<JsonObject>("https://people.googleapis.com/v1/people/me") {
+        header("Authorization", "Bearer $accessToken")
+        parameter("personFields", "birthdays")
+      }
+      val birthday = birthdayInfo["birthdays"]?.let { birthdays ->
+        birthdays.jsonArray.filterIsInstance<JsonObject>().firstOrNull {
+          it["date"]?.jsonObject?.let { date ->
+            "day" in date && "month" in date && "year" in date
+          } ?: false
+        }?.let {
+          val date = it["date"]!!.jsonObject
+          val year = date["year"]!!.primitive.int
+          val month = date["month"]!!.primitive.int
+          val day = date["day"]!!.primitive.int
+          LocalDate.of(year, month, day)
+        }
+      }
+      log.info("User birthday is $birthday")
     }
-    log.info("User birthday is $birthday")
 
     // TODO: load/create user, create JWT token
 
-    call.respond(PhoehnlixApiToken())
+    call.respond(PhoehnlixApiToken("helloWorld"))
   }
 }
 
@@ -239,4 +249,11 @@ suspend fun <T, A> ApplicationCall.respondDbList(
 suspend inline fun <T> db(crossinline statement: suspend Transaction.() -> T) =
   newSuspendedTransaction(Dispatchers.IO) {
     statement()
+  }
+
+private val ApplicationRequest.fullUri: String
+  get() = with (origin) {
+    val defaultPort = URLProtocol.byName[scheme]?.defaultPort ?: 443
+    val port = port.let { port -> if (port == defaultPort) "" else ":$port" }
+    "$scheme://$host$port$uri"
   }
