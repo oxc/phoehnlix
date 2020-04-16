@@ -4,13 +4,11 @@ import date_fns.subDays
 import date_fns.subMonths
 import date_fns.subWeeks
 import date_fns.subYears
-import de.esotechnik.phoehnlix.frontend.api
+import de.esotechnik.phoehnlix.frontend.phoehnlix
 import de.esotechnik.phoehnlix.frontend.dashboard.DashboardViewType.*
 import de.esotechnik.phoehnlix.frontend.logoMenu
-import de.esotechnik.phoehnlix.frontend.useApiContext
-import de.esotechnik.phoehnlix.frontend.util.isAfter
+import de.esotechnik.phoehnlix.frontend.usePhoehnlixContext
 import de.esotechnik.phoehnlix.frontend.util.isBefore
-import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.frontend.util.subYears
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.Profile
@@ -19,18 +17,13 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.css.backgroundColor
-import kotlinx.css.height
-import kotlinx.css.vh
 import kotlinx.html.Tag
 import kotlinx.html.js.onClickFunction
 import materialui.components.button.enums.ButtonColor
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
-import materialui.components.paper.enums.PaperStyle
 import materialui.components.paper.paper
 import materialui.components.typography.typography
-import materialui.styles.palette.paper
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
@@ -79,7 +72,7 @@ private val MEASURE_TYPES = MeasureType.values().asList()
 class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, DashboardState>(props) {
   companion object {
     init {
-      useApiContext<DashboardComponent>()
+      usePhoehnlixContext<DashboardComponent>()
     }
   }
 
@@ -114,7 +107,7 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     mainScope.launch {
       val (from, _) = dateRange.getRange()
       // we always load with open-ended to, so we have the newest for the bullets
-      val measurements = api.profile[profile.id].measurements(
+      val measurements = phoehnlix.api.profile[profile.id].measurements(
         from = from?.toISOString()
       ).sortedBy { it.timestamp }
       setState {

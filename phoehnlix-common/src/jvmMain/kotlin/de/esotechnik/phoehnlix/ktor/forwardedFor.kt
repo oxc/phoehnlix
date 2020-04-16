@@ -18,20 +18,20 @@ fun Application.setupForwardedFor() {
     return
   }
 
-  val config = environment.config.config("phoehnlix.connector")
+  val config = environment.config
   install(XForwardedHeaderSupport) {
     hostHeaders.clear()
     protoHeaders.clear()
     forHeaders.apply {
       clear()
-      config.propertyOrNull("forwardedForHeader")?.getString()?.let {
+      config.propertyOrNull("phoehnlix.connector.forwardedForHeader")?.getString()?.let {
         log.info("Setting XForwardedHeaderSupport#forHeaders to [$it]")
         add(it)
       }
     }
     httpsFlagHeaders.apply {
       clear()
-      config.propertyOrNull("forwardedSSLHeader")?.getString()?.let {
+      config.propertyOrNull("phoehnlix.connector.forwardedSSLHeader")?.getString()?.let {
         log.info("Setting XForwardedHeaderSupport#httpsFlagHeaders to [$it]")
         add(it)
       }

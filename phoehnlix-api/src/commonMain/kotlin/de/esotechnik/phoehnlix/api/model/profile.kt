@@ -21,5 +21,15 @@ class Profile(
   val birthday: String,
   val height: Int,
   val activityLevel: ActivityLevel,
-  val targetWeight: Double
+  val targetWeight: Double? = null
+)
+
+@Serializable
+data class ProfileDraft(
+  var name: String? = null,
+  var sex: Sex? = null,
+  var birthday: String? = null,
+  var height: Int? = null,
+  var activityLevel: ActivityLevel? = null,
+  var targetWeight: Double? = null
 )

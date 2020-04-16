@@ -27,7 +27,7 @@ import java.time.Instant
 /**
  * @author Bernhard Frauendienst
  */
-val Json = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
+val GoogleJson = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
 
 @Serializable
 class TokenInfo(
@@ -44,6 +44,25 @@ class TokenInfo(
   @SerialName("access_type")
   val accessType: String
 )
+
+@Serializable
+class Userinfo(
+  @SerialName("sub")
+  val subject: String,
+  @SerialName("name")
+  val name: String,
+  @SerialName("given_name")
+  val givenName: String,
+  @SerialName("family_name")
+  val familyName: String,
+  @SerialName("picture")
+  val pictureUrl: String,
+  @SerialName("locale")
+  val locale: String
+)
+
+fun TokenInfo.hasScope(scope: String) = scope in scopes
+fun TokenInfo.hasFitWriteScope() = hasScope(SCOPE_FITNESS_BODY_WRITE)
 
 @OptIn(KtorExperimentalAPI::class)
 internal fun Application.createGoogleOAuth2Provider(): OAuthServerSettings.OAuth2ServerSettings {
@@ -63,7 +82,7 @@ internal fun Application.createGoogleOAuth2Provider(): OAuthServerSettings.OAuth
       SCOPE_FITNESS_BODY_WRITE
     ),
     authorizeUrlInterceptor = {
-      parameters.append("access_type","offline")
+      parameters.append("access_type", "offline")
     }
   )
 }
@@ -75,18 +94,21 @@ suspend fun PipelineContext<Unit, ApplicationCall>.oauth2RequestAccessToken(
   dispatcher: CoroutineDispatcher,
   provider: OAuthServerSettings.OAuth2ServerSettings,
   callbackUrl: String,
-  configure: HttpRequestBuilder.() -> Unit = {},
-  block: suspend (OAuthAccessTokenResponse.OAuth2) -> Unit
-) {
-  val pcontext = ParameterOverridingContext(this, parametersOf(
-    OAuth2RequestParameters.State to listOf(""),
-    OAuth2RequestParameters.Code to listOf(code)
-  ))
+  configure: HttpRequestBuilder.() -> Unit = {}
+): OAuthAccessTokenResponse.OAuth2 {
+  val pcontext = ParameterOverridingContext(
+    this, parametersOf(
+      OAuth2RequestParameters.State to listOf(""),
+      OAuth2RequestParameters.Code to listOf(code)
+    )
+  )
 
   // we hacky-hackily re-use oauthHandleCallback here.
   // This will most likely break. Just implement it ourselves.
+  var result: OAuthAccessTokenResponse.OAuth2? = null
   pcontext.oauthHandleCallback(client, dispatcher, provider, callbackUrl, "", configure) {
-    block(it as OAuthAccessTokenResponse.OAuth2)
+    result = it as OAuthAccessTokenResponse.OAuth2
   }
+  return result ?: throw IllegalStateException("OAuth callback callback was not called")
 }
 

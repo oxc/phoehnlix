@@ -39,5 +39,7 @@ class StorageAttributeDelegateProvider<T>(private val storage: Storage, private 
 }
 
 fun <T> Storage.attribute(serializer: KSerializer<T>) = StorageAttributeDelegateProvider(this, serializer)
+fun <T> Storage.attribute(name: String, serializer: KSerializer<T>) = StorageAttribute(this, name, serializer)
+
 operator fun <T> StorageAttribute<T>.getValue(thisRef: Any?, property: KProperty<*>) = getValue()
 operator fun <T> StorageAttribute<T>.setValue(thisRef: Any?, property: KProperty<*>, value: T?) = setValue(value)

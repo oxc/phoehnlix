@@ -1,14 +1,20 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+  application
   kotlin("jvm")
   kotlin("plugin.serialization")
+  id("com.github.johnrengelman.shadow")
 }
 
 repositories {
   mavenLocal()
   jcenter()
   maven { url = uri("https://kotlin.bintray.com/ktor") }
+}
+
+application {
+  mainClassName = "io.ktor.server.netty.EngineMain"
 }
 
 dependencies {
@@ -31,6 +37,7 @@ dependencies {
   implementation("io.ktor:ktor-client-json-jvm")
   implementation("io.ktor:ktor-client-serialization-jvm")
   implementation("io.ktor:ktor-client-logging-jvm")
+  implementation("commons-codec:commons-codec")
 
   api("org.jetbrains.exposed:exposed-core")
   api("org.jetbrains.exposed:exposed-dao")

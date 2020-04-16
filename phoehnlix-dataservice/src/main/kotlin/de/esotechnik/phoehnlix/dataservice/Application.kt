@@ -1,6 +1,7 @@
 package de.esotechnik.phoehnlix.dataservice
 
 import de.esotechnik.phoehnlix.api.client.ApiClient
+import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.ktor.setupForwardedFor
 import io.ktor.application.Application
 import io.ktor.application.ApplicationCall
@@ -82,7 +83,7 @@ private fun Route.dataservice() {
       it.signHexString() + "\n"
     }
 
-    val upstreamResponse = upstreamRequest(call.request, param)
+    val upstreamResponse = upstreamRequest(call.request)
     application.log.info("""Handled WebConnect request:
       |  Bridge Request:     $param
       |  Our Response:       ${response?.trim() ?: ""}
@@ -93,7 +94,7 @@ private fun Route.dataservice() {
   }
 }
 
-suspend fun upstreamRequest(request: ApplicationRequest, data: String): String {
+suspend fun upstreamRequest(request: ApplicationRequest): String {
   val httpClient = HttpClient {
     install(Logging) {
       logger = Logger.DEFAULT
@@ -116,5 +117,5 @@ fun ApplicationCall.apiClient(): ApiClient {
   val config = application.environment.config
   val apiUrl = config.property("phoehnlix.apiUrl").getString()
   val apiKey = config.property("phoehnlix.apiKey").getString()
-  return ApiClient(Apache, apiUrl, apiKey)
+  return ApiClient(Apache, apiUrl, PhoehnlixApiToken(apiKey))
 }

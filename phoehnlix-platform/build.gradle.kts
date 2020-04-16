@@ -46,6 +46,8 @@ dependencies {
 
     api("com.github.doyaaaaaken:kotlin-csv-jvm:0.7.3")
 
+    api("commons-codec:commons-codec:1.14")
+
     api("org.postgresql:postgresql:$postgresql_version")
 
     api("org.testng:testng:$testng_version")

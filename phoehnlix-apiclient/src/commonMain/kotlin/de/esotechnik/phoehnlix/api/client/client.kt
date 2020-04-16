@@ -28,13 +28,13 @@ private typealias ProfileId = Int
  */
 class ApiClient private constructor(
   private val http: HttpClient,
-  private val apiHost: String
+  private val apiUrl: String
 ) {
   companion object {
     operator fun <T : HttpClientEngineConfig> invoke(
       engineFactory: HttpClientEngineFactory<T>,
-      apiHost: String,
-      apiToken: String?,
+      apiUrl: String,
+      apiToken: PhoehnlixApiToken?,
       block: HttpClientConfig<T>.() -> Unit = {}
     ) = ApiClient(HttpClient(engineFactory) {
       Json {
@@ -42,15 +42,15 @@ class ApiClient private constructor(
       }
       defaultRequest {
         apiToken?.let {
-          header("Authorization", "Bearer $it")
+          header("Authorization", "Bearer ${it.accessToken}")
         }
       }
       block()
-    }, apiHost)
+    }, apiUrl)
   }
 
   private fun URLBuilder.appendPath(vararg components: String) {
-    takeFrom(apiHost)
+    takeFrom(apiUrl)
     val prefix = this.encodedPath.takeUnless { it == "/" } ?: ""
     path(*components)
     encodedPath = prefix + encodedPath // both already have prefix="/"

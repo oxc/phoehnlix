@@ -9,3 +9,10 @@ import kotlinx.serialization.Serializable
 class PhoehnlixApiToken(
   val accessToken: String
 )
+
+@Serializable
+class LoginResponse(
+  val apiToken: PhoehnlixApiToken,
+  val profile: Profile? = null,
+  val profileDraft: ProfileDraft? = null
+)

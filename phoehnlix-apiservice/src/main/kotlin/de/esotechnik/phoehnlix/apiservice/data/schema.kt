@@ -2,11 +2,14 @@ package de.esotechnik.phoehnlix.apiservice.data
 
 import de.esotechnik.phoehnlix.api.model.ActivityLevel
 import de.esotechnik.phoehnlix.api.model.Sex
+import de.esotechnik.phoehnlix.apiservice.data.GoogleAccounts.entityId
+import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
@@ -36,18 +39,54 @@ class Scale(id: EntityID<Int>) : IntEntity(id) {
   var connectedProfiles by Profile via ProfileScales
 }
 
-object Profiles : IntIdTable() {
+object Users : IntIdTable()
+class User(id: EntityID<Int>) : IntEntity(id) {
+  companion object : IntEntityClass<User>(Users)
+}
+
+object GoogleAccounts : IdTable<Int>() {
+  override val id = integer("user_id").entityId().references(Users.id, onDelete = CASCADE, onUpdate = CASCADE)
+  val googleId = varchar("google_id", 255).uniqueIndex()
+  val accessToken = varchar("access_token", 2048)
+  val expiresAt = timestamp("expires_at")
+  val refreshToken = varchar("refresh_token", 512).nullable()
+  val syncWithFit = bool("sync_fit")
+
+  override val primaryKey = PrimaryKey(id)
+}
+class GoogleAccount(userId: EntityID<Int>) : IntEntity(userId) {
+  companion object : IntEntityClass<GoogleAccount>(GoogleAccounts) {
+    fun new(user: User, init: GoogleAccount.() -> Unit) = new(user.id.value, init)
+  }
+
+  val userId by GoogleAccounts.id
+  var googleId by GoogleAccounts.googleId
+  var accessToken by GoogleAccounts.accessToken
+  var expiresAt by GoogleAccounts.expiresAt
+  var refreshToken by GoogleAccounts.refreshToken
+  var syncWithFit by GoogleAccounts.syncWithFit
+
+  val user by User referencedOn GoogleAccounts.id
+}
+
+object Profiles : IdTable<Int>() {
+  override val id = integer("user_id").entityId().references(Users.id, onDelete = RESTRICT, onUpdate = CASCADE)
   val name = varchar("name", 255)
   val sex = enumeration("sex", Sex::class)
   val birthday = date("birthday")
   val height = integer("height")
   val activityLevel = enumeration("activity_level", ActivityLevel::class)
-  val targetWeight = double("target_weight")
+  val targetWeight = double("target_weight").nullable()
+
+  override val primaryKey = PrimaryKey(id)
 }
 
-class Profile(id: EntityID<Int>) : IntEntity(id) {
-  companion object : IntEntityClass<Profile>(Profiles)
+class Profile(userId: EntityID<Int>) : IntEntity(userId) {
+  companion object : IntEntityClass<Profile>(Profiles) {
+    fun new(user: User, init: Profile.() -> Unit) = new(user.id.value, init)
+  }
 
+  val userId by Profiles.id
   var name by Profiles.name
   var sex by Profiles.sex
   var birthday by Profiles.birthday
@@ -55,6 +94,7 @@ class Profile(id: EntityID<Int>) : IntEntity(id) {
   var activityLevel by Profiles.activityLevel
   var targetWeight by Profiles.targetWeight
 
+  val user by User referencedOn Profiles.id
   var connectedScales by Scale via ProfileScales
 }
 
@@ -127,7 +167,8 @@ internal fun setupSchema() {
     withDataBaseLock {
       println("Got lock, setting up schema...")
       SchemaUtils.createMissingTablesAndColumns(
-        Scales, Profiles, ProfileScales,
+        Users, GoogleAccounts, Profiles,
+        Scales, ProfileScales,
         Measurements
       )
       println("Done.")
