@@ -1,5 +1,4 @@
 import de.esotechnik.phoehnlix.frontend.Application
-import de.esotechnik.phoehnlix.frontend.apiProvider
 import react.dom.render
 import kotlin.browser.document
 
@@ -12,10 +11,9 @@ fun main() {
   val apiUrl = root.getAttribute("data-api-url")!!
   val googleClientId = root.getAttribute("data-google-clientId")!!
   render(root) {
-    apiProvider(apiUrl) {
-      child(Application::class) {
-        attrs.googleClientId = googleClientId
-      }
+    child(Application::class) {
+      attrs.apiUrl = apiUrl
+      attrs.googleClientId = googleClientId
     }
   }
 }

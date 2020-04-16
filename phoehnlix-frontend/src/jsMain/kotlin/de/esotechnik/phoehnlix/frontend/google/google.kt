@@ -4,6 +4,7 @@ import gapi.Gapi
 import gapi.auth2.AuthorizeConfig
 import gapi.auth2.AuthorizeResponse
 import gapi.auth2.GapiAuth2
+import gapi.gapi
 import kotlinx.coroutines.yield
 import org.w3c.dom.HTMLScriptElement
 import org.w3c.dom.get
@@ -29,9 +30,9 @@ class GoogleAuth2Loader : RComponent<GoogleAuth2LoaderProps, RState>() {
     val script = document.createElement("script").unsafeCast<HTMLScriptElement>().apply {
       src = "https://apis.google.com/js/platform.js"
       onload = {
-        val gapi = window["gapi"].unsafeCast<Gapi>()
+        val gapi = window.gapi
         gapi.load("auth2") {
-          props.onAuthApiLoaded.invoke(gapi.asDynamic().auth2.unsafeCast<GapiAuth2>())
+          props.onAuthApiLoaded.invoke(gapi.auth2)
         }
       }
     }
