@@ -1,13 +1,12 @@
 package de.esotechnik.phoehnlix.frontend.dashboard
 
+import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
 import de.esotechnik.phoehnlix.frontend.util.styleSets
-import de.esotechnik.phoehnlix.api.model.MeasureType
 import kotlinx.css.Align
 import kotlinx.css.Display
 import kotlinx.css.FlexDirection
 import kotlinx.css.JustifyContent
-import kotlinx.css.StyledElement
 import kotlinx.css.alignItems
 import kotlinx.css.display
 import kotlinx.css.em
@@ -26,7 +25,6 @@ import kotlinx.css.width
 import materialui.lab.components.skeleton.enums.SkeletonStyle
 import materialui.lab.components.skeleton.enums.SkeletonVariant
 import materialui.lab.components.skeleton.skeleton
-import materialui.styles.StylesSet
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RProps
@@ -40,7 +38,7 @@ interface SkeletonProps : RProps {
   var measureTypeCount: Int
 }
 
-private val styleSets: StylesSet.() -> Unit = {
+private val graphSkeleton = withStyles("GraphSkeleton", {
   "root" {
     circleDiameter = 100.vw.div(MeasureType.values().size + 1)
   }
@@ -81,9 +79,7 @@ private val styleSets: StylesSet.() -> Unit = {
     flexGrow = 1.0
     height = 100.vw/2
   }
-}
-
-private val graphSkeleton = withStyles("GraphSkeleton", styleSets) { props: SkeletonProps ->
+}) { props: SkeletonProps ->
   val root by props.styleSets
   val skeletonContainer by props.styleSets
   val skeletonHeadline by props.styleSets

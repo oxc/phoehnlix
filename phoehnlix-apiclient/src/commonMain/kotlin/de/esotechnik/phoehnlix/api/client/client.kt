@@ -1,6 +1,7 @@
 package de.esotechnik.phoehnlix.api.client
 
 import de.esotechnik.phoehnlix.api.google.LoginRequest
+import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.MeasurementData
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
@@ -104,7 +105,7 @@ class ApiClient private constructor(
   val login = LoginClient()
 
   inner class LoginClient {
-    suspend fun google(code: String): PhoehnlixApiToken = post("login", "google", body = LoginRequest(code))
+    suspend fun google(code: String): LoginResponse = post("login", "google", body = LoginRequest(code))
   }
 
   val measurement = MeasurementClient()

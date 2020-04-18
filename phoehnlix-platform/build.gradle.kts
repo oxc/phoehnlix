@@ -11,6 +11,7 @@ javaPlatform {
 val logback_version: String by project
 val kotlin_version: String by project
 val kotlinx_coroutines_version: String by project
+val kotlinx_html_version: String by project
 val kotlinx_serialization_version: String by project
 val ktor_version: String by project
 val testng_version: String by project
@@ -43,6 +44,10 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinx_serialization_version")
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$kotlinx_serialization_version")
     api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$kotlinx_serialization_version")
+
+    api("org.jetbrains.kotlinx:kotlinx-html:$kotlinx_html_version")
+    api("org.jetbrains.kotlinx:kotlinx-html-js:$kotlinx_html_version")
+    api("org.jetbrains.kotlinx:kotlinx-html-common:$kotlinx_html_version")
 
     api("com.github.doyaaaaaken:kotlin-csv-jvm:0.7.3")
 

@@ -14,6 +14,8 @@ repositories {
   maven { url = uri("https://kotlin.bintray.com/kotlin-js-wrappers") }
 }
 
+val kotlin_version: String by project
+
 kotlin {
   sourceSets {
     all {
@@ -58,27 +60,33 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
+        val kotlinWrappersBuild = "pre.97-kotlin-$kotlin_version"
+
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
-        implementation("org.jetbrains:kotlin-extensions:1.0.1-pre.94-kotlin-1.3.70")
+        implementation("org.jetbrains:kotlin-extensions:1.0.1-$kotlinWrappersBuild")
 
-        //implementation("org.jetbrains.kotlinx:kotlinx-html-js")
+        implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")
 
-        implementation("org.jetbrains:kotlin-react:16.13.0-pre.94-kotlin-1.3.70")
-        implementation("org.jetbrains:kotlin-react-dom:16.13.0-pre.94-kotlin-1.3.70")
-        implementation(npm("react", "16.13.0"))
-        implementation(npm("react-is", "16.13.0"))
-        implementation(npm("react-dom", "16.13.0"))
+        val reactVersion = "16.13.0"
+        implementation("org.jetbrains:kotlin-react:$reactVersion-$kotlinWrappersBuild")
+        implementation("org.jetbrains:kotlin-react-dom:$reactVersion-$kotlinWrappersBuild")
+        implementation("org.jetbrains:kotlin-react-router-dom:4.3.1-$kotlinWrappersBuild-SNAPSHOT")
+        implementation(npm("react", "$reactVersion"))
+        implementation(npm("react-is", "$reactVersion"))
+        implementation(npm("react-dom", "$reactVersion"))
+        implementation(npm("react-router-dom", "^5.1.2"))
 
-        implementation("org.jetbrains:kotlin-css-js:1.0.0-pre.94-kotlin-1.3.70")
+        implementation("org.jetbrains:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
 
-        implementation("subroh0508.net.kotlinmaterialui:core:0.3.4-SNAPSHOT")
-        implementation("subroh0508.net.kotlinmaterialui:lab:0.3.1-SNAPSHOT")
+        val kotlinmaterialuiVersion = "0.3.6-SNAPSHOT"
+        implementation("subroh0508.net.kotlinmaterialui:core:$kotlinmaterialuiVersion")
+        implementation("subroh0508.net.kotlinmaterialui:lab:$kotlinmaterialuiVersion")
         implementation(npm("@material-ui/core", "^4.9.8"))
 
         implementation(npm("chart.js", "^2.9.3"))

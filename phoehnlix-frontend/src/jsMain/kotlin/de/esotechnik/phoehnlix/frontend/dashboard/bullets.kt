@@ -32,7 +32,7 @@ import kotlinx.css.px
 import kotlinx.css.textAlign
 import kotlinx.css.verticalAlign
 import kotlinx.css.width
-import materialui.styles.StylesSet
+import materialui.styles.StylesBuilder
 import react.RBuilder
 import react.RElementBuilder
 import react.RProps
@@ -70,7 +70,7 @@ fun RBuilder.bullets(
   }
 }
 
-fun StylesSet.makeBulletStyles() {
+fun StylesBuilder<*>.makeBulletStyles() {
   "measurementBullet" {
     display = Display.inlineBlock
     overflow = Overflow.hidden

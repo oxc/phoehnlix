@@ -1,8 +1,10 @@
 package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.api.client.ApiClient
+import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
+import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.frontend.util.attribute
 import de.esotechnik.phoehnlix.frontend.util.getValue
 import de.esotechnik.phoehnlix.frontend.util.setValue
@@ -65,16 +67,23 @@ data class PhoehnlixState(
   val googleClientId: String,
   val apiToken: PhoehnlixApiToken?,
   val currentProfile: Profile?,
+  val currentProfileDraft: ProfileDraft?,
   private val updateState: (PhoehnlixState) -> Unit
 ) {
-  fun updateApiToken(token: PhoehnlixApiToken?) {
-    storedApiAccessToken = token
-    updateState(copy(apiToken = token))
+  fun update(apiToken: PhoehnlixApiToken?) {
+    storedApiAccessToken = apiToken
+    updateState(copy(apiToken = apiToken))
   }
-  fun updateProfile(profile: Profile?) = updateState(copy(currentProfile = profile))
+  fun update(profile: Profile?) = updateState(copy(currentProfile = profile))
+  fun update(apiToken: PhoehnlixApiToken?, profile: Profile?, profileDraft: ProfileDraft?) {
+    storedApiAccessToken = apiToken
+    updateState(copy(apiToken = apiToken, currentProfile = profile, currentProfileDraft = profileDraft))
+  }
 
   val api = ApiClient(Js, apiUrl, apiToken)
 }
+
+val PhoehnlixState.isLoggedIn get() = apiToken != null
 
 class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
   override fun AppState.init(props: AppProps) {
@@ -83,6 +92,7 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
       googleClientId = props.googleClientId,
       apiToken = storedApiAccessToken,
       currentProfile = null,
+      currentProfileDraft = null,
       updateState = { newState -> setState { phoehnlixState = newState } }
     )
     phoehnlixState = state
@@ -91,7 +101,7 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
       val mainScope = MainScope() + CoroutineName("Application")
       mainScope.launch {
         val profile = api.profile[1]()
-        updateProfile(profile)
+        update(profile)
       }
     }
   }

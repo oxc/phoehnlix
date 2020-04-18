@@ -1,5 +1,6 @@
 package de.esotechnik.phoehnlix.frontend
 
+import de.esotechnik.phoehnlix.frontend.Application.Companion.whiteToolbarTheme
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import kotlinx.css.TextAlign
 import kotlinx.css.TextTransform.uppercase
@@ -20,10 +21,8 @@ import materialui.components.typography.enums.TypographyVariant.h6
 import materialui.components.typography.enums.TypographyVariant.headline
 import materialui.components.typography.enums.TypographyVariant.subheading
 import materialui.components.typography.typography
-import materialui.styles.StylesSet
-import materialui.styles.childWithStyles
-import materialui.styles.withStyles
 import materialui.styles.themeprovider.themeProvider
+import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
 import react.RHandler
@@ -71,12 +70,14 @@ fun RBuilder.mainMenu(handler: RHandler<MainMenuProps>) = with(MainMenuComponent
   render(handler)
 }
 
+private val styledMainMenu = withStyles(MainMenuComponent::class, {
+  "title" {
+    flexGrow = 1.0
+  }
+})
+
 fun RBuilder.mainMenu(title: String, subtitle: String? = null, handler: RHandler<MainMenuProps>) {
-  childWithStyles(MainMenuComponent::class, {
-    "title" {
-      flexGrow = 1.0
-    }
-  }) {
+  styledMainMenu {
     typography {
       attrs.variant = headline
       +title
@@ -104,26 +105,18 @@ class LogoMenu(props: MainMenuProps) : RComponent<MainMenuProps, RState>(props) 
     }
   }
 
-  companion object {
-    private val styleSets: StylesSet.() -> Unit = {
-      "title" {
-        flexGrow = 1.0
-        fontFamily = "Days One, sans-serif"
-        textAlign = TextAlign.center
-        textDecoration(TextDecorationLine.overline)
-        textTransform = uppercase
-      }
-    }
-
-    private val styledComponent = withStyles(LogoMenu::class, styleSets)
-
-    fun RBuilder.render(handler: RHandler<MainMenuProps>) =
-      themeProvider(Application.whiteToolbarTheme) {
-        styledComponent(handler)
-      }
-  }
 }
 
-fun RBuilder.logoMenu(handler: RHandler<MainMenuProps>) = with(LogoMenu) {
-  render(handler)
+private val styledLogoMenu = withStyles(LogoMenu::class, {
+  "title" {
+    flexGrow = 1.0
+    fontFamily = "Days One, sans-serif"
+    textAlign = TextAlign.center
+    textDecoration(TextDecorationLine.overline)
+    textTransform = uppercase
+  }
+})
+
+fun RBuilder.logoMenu(handler: RHandler<MainMenuProps>) = themeProvider(whiteToolbarTheme) {
+  styledLogoMenu(handler)
 }

@@ -3,7 +3,6 @@ package de.esotechnik.phoehnlix.frontend
 import de.esotechnik.phoehnlix.api.google.SCOPE_FITNESS_BODY_WRITE
 import de.esotechnik.phoehnlix.api.google.SCOPE_USERINFO_PROFILE
 import de.esotechnik.phoehnlix.api.google.SCOPE_USER_BIRTHDAY_READ
-import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.frontend.dashboard.new
 import de.esotechnik.phoehnlix.frontend.google.loadGoogleAuth2
 import de.esotechnik.phoehnlix.frontend.google.authorize
@@ -30,7 +29,6 @@ import materialui.lab.components.skeleton.skeleton
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
-import react.RHandler
 import react.RProps
 import react.RState
 import react.setState
@@ -138,8 +136,8 @@ class LoginPageComponent : RComponent<RProps, LoginPageState>() {
         }
         return@launch
       }
-      val accessToken = api.login.google(response.code!!)
-      updateApiToken(accessToken)
+      val login = api.login.google(response.code!!)
+      update(apiToken = login.apiToken, profile = login.profile, profileDraft = login.profileDraft)
     }
   }
 }
