@@ -16,7 +16,6 @@ import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.api.model.get
 import de.esotechnik.phoehnlix.util.roundToDigits
 import kotlinx.html.id
-import materialui.styles.StylesSet
 import materialui.styles.palette.primary
 import materialui.styles.withStyles
 import org.w3c.dom.BOTTOM
@@ -80,10 +79,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       val downsamplePlugin = chartjsPluginDownsample
     }
 
-    private val styleSets: StylesSet.() -> Unit = {
-    }
-
-    private val styledComponent = withStyles(MeasurementChartComponent::class, styleSets, withTheme = true)
+    private val styledComponent = withStyles(MeasurementChartComponent::class, {}, withTheme = true)
 
     fun RBuilder.render(handler: RHandler<MeasurementChartProps>): ReactElement =
       styledComponent(handler)

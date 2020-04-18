@@ -5,40 +5,16 @@ import kotlinx.css.CSSBuilder
 import kotlinx.css.Color
 import kotlinx.css.CssValue
 import kotlinx.css.LinearDimension
-import kotlinx.css.RuleSet
 import kotlinx.css.hyphenize
 import kotlinx.css.toCustomProperty
-import kotlinx.html.Tag
-import materialui.styles.StylesSet
 import materialui.styles.muitheme.MuiTheme
-import materialui.styles.withStyles
 import react.Component
-import react.RClass
 import react.RProps
-import react.dom.jsStyle
-import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 /**
  * @author Bernhard Frauendienst
  */
-// copied from https://github.com/JetBrains/kotlin-wrappers/blob/master/kotlin-react/README.md
-var Tag.style: RuleSet
-  get() = error("style cannot be read from props")
-  set(value) = jsStyle {
-    CSSBuilder().apply(value).declarations.forEach {
-      this[it.key] = when (it.value) {
-        !is String, !is Number -> it.value.toString()
-        else -> it.value
-      }
-    }
-  }
-
-fun Tag.style(handler: RuleSet) {
-  style = handler
-}
-// </copied>
-
 class CustomPropertyDelegate<T : CssValue>(private val ctor: (String) -> T) {
   operator fun getValue(cssBuilder: CSSBuilder, property: KProperty<*>): T {
     return ctor(property.name.hyphenize().toCustomProperty())

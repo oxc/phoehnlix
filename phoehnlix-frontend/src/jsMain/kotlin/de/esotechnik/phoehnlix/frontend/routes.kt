@@ -1,9 +1,12 @@
 package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
-import materialui.components.typography.typography
 import react.RProps
 import react.rFunction
+import react.router.dom.browserRouter
+import react.router.dom.redirect
+import react.router.dom.route
+import react.router.dom.switch
 import react.useContext
 
 /**
@@ -13,12 +16,32 @@ import react.useContext
 val routingRoot = rFunction<RProps>("routingRoot") {
   val ctx = useContext(PhoehnlixContext)
 
-  if (ctx.apiToken == null) {
-    loginPage()
-  } else {
-    dashboardPage {
-      attrs.profile = ctx.currentProfile
+  browserRouter {
+    switch {
+      route("/", exact = true) {
+        when {
+          !ctx.isLoggedIn -> {
+            redirect(to = "/login")
+          }
+          ctx.currentProfileDraft != null -> {
+            redirect(to = "/myprofile")
+          }
+          else -> {
+            redirect(to = "/dashboard")
+          }
+        }
+      }
+      route("/login") {
+        if (ctx.isLoggedIn) {
+          redirect(to = "/")
+        }
+        loginPage()
+      }
+      route("/dashboard") {
+        dashboardPage {
+          attrs.profile = ctx.currentProfile
+        }
+      }
     }
   }
-
 }
