@@ -67,6 +67,7 @@ import react.RProps
 import react.RState
 import react.dom.div
 import react.setState
+import kotlin.js.Date
 
 /**
  * @author Bernhard Frauendienst
@@ -75,6 +76,7 @@ import react.setState
 interface GraphProps : RProps {
   var requestMoreData: (dateRange: DateRange, callback: (willUpdate: Boolean) -> Unit) -> Unit
   var profile: Profile?
+  var selectionDate: Date?
   var measurements: List<ProfileMeasurement>
   var measureTypes: List<MeasureType>
 }
@@ -106,7 +108,7 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
   }
 
   private val availableMeasurements by memoizeOne({ it.map(::ChartMeasurement)}) { this.props.measurements }
-  private val selectedMeasurements by memoizeOne({ p1, p2 -> p1.select(p2) },
+  private val selectedMeasurements by memoizeOne({ ms, dateRange -> ms.select(dateRange) },
     { availableMeasurements }, { state.selectedRange })
 
   private val waitingForData by memoizeOne({ atomic(false) }) { availableMeasurements }
@@ -186,6 +188,7 @@ class GraphFragment(props: GraphProps) : RComponent<GraphProps, GraphState>(prop
           attrs.measureTypes = measureTypes
           attrs.visibleMeasureTypes = visibleMeasureTypes
           attrs.measurements = selectedMeasurements
+          attrs.showDatesUntil = props.selectionDate?.takeIf { state.selectedRange.getRange().second == null }
           attrs.targetWeight = props.profile?.targetWeight
           attrs.targetDatapointCount = state.targetDatapointCount
         }

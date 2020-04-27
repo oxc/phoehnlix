@@ -42,6 +42,9 @@ class Scale(id: EntityID<Int>) : IntEntity(id) {
 object Users : IntIdTable()
 class User(id: EntityID<Int>) : IntEntity(id) {
   companion object : IntEntityClass<User>(Users)
+
+  val profile by Profile optionalBackReferencedOn Profiles.id
+  val googleAccount by GoogleAccount optionalBackReferencedOn GoogleAccounts.id
 }
 
 object GoogleAccounts : IdTable<Int>() {

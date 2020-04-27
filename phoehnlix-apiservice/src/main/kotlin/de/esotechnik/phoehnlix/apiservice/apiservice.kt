@@ -105,6 +105,22 @@ fun Route.apiservice(jwt: SimpleJWT) {
             loadProfile(profileId)
           }
         }
+        post {
+          val profileId = call.profileId()
+          val values = call.receive<ProfileDraft>()
+          call.respondDb(ProfileResponse) {
+            val user = User.findById(profileId) ?: throw NotFoundException()
+            val dataSetter: Profile.() -> Unit = {
+              name = values.name!!
+              sex = values.sex!!
+              birthday = LocalDate.parse(values.birthday, BIRTHDAY_FORMATTER)
+              height = values.height!!
+              activityLevel = values.activityLevel!!
+              targetWeight = values.targetWeight
+            }
+            user.profile?.apply(dataSetter) ?: Profile.new(user, dataSetter)
+          }
+        }
         route("/measurements") {
           get {
             val profileId = call.profileId()
@@ -126,7 +142,7 @@ fun Route.apiservice(jwt: SimpleJWT) {
             val profileId = call.profileId()
             var activityLevel: ActivityLevel? = call.parameters["activityLevel"]
               ?.toIntOrNull()
-              ?.let { enumFromOrdinal(ActivityLevel::class, it) }
+              ?.let { ActivityLevel.fromIndex(it) }
 
             var csvPart: PartData.FileItem? = null
 
@@ -136,7 +152,7 @@ fun Route.apiservice(jwt: SimpleJWT) {
                 is PartData.FormItem -> {
                   when (part.name) {
                     //"profileId" -> profileId = part.getValue()
-                    "activityLevel" -> activityLevel = enumFromOrdinal(ActivityLevel::class, part.getValue())
+                    "activityLevel" -> activityLevel = ActivityLevel.fromIndex(part.getValue())
                   }
                 }
                 is PartData.FileItem -> {

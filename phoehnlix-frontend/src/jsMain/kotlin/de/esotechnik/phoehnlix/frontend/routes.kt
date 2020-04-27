@@ -1,5 +1,7 @@
 package de.esotechnik.phoehnlix.frontend
 
+import de.esotechnik.phoehnlix.api.model.ProfileDraft
+import de.esotechnik.phoehnlix.api.model.toProfileDraft
 import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
 import react.RProps
 import react.rFunction
@@ -18,8 +20,12 @@ val routingRoot = rFunction<RProps>("routingRoot") {
 
   browserRouter {
     switch {
-      route("/", exact = true) {
+
+      route<RProps>("/", exact = true) { props ->
         when {
+          props.location.hash.startsWith("#!/") -> {
+            redirect(to = props.location.hash.substring(2))
+          }
           !ctx.isLoggedIn -> {
             redirect(to = "/login")
           }
@@ -36,6 +42,15 @@ val routingRoot = rFunction<RProps>("routingRoot") {
           redirect(to = "/")
         }
         loginPage()
+      }
+      if (!ctx.isLoggedIn) {
+        redirect(to = "/login")
+      }
+      route("/myprofile") {
+        myProfilePage {
+          attrs.profileDraft = ctx.currentProfileDraft ?:
+            ctx.currentProfile?.toProfileDraft()
+        }
       }
       route("/dashboard") {
         dashboardPage {

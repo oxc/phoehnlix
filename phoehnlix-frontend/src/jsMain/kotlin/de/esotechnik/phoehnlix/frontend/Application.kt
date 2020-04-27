@@ -1,6 +1,7 @@
 package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.api.client.ApiClient
+import de.esotechnik.phoehnlix.api.client.ProfileId
 import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
@@ -18,7 +19,9 @@ import kotlinx.css.CSSBuilder
 import kotlinx.css.Color
 import kotlinx.css.backgroundColor
 import kotlinx.css.color
+import kotlinx.css.html
 import kotlinx.css.minHeight
+import kotlinx.css.pct
 import kotlinx.css.vh
 import materialui.components.cssbaseline.cssBaseline
 import materialui.components.grid.enums.GridDirection
@@ -38,6 +41,7 @@ import materialui.styles.palette.options.text
 import materialui.styles.palette.paper
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.withStyles
+import react.Fragment
 import react.RBuilder
 import react.RComponent
 import react.RProps
@@ -68,13 +72,15 @@ data class PhoehnlixState(
   val apiToken: PhoehnlixApiToken?,
   val currentProfile: Profile?,
   val currentProfileDraft: ProfileDraft?,
+  val profileIsLoading: Boolean,
   private val updateState: (PhoehnlixState) -> Unit
 ) {
+
   fun update(apiToken: PhoehnlixApiToken?) {
     storedApiAccessToken = apiToken
     updateState(copy(apiToken = apiToken))
   }
-  fun update(profile: Profile?) = updateState(copy(currentProfile = profile))
+  fun update(profile: Profile?) = updateState(copy(currentProfile = profile, currentProfileDraft = null))
   fun update(apiToken: PhoehnlixApiToken?, profile: Profile?, profileDraft: ProfileDraft?) {
     storedApiAccessToken = apiToken
     updateState(copy(apiToken = apiToken, currentProfile = profile, currentProfileDraft = profileDraft))
@@ -87,27 +93,32 @@ val PhoehnlixState.isLoggedIn get() = apiToken != null
 
 class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
   override fun AppState.init(props: AppProps) {
+    val apiToken = storedApiAccessToken
+    val loadProfile = apiToken != null
     val state = PhoehnlixState(
       apiUrl = props.apiUrl,
       googleClientId = props.googleClientId,
-      apiToken = storedApiAccessToken,
+      apiToken = apiToken,
       currentProfile = null,
       currentProfileDraft = null,
+      profileIsLoading = loadProfile,
       updateState = { newState -> setState { phoehnlixState = newState } }
     )
     phoehnlixState = state
 
-    with (state) {
+    if (loadProfile) with(state) {
+      // load profile if we're already logged in
       val mainScope = MainScope() + CoroutineName("Application")
       mainScope.launch {
-        val profile = api.profile[1]()
+        val profile = api.profile[ProfileId.Me]()
         update(profile)
       }
     }
   }
 
   override fun RBuilder.render() {
-    cssBaseline {
+    Fragment {
+      cssBaseline { }
       themeProvider(defaultTheme) {
         PhoehnlixContext.Provider(state.phoehnlixState) {
           flexRoot {
@@ -134,12 +145,12 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
     val whiteToolbarTheme = createMuiTheme {
       palette {
         background {
-          default = paper
+          default = Color("#fff")
         }
       }
       mixins {
         toolbar = CSSBuilder().apply {
-          backgroundColor = defaultTheme.palette.background.paper
+          backgroundColor = Color("#fff")
           color = defaultTheme.palette.primary.main
         }
       }
@@ -148,6 +159,11 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
 }
 
 private val flexRoot = withStyles("phoehnlix-flex-root", {
+  "@global" {
+    "html, body, div#root" {
+      minHeight = 100.pct
+    }
+  }
   "root" {
     minHeight = 100.vh
   }

@@ -9,9 +9,11 @@ import io.ktor.html.respondHtml
 import io.ktor.http.content.resource
 import io.ktor.http.content.static
 import io.ktor.http.content.staticBasePackage
+import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.util.KtorExperimentalAPI
+import io.ktor.util.getValue
 import kotlinx.html.body
 import kotlinx.html.div
 import kotlinx.html.head
@@ -55,6 +57,13 @@ fun Application.module(testing: Boolean = false) {
           }
           script(src = jsUrl) {}
         }
+      }
+    }
+    get("/{path...}") {
+      val path: String by call.parameters
+      call.respondRedirect {
+        encodedPath = "/"
+        fragment = "!/$path"
       }
     }
   }

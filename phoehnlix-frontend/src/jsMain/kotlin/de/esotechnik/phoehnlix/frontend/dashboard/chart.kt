@@ -48,6 +48,7 @@ interface MeasurementChartProps : RProps {
   var measurements: List<ChartMeasurement>
   var measureTypes: List<MeasureType>
   var visibleMeasureTypes: Set<MeasureType>
+  var showDatesUntil: Date?
   var targetWeight: Double?
   var targetDatapointCount: Int
   var downsampleMethod: DownsampleMethod
@@ -73,9 +74,9 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       }
 
       // make sure dependencies are loaded
-      @Suppress("UNUSED")
+      @Suppress("UNUSED_VARIABLE")
       val adapter = chartsJsAdapterDateFns
-      @Suppress("UNUSED")
+      @Suppress("UNUSED_VARIABLE")
       val downsamplePlugin = chartjsPluginDownsample
     }
 
@@ -178,7 +179,7 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       props.targetWeight?.let { targetWeight ->
         val targetWeights = emptyArray<Chart.ChartPoint>()
         targetWeights.add(targetWeight, entries.first().timestamp)
-        targetWeights.add(targetWeight, entries.last().timestamp)
+        targetWeights.add(targetWeight, props.showDatesUntil ?: entries.last().timestamp)
         datasetConfigs.add(new {
           measureType = Weight
           hidden = Weight !in visibleMeasureTypes
@@ -210,6 +211,10 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
         scales = new<Chart.ChartScales<*>> {
           xAxes = arrayOf(new<Chart.ChartXAxe> {
             type = "time"
+            time = new {
+              minUnit = "day"
+              max = props.showDatesUntil.asDynamic()
+            }
           }.also { o: dynamic ->
             o.adapters = js("{}")
             o.adapters.date = js("{}")
@@ -288,6 +293,7 @@ private val MeasureType.yAxisId get() = when (this) {
 }
 
 object TopYAxisLabelPlugin {
+  @Suppress("MemberVisibilityCanBePrivate", "UNUSED_PARAMETER")
   fun afterDatasetsDraw(chart: dynamic, options: dynamic) {
     val helpers = Chart.helpers.asDynamic()
     val defaults = Chart.defaults.asDynamic()
