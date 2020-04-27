@@ -13,6 +13,8 @@ import de.esotechnik.phoehnlix.frontend.util.subYears
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
+import de.esotechnik.phoehnlix.frontend.Application
+import de.esotechnik.phoehnlix.frontend.Application.Companion.whiteToolbarTheme
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -24,6 +26,7 @@ import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
 import materialui.components.paper.paper
 import materialui.components.typography.typography
+import materialui.styles.themeprovider.themeProvider
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RComponent
@@ -44,6 +47,7 @@ interface DashboardProps : RProps {
 interface DashboardState : RState {
   var view: DashboardViewType
   var selectedSince: Date?
+  var selectedAt: Date?
   var selectedRange: DateRange
   var measurements: List<ProfileMeasurement>
 }
@@ -106,13 +110,16 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
     val mainScope = MainScope() + CoroutineName("Dashboard")
     mainScope.launch {
       val (from, _) = dateRange.getRange()
-      // we always load with open-ended to, so we have the newest for the bullets
+      // we always load with open-ended to, so we have the newest measurement for the bullets
+      // but save the current date for adjusting the graph x-axis
+      val now = Date()
       val measurements = phoehnlix.api.profile[profile.id].measurements(
         from = from?.toISOString()
       ).sortedBy { it.timestamp }
       setState {
         this.measurements = measurements
         this.selectedSince = from
+        this.selectedAt = now
         this.selectedRange = dateRange
         this.view = when {
           measurements.isEmpty() -> Empty
@@ -124,56 +131,59 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
   }
 
   override fun RBuilder.render() {
-    logoMenu {
-      iconButton {
-        attrs {
-          attrs["edge"] = "end"
-          color = ButtonColor.inherit
-          onClickFunction = {
-            setState {
-              view = when (state.view) {
-                Graph -> List
-                else -> Graph
+    themeProvider(whiteToolbarTheme) {
+      logoMenu {
+        iconButton {
+          attrs {
+            attrs["edge"] = "end"
+            color = ButtonColor.inherit
+            onClickFunction = {
+              setState {
+                view = when (state.view) {
+                  Graph -> List
+                  else -> Graph
+                }
+              }
+            }
+            (this as Tag).disabled = when (state.view) {
+              Graph, List -> false
+              else -> true
+            }
+          }
+          icon {
+            +"visibility"
+          }
+        }
+      }
+      paper {
+        attrs.elevation = 0
+        when (state.view) {
+          Graph -> graphFragment {
+            attrs {
+              profile = props.profile
+              measureTypes = MEASURE_TYPES
+              measurements = state.measurements
+              selectionDate = state.selectedAt
+              requestMoreData = ::onMoreDataRequested
+            }
+          }
+          List -> {
+            measurementList {
+              attrs {
+                measurements = state.measurements.asReversed()
+                requestMoreData = if (state.selectedRange != Everything) {
+                  { loadData(Everything) }
+                } else null
               }
             }
           }
-          (this as Tag).disabled = when (state.view) {
-            Graph, List -> false
-            else -> true
-          }
-        }
-        icon {
-          +"visibility"
-        }
-      }
-    }
-    paper {
-      attrs.elevation = 0
-      when (state.view) {
-        Graph -> graphFragment {
-          attrs {
-            profile = props.profile
-            measureTypes = MEASURE_TYPES
-            measurements = state.measurements
-            requestMoreData = ::onMoreDataRequested
-          }
-        }
-        List -> {
-          measurementList {
-            attrs {
-              measurements = state.measurements.asReversed()
-              requestMoreData = if (state.selectedRange != Everything) {
-                { loadData(Everything) }
-              } else null
+          Empty -> {
+            typography {
+              +"Keine Messwerte vorhanden."
             }
           }
+          Loading -> graphSkeletonFragment(MEASURE_TYPES.size)
         }
-        Empty -> {
-          typography {
-            +"Keine Messwerte vorhanden."
-          }
-        }
-        Loading -> graphSkeletonFragment(MEASURE_TYPES.size)
       }
     }
   }

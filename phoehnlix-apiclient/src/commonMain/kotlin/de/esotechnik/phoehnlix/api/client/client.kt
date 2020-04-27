@@ -5,6 +5,7 @@ import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.MeasurementData
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
+import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -22,7 +23,12 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
 import io.ktor.http.takeFrom
 
-private typealias ProfileId = Int
+sealed class ProfileId(private val id: String) {
+  override fun toString() = id
+
+  object Me : ProfileId("me")
+  class Id(id: Int) : ProfileId(id.toString())
+}
 
 /**
  * @author Bernhard Frauendienst
@@ -83,11 +89,14 @@ class ApiClient private constructor(
   inner class ProfilesClient {
     suspend operator fun invoke(): List<Profile> = get("profile")
     suspend operator fun invoke(id: ProfileId): Profile = get("profile", id.toString())
+    suspend operator fun invoke(id: Int): Profile = invoke(ProfileId.Id(id))
     operator fun get(id: ProfileId) = ProfileClient(id)
+    operator fun get(id: Int) = ProfileClient(ProfileId.Id(id))
   }
 
   inner class ProfileClient(private val id: ProfileId) {
     suspend operator fun invoke(): Profile = profile(id)
+    suspend fun update(profileUpdate: ProfileDraft): Profile = post("profile", id.toString(), body = profileUpdate)
 
     val measurements = ProfileMeasurementsClient(id)
   }
