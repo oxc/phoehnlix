@@ -67,7 +67,9 @@ private fun Route.dataservice() {
     val response = when (val request = param.substring(0, 2)) {
       "24" -> {
         val data = WebConnectProtocol.parseMeasurementData(param)
-        call.apiClient().measurement.post(data)
+        call.apiClient().use {
+          it.measurement.post(data)
+        }
         "A00000000000000001000000000000000000000000000000"
       }
       "22" -> "A20000000000000000000000000000000000000000000000"
@@ -95,20 +97,21 @@ private fun Route.dataservice() {
 }
 
 suspend fun upstreamRequest(request: ApplicationRequest): String {
-  val httpClient = HttpClient {
+  return HttpClient {
     install(Logging) {
       logger = Logger.DEFAULT
       level = LogLevel.ALL
     }
-  }
-  return httpClient.get {
-    url.takeFrom(request.uri)
-    url {
-      // We have to use the IP, because the hostname should resolve to us in this net
-      host = "213.174.39.77"
+  }.use { http ->
+    http.get {
+      url.takeFrom(request.uri)
+      url {
+        // We have to use the IP, because the hostname should resolve to us in this net
+        host = "213.174.39.77"
+      }
+      headers.clear()
+      headers.appendAll(request.headers)
     }
-    headers.clear()
-    headers.appendAll(request.headers)
   }
 }
 

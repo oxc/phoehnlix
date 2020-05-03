@@ -60,7 +60,7 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        val kotlinWrappersBuild = "pre.100-kotlin-$kotlin_version"
+        val kotlinWrappersBuild = "pre.104-kotlin-$kotlin_version"
 
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
@@ -75,20 +75,14 @@ kotlin {
 
         val reactVersion = "16.13.1"
         val reactRouterVersion = "5.1.2"
-        implementation("org.jetbrains:kotlin-react:$reactVersion-$kotlinWrappersBuild")
-        implementation("org.jetbrains:kotlin-react-dom:$reactVersion-$kotlinWrappersBuild")
         implementation("org.jetbrains:kotlin-react-router-dom:$reactRouterVersion-$kotlinWrappersBuild")
-        implementation(npm("react", "^$reactVersion"))
-        implementation(npm("react-is", "^$reactVersion"))
-        implementation(npm("react-dom", "^$reactVersion"))
-        implementation(npm("react-router-dom", "^$reactRouterVersion"))
 
         implementation("org.jetbrains:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
+        implementation("org.jetbrains:kotlin-styled:1.0.0-$kotlinWrappersBuild")
 
-        val kotlinMuiVersion = "0.3.9"
+        val kotlinMuiVersion = "0.3.15-SNAPSHOT"
         implementation("subroh0508.net.kotlinmaterialui:core:$kotlinMuiVersion")
         implementation("subroh0508.net.kotlinmaterialui:lab:$kotlinMuiVersion")
-        implementation(npm("@material-ui/core", "^4.9.11"))
 
         implementation(npm("chart.js", "^2.9.3"))
         implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))

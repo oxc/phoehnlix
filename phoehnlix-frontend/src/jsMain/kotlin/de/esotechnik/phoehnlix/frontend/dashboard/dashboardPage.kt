@@ -13,18 +13,22 @@ import de.esotechnik.phoehnlix.frontend.util.subYears
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
-import de.esotechnik.phoehnlix.frontend.Application
 import de.esotechnik.phoehnlix.frontend.Application.Companion.whiteToolbarTheme
+import de.esotechnik.phoehnlix.frontend.util.styleSets
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import kotlinx.css.flexGrow
+import kotlinx.css.marginTop
+import kotlinx.css.px
 import kotlinx.html.Tag
 import kotlinx.html.js.onClickFunction
 import materialui.components.button.enums.ButtonColor
+import materialui.components.grid.enums.GridStyle
+import materialui.components.grid.grid
 import materialui.components.icon.icon
 import materialui.components.iconbutton.iconButton
-import materialui.components.paper.paper
 import materialui.components.typography.typography
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.withStyles
@@ -131,6 +135,7 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
   }
 
   override fun RBuilder.render() {
+    val root by styleSets
     themeProvider(whiteToolbarTheme) {
       logoMenu {
         iconButton {
@@ -155,8 +160,11 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
           }
         }
       }
-      paper {
-        attrs.elevation = 0
+      grid(GridStyle.item to root) {
+        attrs {
+          item = true
+
+        }
         when (state.view) {
           Graph -> graphFragment {
             attrs {
@@ -215,7 +223,8 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
 
 private val styledComponent = withStyles(DashboardComponent::class, {
   "root" {
-
+    flexGrow = 1.0
+    marginTop = 10.px
   }
 })
 

@@ -11,18 +11,29 @@ import de.esotechnik.phoehnlix.frontend.util.getValue
 import de.esotechnik.phoehnlix.frontend.util.setValue
 import de.esotechnik.phoehnlix.frontend.util.styleSets
 import io.ktor.client.engine.js.Js
+import io.ktor.utils.io.core.Closeable
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.css.CSSBuilder
 import kotlinx.css.Color
+import kotlinx.css.Display
+import kotlinx.css.FlexDirection
 import kotlinx.css.backgroundColor
+import kotlinx.css.body
 import kotlinx.css.color
+import kotlinx.css.display
+import kotlinx.css.flexDirection
+import kotlinx.css.height
 import kotlinx.css.html
+import kotlinx.css.margin
 import kotlinx.css.minHeight
+import kotlinx.css.padding
 import kotlinx.css.pct
+import kotlinx.css.px
 import kotlinx.css.vh
+import kotlinx.css.width
 import materialui.components.cssbaseline.cssBaseline
 import materialui.components.grid.enums.GridDirection
 import materialui.components.grid.enums.GridStyle
@@ -74,7 +85,7 @@ data class PhoehnlixState(
   val currentProfileDraft: ProfileDraft?,
   val profileIsLoading: Boolean,
   private val updateState: (PhoehnlixState) -> Unit
-) {
+) : Closeable {
 
   fun update(apiToken: PhoehnlixApiToken?) {
     storedApiAccessToken = apiToken
@@ -87,6 +98,10 @@ data class PhoehnlixState(
   }
 
   val api = ApiClient(Js, apiUrl, apiToken)
+
+  override fun close() {
+    api.close()
+  }
 }
 
 val PhoehnlixState.isLoggedIn get() = apiToken != null
@@ -102,7 +117,11 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
       currentProfile = null,
       currentProfileDraft = null,
       profileIsLoading = loadProfile,
-      updateState = { newState -> setState { phoehnlixState = newState } }
+      updateState = { newState ->
+        val oldState = state.phoehnlixState
+        setState { phoehnlixState = newState }
+        oldState.close()
+      }
     )
     phoehnlixState = state
 
@@ -159,21 +178,27 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
 }
 
 private val flexRoot = withStyles("phoehnlix-flex-root", {
-  "@global" {
-    "html, body, div#root" {
-      minHeight = 100.pct
+  global {
+    html {
+      display = Display.table
+      height = 100.pct
     }
-  }
-  "root" {
-    minHeight = 100.vh
+    body {
+      display = Display.tableCell
+    }
+    "html, body" {
+      width = 100.pct
+      margin(0.px)
+      padding(0.px)
+    }
+    "div#root" {
+      minHeight = 100.pct
+      display = Display.flex
+      flexDirection = FlexDirection.column
+    }
   }
 }) { props: RProps ->
-  val root by props.styleSets
-  grid(GridStyle.container to root) {
-    attrs {
-      direction = GridDirection.column
-      container = true
-    }
+  Fragment {
     props.children()
   }
 }
