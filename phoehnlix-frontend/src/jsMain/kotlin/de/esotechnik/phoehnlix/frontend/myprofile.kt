@@ -27,6 +27,7 @@ import kotlinx.html.js.onClickFunction
 import materialui.components.button.enums.ButtonColor
 import materialui.components.formcontrol.enums.FormControlVariant.outlined
 import materialui.components.grid.enums.GridAlignItems.center
+import materialui.components.grid.enums.GridAlignItems.flexStart
 import materialui.components.grid.enums.GridDirection.column
 import materialui.components.grid.enums.GridJustify
 import materialui.components.grid.enums.GridStyle
@@ -287,6 +288,7 @@ private val formRow = withStyles("MyProfileFormRow", {
     attrs {
       item = true
       container = true
+      alignItems = flexStart
       spacing(1)
     }
 
