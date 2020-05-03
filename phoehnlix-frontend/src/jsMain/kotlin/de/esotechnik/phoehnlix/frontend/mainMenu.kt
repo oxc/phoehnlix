@@ -46,7 +46,7 @@ interface MainMenuProps : RProps {
 
 private val styledMainMenu = withStyles("MainMenu", {
   "appbar" {
-    marginBottom = 20.px
+
   }
 }) { props: MainMenuProps ->
   val appbar by props.styleSets
@@ -78,7 +78,7 @@ private val titleMainMenu = withStyles("TitleMainMenu", {
     flexGrow = 1.0
   }
 }) { props: TitleMenuProps ->
-  styledMainMenu {
+  baseMainMenu {
     val title by props.styleSets
     grid(GridStyle.container to title) {
       attrs {

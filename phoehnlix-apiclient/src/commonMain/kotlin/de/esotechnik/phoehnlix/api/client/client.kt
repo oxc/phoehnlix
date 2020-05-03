@@ -22,6 +22,7 @@ import io.ktor.http.ParametersBuilder
 import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
 import io.ktor.http.takeFrom
+import io.ktor.utils.io.core.Closeable
 
 sealed class ProfileId(private val id: String) {
   override fun toString() = id
@@ -36,7 +37,7 @@ sealed class ProfileId(private val id: String) {
 class ApiClient private constructor(
   private val http: HttpClient,
   private val apiUrl: String
-) {
+) : Closeable by http {
   companion object {
     operator fun <T : HttpClientEngineConfig> invoke(
       engineFactory: HttpClientEngineFactory<T>,
