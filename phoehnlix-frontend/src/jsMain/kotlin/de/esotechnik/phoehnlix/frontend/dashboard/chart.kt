@@ -36,6 +36,8 @@ import react.createRef
 import react.dom.canvas
 import react.dom.div
 import kotlin.js.Date
+import kotlin.math.ceil
+import kotlin.math.floor
 
 @JsModule("chartjs-adapter-date-fns")
 external val chartsJsAdapterDateFns: dynamic
@@ -58,6 +60,7 @@ interface MeasurementChartState : RState {
 }
 
 private val MEASURE_TYPES = values().toList()
+private val MIN_WEIGHT_RANGE = 4.5
 
 /**
  * @author Bernhard Frauendienst
@@ -79,11 +82,6 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       @Suppress("UNUSED_VARIABLE")
       val downsamplePlugin = chartjsPluginDownsample
     }
-
-    private val styledComponent = withStyles(MeasurementChartComponent::class, {}, withTheme = true)
-
-    fun RBuilder.render(handler: RHandler<MeasurementChartProps>): ReactElement =
-      styledComponent(handler)
   }
 
   private val canvasRef = createRef<HTMLCanvasElement>()
@@ -175,7 +173,21 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
         pointRadius = 2
       }
     }
+    var weightScaleMin: Double? = undefined
+    var weightScaleMax: Double? = undefined
     if (Weight in measureTypes) {
+      // make sure we have at least 5kg
+      val weights = entries.mapTo(mutableListOf()) { it[Weight]!! }
+      props.targetWeight?.let { weights.add(it) }
+      val min = weights.min()!!
+      val max = weights.max()!!
+      if (max-min < MIN_WEIGHT_RANGE) {
+        val halfRange = MIN_WEIGHT_RANGE / 2.0
+        val avg = weights.average()
+        weightScaleMin = floor((avg - halfRange).coerceAtLeast(max - MIN_WEIGHT_RANGE))
+        weightScaleMax = ceil((avg + halfRange).coerceAtMost(min + MIN_WEIGHT_RANGE))
+      }
+
       props.targetWeight?.let { targetWeight ->
         val targetWeights = emptyArray<Chart.ChartPoint>()
         targetWeights.add(targetWeight, entries.first().timestamp)
@@ -213,6 +225,8 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
             type = "time"
             time = new {
               minUnit = "day"
+            }
+            ticks = new {
               max = props.showDatesUntil.asDynamic()
             }
           }.also { o: dynamic ->
@@ -229,11 +243,9 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
               scaleLabel = new {
                 labelString = "kg"
               }
-              props.targetWeight?.let { targetWeight ->
-                ticks = new {
-                  suggestedMin = targetWeight
-                  suggestedMax = targetWeight
-                }
+              ticks = new {
+                suggestedMin = weightScaleMin
+                suggestedMax = weightScaleMax
               }
             }, new {
               id = "percent"
@@ -341,11 +353,9 @@ var Chart.ChartDataSets.measureType: MeasureType
   set(value) { asDynamic().measureType = value }
 
 
-fun RBuilder.measurementChart(handler: RHandler<MeasurementChartProps>) = with(
-  MeasurementChartComponent
-) {
-  render(handler)
-}
+private val styledComponent = withStyles(MeasurementChartComponent::class, {}, withTheme = true)
+
+fun RBuilder.measurementChart(handler: RHandler<MeasurementChartProps>) = styledComponent(handler)
 
 data class ChartMeasurement(
   val timestamp: Date,
