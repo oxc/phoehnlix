@@ -29,6 +29,7 @@ enum class ActivityLevel(val index: Int) {
 class Profile(
   val id: Int,
   val name: String,
+  val imageUrl: String?,
   val sex: Sex,
   val birthday: String,
   val height: Int,
@@ -39,6 +40,7 @@ class Profile(
 @Serializable
 data class ProfileDraft(
   var name: String? = null,
+  var imageUrl: String? = null,
   var sex: Sex? = null,
   var birthday: String? = null,
   var height: Int? = null,
@@ -48,6 +50,7 @@ data class ProfileDraft(
 
 fun Profile.toProfileDraft() = ProfileDraft(
   name = name,
+  imageUrl = imageUrl,
   sex = sex,
   birthday = birthday,
   height = height,

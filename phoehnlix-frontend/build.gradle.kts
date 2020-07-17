@@ -20,7 +20,7 @@ kotlin {
   sourceSets {
     all {
       languageSettings.enableLanguageFeature("NewInference")
-      languageSettings.useExperimentalAnnotation("kotlin.OptIn")
+      languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
     }
     jvm()
     js {
