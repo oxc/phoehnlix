@@ -64,44 +64,51 @@ private fun Route.dataservice() {
       )
     }
 
-    val response = when (val request = param.substring(0, 2)) {
-      "24" -> {
-        val data = WebConnectProtocol.parseMeasurementData(param)
-        call.apiClient().use {
-          it.measurement.post(data)
+    val result = Result.runCatching {
+      when (val request = param.substring(0, 2)) {
+        "24" -> {
+          if (param.substring(26, 46) == "fa072011060741014101") {
+            // new scale registration
+            "A00000000000000001000000000000000000000000000000"
+          } else {
+            val data = WebConnectProtocol.parseMeasurementData(param)
+            call.apiClient().use {
+              it.measurement.post(data)
+            }
+            "A00000000000000001000000000000000000000000000000"
+          }
         }
-        "A00000000000000001000000000000000000000000000000"
+        "22" -> "A20000000000000000000000000000000000000000000000"
+        "25" -> "A00000000000000001000000000000000000000000000000"
+        "28" -> "A50000000000000001000000000000000000000000000000"
+        "21" -> {
+          val time = WebConnectProtocol.serializeTimestamp()
+          "A100000000000000${time}000000000000000000000000"
+        }
+        "23" -> "A00000000000000001000000000000000000000000000000"
+        "20" -> "A00000000000000001000000000000000000000000000000"
+        "29" -> null
+        else -> throw BadRequestException("Unknown request type 0x$request: $param")
+      }?.let {
+        it.signHexString() + "\n"
       }
-      "22" -> "A20000000000000000000000000000000000000000000000"
-      "25" -> "A00000000000000001000000000000000000000000000000"
-      "28" -> "A50000000000000001000000000000000000000000000000"
-      "21" -> {
-        val time = WebConnectProtocol.serializeTimestamp()
-        "A100000000000000${time}000000000000000000000000"
-      }
-      "29" -> null
-      else -> throw BadRequestException("Unknown request type 0x$request")
-    }?.let {
-      it.signHexString() + "\n"
     }
 
     val upstreamResponse = upstreamRequest(call.request)
     application.log.info("""Handled WebConnect request:
       |  Bridge Request:     $param
-      |  Our Response:       ${response?.trim() ?: ""}
+      |  Our Response:       ${result.getOrElse { it.message }?.trim() ?: ""}
       |  Upstream Response:  ${upstreamResponse.trim()}
     """.replaceIndentByMargin())
 
+    val response = result.getOrThrow()
     call.respondText(response ?: "", contentType = ContentType.Text.Plain)
   }
 }
 
 suspend fun upstreamRequest(request: ApplicationRequest): String {
   return HttpClient {
-    install(Logging) {
-      logger = Logger.DEFAULT
-      level = LogLevel.ALL
-    }
+
   }.use { http ->
     http.get {
       url.takeFrom(request.uri)

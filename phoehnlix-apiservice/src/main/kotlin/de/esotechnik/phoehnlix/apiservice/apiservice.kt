@@ -111,12 +111,12 @@ fun Route.apiservice(jwt: SimpleJWT) {
           call.respondDb(ProfileResponse) {
             val user = User.findById(profileId) ?: throw NotFoundException()
             val dataSetter: Profile.() -> Unit = {
-              name = values.name!!
-              sex = values.sex!!
-              birthday = LocalDate.parse(values.birthday, BIRTHDAY_FORMATTER)
-              height = values.height!!
-              activityLevel = values.activityLevel!!
-              targetWeight = values.targetWeight
+              values.name?.let { name = it }
+              values.sex?.let { sex = it }
+              values.birthday?.let { birthday = LocalDate.parse(it, BIRTHDAY_FORMATTER) }
+              values.height?.let { height = it }
+              values.activityLevel?.let { activityLevel = it }
+              values.targetWeight?.let { targetWeight = it.takeIf { it > 0 } }
             }
             user.profile?.apply(dataSetter) ?: Profile.new(user, dataSetter)
           }

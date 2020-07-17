@@ -16,6 +16,6 @@ fun String.hexStringChecksum(): Long {
   return checksum.value
 }
 
-fun String.hexStringSignature() = hexStringChecksum().toString(16)
+fun String.hexStringSignature() = hexStringChecksum().toString(16).padStart(8, '0')
 
 fun String.signHexString() = this + hexStringSignature()

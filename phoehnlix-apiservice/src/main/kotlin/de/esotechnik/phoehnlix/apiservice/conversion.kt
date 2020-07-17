@@ -16,6 +16,7 @@ val TIMESTAMP_FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
 fun DbProfile.toProfile() = Profile(
     id = id.value,
     name = name,
+    imageUrl = null,
     sex = sex,
     birthday = BIRTHDAY_FORMATTER.format(birthday),
     height = height,
