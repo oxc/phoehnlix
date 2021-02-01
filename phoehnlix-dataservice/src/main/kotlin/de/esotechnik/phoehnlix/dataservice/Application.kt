@@ -94,31 +94,13 @@ private fun Route.dataservice() {
       }
     }
 
-    val upstreamResponse = upstreamRequest(call.request)
     application.log.info("""Handled WebConnect request:
       |  Bridge Request:     $param
       |  Our Response:       ${result.getOrElse { it.message }?.trim() ?: ""}
-      |  Upstream Response:  ${upstreamResponse.trim()}
     """.replaceIndentByMargin())
 
     val response = result.getOrThrow()
     call.respondText(response ?: "", contentType = ContentType.Text.Plain)
-  }
-}
-
-suspend fun upstreamRequest(request: ApplicationRequest): String {
-  return HttpClient {
-
-  }.use { http ->
-    http.get {
-      url.takeFrom(request.uri)
-      url {
-        // We have to use the IP, because the hostname should resolve to us in this net
-        host = "213.174.39.77"
-      }
-      headers.clear()
-      headers.appendAll(request.headers)
-    }
   }
 }
 
