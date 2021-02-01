@@ -60,7 +60,7 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        val kotlinWrappersBuild = "pre.104-kotlin-$kotlin_version"
+        val kotlinWrappersBuild = "pre.109-kotlin-$kotlin_version"
 
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
@@ -80,7 +80,7 @@ kotlin {
         implementation("org.jetbrains:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
         implementation("org.jetbrains:kotlin-styled:1.0.0-$kotlinWrappersBuild")
 
-        val kotlinMuiVersion = "0.3.15-SNAPSHOT"
+        val kotlinMuiVersion = "0.4.4"
         implementation("subroh0508.net.kotlinmaterialui:core:$kotlinMuiVersion")
         implementation("subroh0508.net.kotlinmaterialui:lab:$kotlinMuiVersion")
 
