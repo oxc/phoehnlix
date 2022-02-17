@@ -25,14 +25,7 @@ import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.CanvasTextBaseline
 import org.w3c.dom.LEFT
 import org.w3c.dom.RIGHT
-import react.RBuilder
-import react.RHandler
-import react.RProps
-import react.RPureComponent
-import react.RState
-import react.RStatics
-import react.ReactElement
-import react.createRef
+import react.*
 import react.dom.canvas
 import react.dom.div
 import kotlin.js.Date
@@ -45,7 +38,7 @@ external val chartsJsAdapterDateFns: dynamic
 @JsModule("chartjs-plugin-downsample")
 external val chartjsPluginDownsample: dynamic
 
-interface MeasurementChartProps : RProps {
+interface MeasurementChartProps : PropsWithChildren {
   var skipUpdate: Boolean
   var measurements: List<ChartMeasurement>
   var measureTypes: List<MeasureType>
@@ -56,7 +49,7 @@ interface MeasurementChartProps : RProps {
   var downsampleMethod: DownsampleMethod
 }
 
-interface MeasurementChartState : RState {
+interface MeasurementChartState : State {
 }
 
 private val MEASURE_TYPES = values().toList()
@@ -179,8 +172,8 @@ class MeasurementChartComponent(props: MeasurementChartProps) : RPureComponent<M
       // make sure we have at least 5kg
       val weights = entries.mapTo(mutableListOf()) { it[Weight]!! }
       props.targetWeight?.let { weights.add(it) }
-      val min = weights.min()!!
-      val max = weights.max()!!
+      val min = weights.minOrNull()!!
+      val max = weights.maxOrNull()!!
       if (max-min < MIN_WEIGHT_RANGE) {
         val halfRange = MIN_WEIGHT_RANGE / 2.0
         val avg = weights.average()

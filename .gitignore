@@ -8,8 +8,10 @@
 *.ipr
 *.iws
 
+kotlin-js-store
 node_modules
 package-lock.json
 
 /phoehnlix.conf
 /rawdata
+

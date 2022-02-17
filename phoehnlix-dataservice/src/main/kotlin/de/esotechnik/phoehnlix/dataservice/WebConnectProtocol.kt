@@ -3,8 +3,8 @@ package de.esotechnik.phoehnlix.dataservice
 import de.esotechnik.phoehnlix.api.model.MeasurementData
 import de.esotechnik.phoehnlix.api.model.SenderId
 import de.esotechnik.phoehnlix.util.toBigInt
-import kotlinx.atomicfu.atomic
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 private val REQUEST_24: Byte = 0x24
 private val TIMESTAMP_OFFSET = Instant.parse("2010-01-01T00:00:00.00Z")
@@ -22,8 +22,8 @@ object WebConnectProtocol {
     //       ^request type   ^scale id 1-3    ^? ^timestamp    ^imp50               ^crc32
     //          ^bridge id 1-6      ^scale id 4-6         ^weight  ^imp5
     //                                     ^ nr. measurements queued on scale
-    val i = atomic(0)
-    fun nextBytes(n: Int) = raw.substring(i.value, i.addAndGet(n * 2)).hexStringBytes()
+    val i = AtomicInteger(0)
+    fun nextBytes(n: Int) = raw.substring(i.get(), i.addAndGet(n * 2)).hexStringBytes()
     fun next(n: Int) = nextBytes(n).toBigInt()
     require(nextBytes(1).single() == REQUEST_24) { "Request must be 0x24" }
     val senderId = SenderId(nextBytes(12))

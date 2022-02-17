@@ -5,8 +5,7 @@ plugins {
 
 repositories {
   mavenLocal()
-  jcenter()
-  maven { url = uri("https://kotlin.bintray.com/ktor") }
+  mavenCentral()
 }
 
 kotlin {
@@ -21,7 +20,7 @@ kotlin {
         api(project(":phoehnlix-util"))
 
         implementation(kotlin("stdlib-common"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
         api("io.ktor:ktor-client-core")
         implementation("io.ktor:ktor-client-json")
         implementation("io.ktor:ktor-client-serialization")
@@ -32,7 +31,6 @@ kotlin {
         api(project(":phoehnlix-util"))
 
         implementation(kotlin("stdlib-jdk8"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
 
         implementation("io.ktor:ktor-server-netty")
         implementation("ch.qos.logback:logback-classic")
@@ -54,7 +52,6 @@ kotlin {
         implementation(project(":phoehnlix-util"))
 
         implementation(kotlin("stdlib-js"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
 
         implementation("io.ktor:ktor-client-json-js")
         runtimeOnly("io.ktor:ktor-client-serialization-js")

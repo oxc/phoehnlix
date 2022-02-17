@@ -21,13 +21,14 @@ import materialui.styles.withStyles
 import org.w3c.dom.events.Event
 import react.RBuilder
 import react.RHandler
-import react.RProps
+import react.Props
+import react.dom.attrs
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface SignInButtonProps : RProps {
+interface SignInButtonProps : Props {
   var onClickFunction: ((Event) -> Unit)?
 }
 

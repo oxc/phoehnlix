@@ -12,7 +12,6 @@ import io.ktor.http.content.staticBasePackage
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
-import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getValue
 import kotlinx.html.body
 import kotlinx.html.div
@@ -26,7 +25,6 @@ import kotlin.collections.set
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
-@KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
   setupForwardedFor()

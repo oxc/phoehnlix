@@ -3,10 +3,9 @@ package de.esotechnik.phoehnlix.apiservice.data
 import de.esotechnik.phoehnlix.api.model.ActivityLevel
 import de.esotechnik.phoehnlix.apiservice.calculateMetabolicRate
 import de.esotechnik.phoehnlix.util.roundToDigits
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonLiteral
+import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import java.io.InputStream
 import java.lang.IllegalArgumentException
@@ -16,6 +15,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicInteger
 
 
 private val TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")
@@ -42,7 +42,7 @@ object CsvImport {
       numberFormat.parse(it).toDouble()
     }
 
-    val counter = atomic(0)
+    val counter = AtomicInteger(0)
     newSuspendedTransaction(Dispatchers.IO) {
       reader.forEachLine { line ->
         val (day, time, weight, fat, water, muscle, bmi, escapedNotes) = line.csvLine()
@@ -51,7 +51,7 @@ object CsvImport {
         // notes are backslash escaped (except for newlines, which are \n)
         // Use Json parser for first level of escaping, and manually do the second
         val notes = escapedNotes.takeIf { it.isNotEmpty() }?.let {
-          (Json.parseJson(""""$it"""") as JsonLiteral).body.toString()
+          (Json.parseToJsonElement(""""$it"""").jsonPrimitive).content.toString()
             .replace(PATTERN_BACKSLASH, "$1")
         }
 
@@ -74,7 +74,7 @@ object CsvImport {
       }
     }
 
-    return counter.value
+    return counter.get()
   }
 }
 

@@ -1,6 +1,6 @@
 import de.esotechnik.phoehnlix.frontend.Application
 import react.dom.render
-import kotlin.browser.document
+import kotlinx.browser.document
 
 /**
  * @author Bernhard Frauendienst

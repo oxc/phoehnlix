@@ -40,23 +40,18 @@ import materialui.components.menuitem.menuItem
 import materialui.components.textfield.TextFieldElementBuilder
 import materialui.components.textfield.textField
 import materialui.styles.withStyles
-import react.RBuilder
-import react.RComponent
-import react.RHandler
-import react.RProps
-import react.RState
-import react.buildElement
-import react.setState
+import react.*
+import react.dom.attrs
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface MyProfileProps : RProps {
+interface MyProfileProps : PropsWithChildren {
   var profileDraft: ProfileDraft?
 }
 
-interface MyProfileState : RState {
+interface MyProfileState : State {
   var name: String?
   var sex: String?
   var birthday: String?
@@ -256,7 +251,7 @@ private val styledComponent = withStyles(MyProfileComponent::class, {
 
 })
 
-private interface FormRowProps : RProps {
+private interface FormRowProps : PropsWithChildren {
   var id: String
   var label: String
   var icon: String?
@@ -277,12 +272,7 @@ private inline fun <reified T : Enum<T>> FormRowProps.selectOptions(labelGenerat
   selectOptions = enumValues<T>().map { it.name to labelGenerator(it) }
 }
 
-private val formRow = withStyles("MyProfileFormRow", {
-  "gridIcon" {
-    minHeight = 64.px
-    minWidth = 64.px
-  }
-}) { props: FormRowProps ->
+private val MyProfileFormRow = fc { props: FormRowProps ->
   val gridIcon by props.styleSets
   grid {
     attrs {
@@ -365,5 +355,11 @@ private val formRow = withStyles("MyProfileFormRow", {
     }
   }
 }
+private val formRow = withStyles(MyProfileFormRow, {
+  "gridIcon" {
+    minHeight = 64.px
+    minWidth = 64.px
+  }
+});
 
 fun RBuilder.myProfilePage(handler: RHandler<MyProfileProps>) = styledComponent(handler)

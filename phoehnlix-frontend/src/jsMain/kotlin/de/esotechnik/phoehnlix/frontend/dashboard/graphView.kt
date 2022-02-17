@@ -60,20 +60,16 @@ import materialui.components.typography.enums.TypographyStyle
 import materialui.components.typography.enums.TypographyVariant
 import materialui.components.typography.typography
 import materialui.styles.withStyles
-import react.RBuilder
-import react.RComponent
-import react.RHandler
-import react.RProps
-import react.RState
+import react.*
+import react.dom.attrs
 import react.dom.div
-import react.setState
 import kotlin.js.Date
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface GraphProps : RProps {
+interface GraphProps : PropsWithChildren {
   var requestMoreData: (dateRange: DateRange, callback: (willUpdate: Boolean) -> Unit) -> Unit
   var profile: Profile?
   var selectionDate: Date?
@@ -81,7 +77,7 @@ interface GraphProps : RProps {
   var measureTypes: List<MeasureType>
 }
 
-interface GraphState : RState {
+interface GraphState : State {
   var selectedRange: DateRange
   var targetDatapointCount: Int
   var visibleMeasureTypes: Set<MeasureType>
@@ -340,6 +336,6 @@ private val styledComponent = withStyles(GraphFragment::class, {
 
   "unchecked" {}
   "selected" {}
-})
+}, withTheme = false)
 
 fun RBuilder.graphFragment(handler: RHandler<GraphProps>) = styledComponent(handler)

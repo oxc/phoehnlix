@@ -7,7 +7,6 @@ import io.ktor.application.install
 import io.ktor.config.ApplicationConfig
 import io.ktor.routing.Routing
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.pipeline.ContextDsl
 import org.jetbrains.exposed.sql.Database as ExposedDatabase
 
@@ -24,7 +23,6 @@ class Database(configuration: Configuration) {
     var user: String? = "phoehnlix"
     var password: String? = null
 
-    @KtorExperimentalAPI
     fun loadFromConfiguration(config: ApplicationConfig) {
       config.propertyOrNull("url")?.let { url = it.getString() }
       config.propertyOrNull("user")?.let { user = it.getString() }
@@ -36,7 +34,6 @@ class Database(configuration: Configuration) {
     println("Connected to ${it.url}")
   }
 
-  @KtorExperimentalAPI
   companion object Feature : ApplicationFeature<Application, Configuration, Database> {
     override val key = AttributeKey<Database>("PhoehnlixDatasource")
 
@@ -56,7 +53,6 @@ class Database(configuration: Configuration) {
 /**
  * Gets or installs a [Routing] feature for the this [Application] and runs a [configuration] script on it
  */
-@KtorExperimentalAPI
 @ContextDsl
 fun Application.setupDatabase(): Database =
   featureOrNull(Database) ?: install(Database)

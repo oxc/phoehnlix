@@ -15,7 +15,6 @@ import io.ktor.auth.oauthHandleCallback
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.parametersOf
-import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.SerialName
@@ -27,7 +26,9 @@ import java.time.Instant
 /**
  * @author Bernhard Frauendienst
  */
-val GoogleJson = Json(JsonConfiguration.Stable.copy(ignoreUnknownKeys = true))
+val GoogleJson = Json {
+  ignoreUnknownKeys = true
+}
 
 @Serializable
 class TokenInfo(
@@ -64,7 +65,6 @@ class Userinfo(
 fun TokenInfo.hasScope(scope: String) = scope in scopes
 fun TokenInfo.hasFitWriteScope() = hasScope(SCOPE_FITNESS_BODY_WRITE)
 
-@OptIn(KtorExperimentalAPI::class)
 internal fun Application.createGoogleOAuth2Provider(): OAuthServerSettings.OAuth2ServerSettings {
   val config = environment.config.config("phoehnlix.googleOAuth")
 
@@ -87,14 +87,12 @@ internal fun Application.createGoogleOAuth2Provider(): OAuthServerSettings.OAuth
   )
 }
 
-@OptIn(KtorExperimentalAPI::class)
 suspend fun PipelineContext<Unit, ApplicationCall>.oauth2RequestAccessToken(
   code: String,
   client: HttpClient,
   dispatcher: CoroutineDispatcher,
   provider: OAuthServerSettings.OAuth2ServerSettings,
   callbackUrl: String,
-  configure: HttpRequestBuilder.() -> Unit = {}
 ): OAuthAccessTokenResponse.OAuth2 {
   val pcontext = ParameterOverridingContext(
     this, parametersOf(
@@ -106,7 +104,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.oauth2RequestAccessToken(
   // we hacky-hackily re-use oauthHandleCallback here.
   // This will most likely break. Just implement it ourselves.
   var result: OAuthAccessTokenResponse.OAuth2? = null
-  pcontext.oauthHandleCallback(client, dispatcher, provider, callbackUrl, "", configure) {
+  pcontext.oauthHandleCallback(client, dispatcher, provider, callbackUrl, "") {
     result = it as OAuthAccessTokenResponse.OAuth2
   }
   return result ?: throw IllegalStateException("OAuth callback callback was not called")

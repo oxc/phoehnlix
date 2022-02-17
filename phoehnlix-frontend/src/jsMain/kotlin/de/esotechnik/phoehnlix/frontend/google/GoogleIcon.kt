@@ -11,7 +11,7 @@ import kotlinx.html.attributesMapOf
 import materialui.components.svgicon.svgIcon
 import materialui.styles.withStyles
 import react.RBuilder
-import react.RProps
+import react.Props
 import react.ReactElement
 import react.dom.RDOMBuilder
 import react.dom.tag
@@ -39,7 +39,7 @@ private val styledGoogleIcon = withStyles("google-icon", {
   "red" {
     fill(Color("#ea4335"))
   }
-}) { props: RProps ->
+}) { props: Props ->
   val rootGroup by props.styleSets
   val blue by props.styleSets
   val green by props.styleSets
@@ -74,7 +74,7 @@ private inline fun RBuilder.g(
   id: String? = null,
   transform: String? = null,
   block: RDOMBuilder<G>.() -> Unit = {}
-): ReactElement = tag(block) {
+) = tag(block) {
   G(attributesMapOf("class", classes, "id", id, "transform", transform), it)
 }
 
@@ -85,7 +85,7 @@ private inline fun RBuilder.path(
   id: String? = null,
   transform: String? = null,
   block: RDOMBuilder<PATH>.() -> Unit = {}
-): ReactElement = tag(block) {
+) = tag(block) {
   PATH(attributesMapOf("class", classes, "d", d, "id", id, "transform", transform), it)
 }
 

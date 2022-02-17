@@ -9,9 +9,8 @@ version = "0.0.1-SNAPSHOT"
 
 repositories {
   mavenLocal()
-  jcenter()
-  maven { url = uri("https://kotlin.bintray.com/ktor") }
-  maven { url = uri("https://kotlin.bintray.com/kotlin-js-wrappers") }
+  mavenCentral()
+  maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
 }
 
 val kotlin_version: String by project
@@ -60,29 +59,32 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        val kotlinWrappersBuild = "pre.109-kotlin-$kotlin_version"
+        val kotlinWrappersBuild = "pre.301-kotlin-$kotlin_version"
 
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
 
         implementation(kotlin("stdlib-js"))
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
-        implementation("org.jetbrains:kotlin-extensions:1.0.1-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:1.0.1-$kotlinWrappersBuild")
 
         implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")
 
-        val reactVersion = "16.13.1"
-        val reactRouterVersion = "5.1.2"
-        implementation("org.jetbrains:kotlin-react-router-dom:$reactRouterVersion-$kotlinWrappersBuild")
+        val reactVersion = "17.0.2"
+        val reactRouterVersion = "6.2.1"
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:$reactVersion-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-legacy:$reactVersion-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:$reactRouterVersion-$kotlinWrappersBuild")
 
-        implementation("org.jetbrains:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
-        implementation("org.jetbrains:kotlin-styled:1.0.0-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:5.3.3-$kotlinWrappersBuild")
 
-        val kotlinMuiVersion = "0.4.4"
-        implementation("subroh0508.net.kotlinmaterialui:core:$kotlinMuiVersion")
-        implementation("subroh0508.net.kotlinmaterialui:lab:$kotlinMuiVersion")
+        val kotlinMuiVersion = "0.7.0-oxc"
+        implementation("net.subroh0508.kotlinmaterialui:core:$kotlinMuiVersion")
+        implementation("net.subroh0508.kotlinmaterialui:lab:$kotlinMuiVersion")
 
         implementation(npm("chart.js", "^2.9.3"))
         implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))

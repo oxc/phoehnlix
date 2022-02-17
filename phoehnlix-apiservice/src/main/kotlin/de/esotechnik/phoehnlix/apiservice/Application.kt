@@ -18,9 +18,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.route
 import io.ktor.routing.routing
-import io.ktor.serialization.DefaultJsonConfiguration
 import io.ktor.serialization.json
-import io.ktor.util.KtorExperimentalAPI
 import kotlinx.serialization.json.Json
 import org.apache.commons.codec.binary.Base64
 import java.nio.charset.StandardCharsets
@@ -29,11 +27,14 @@ import java.security.SecureRandom
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
-@KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
   setupForwardedFor()
   setupDatabase()
+
+  val hostname = environment.config.propertyOrNull("phoehnlix.host")?.getString() ?: run {
+    error("No host configured. Please specify your domain as phoehnlix.host")
+  }
 
   install(CORS) {
     method(HttpMethod.Options)
@@ -44,15 +45,13 @@ fun Application.module(testing: Boolean = false) {
     method(HttpMethod.Patch)
     header(HttpHeaders.Authorization)
     allowCredentials = true
-    anyHost()
+    host(hostname)
   }
   install(ContentNegotiation) {
     json(
-      json = Json(
-        DefaultJsonConfiguration.copy(
-          prettyPrint = true
-        )
-      )
+      json = Json {
+        prettyPrint = true
+      }
     )
   }
   install(StatusPages) {

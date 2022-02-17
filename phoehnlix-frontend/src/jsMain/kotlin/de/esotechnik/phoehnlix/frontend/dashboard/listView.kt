@@ -41,8 +41,9 @@ import org.w3c.dom.HTMLElement
 import react.RBuilder
 import react.RComponent
 import react.RHandler
-import react.RState
+import react.State
 import react.createRef
+import react.dom.attrs
 import react.dom.div
 import react.dom.span
 
@@ -57,7 +58,7 @@ interface MeasurementListProps : TableProps {
   var measurements: List<ProfileMeasurement>
 }
 
-class MeasurementListComponent : RComponent<MeasurementListProps, RState>() {
+class MeasurementListComponent : RComponent<MeasurementListProps, State>() {
   override fun RBuilder.render() {
     val root by styleSets
     val bulletRow by styleSets

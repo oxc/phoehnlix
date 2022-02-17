@@ -1,5 +1,3 @@
-enableFeaturePreview("GRADLE_METADATA")
-
 pluginManagement {
   val kotlin_version: String by settings
   val shadow_version: String by settings

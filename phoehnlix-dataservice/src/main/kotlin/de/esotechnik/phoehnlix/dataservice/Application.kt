@@ -25,13 +25,11 @@ import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
 import io.ktor.routing.routing
-import io.ktor.util.KtorExperimentalAPI
-import io.ktor.util.getOrFail
+import io.ktor.util.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
-@KtorExperimentalAPI
 @JvmOverloads
 fun Application.module(testing: Boolean = false) {
   setupForwardedFor()
@@ -45,7 +43,6 @@ fun Application.module(testing: Boolean = false) {
   }
 }
 
-@KtorExperimentalAPI
 private fun Route.dataservice() {
   get("/devicedataservice/dataservice") {
     // http://bridge1.soehnle.de/devicedataservice/dataservice?data=24...601a30c1
@@ -104,7 +101,6 @@ private fun Route.dataservice() {
   }
 }
 
-@KtorExperimentalAPI
 fun ApplicationCall.apiClient(): ApiClient {
   val config = application.environment.config
   val apiUrl = config.property("phoehnlix.apiUrl").getString()

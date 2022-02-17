@@ -1,7 +1,7 @@
 @file:Suppress("NOTHING_TO_INLINE")
 package de.esotechnik.phoehnlix.frontend.util
 
-import kotlinx.css.CSSBuilder
+import kotlinx.css.CssBuilder
 import kotlinx.css.Color
 import kotlinx.css.CssValue
 import kotlinx.css.LinearDimension
@@ -9,18 +9,18 @@ import kotlinx.css.hyphenize
 import kotlinx.css.toCustomProperty
 import materialui.styles.muitheme.MuiTheme
 import react.Component
-import react.RProps
+import react.Props
 import kotlin.reflect.KProperty
 
 /**
  * @author Bernhard Frauendienst
  */
 class CustomPropertyDelegate<T : CssValue>(private val ctor: (String) -> T) {
-  operator fun getValue(cssBuilder: CSSBuilder, property: KProperty<*>): T {
+  operator fun getValue(cssBuilder: CssBuilder, property: KProperty<*>): T {
     return ctor(property.name.hyphenize().toCustomProperty())
   }
 
-  operator fun setValue(cssBuilder: CSSBuilder, property: KProperty<*>, value: T) {
+  operator fun setValue(cssBuilder: CssBuilder, property: KProperty<*>, value: T) {
     cssBuilder.setCustomProperty(property.name.hyphenize(), value)
   }
 }
@@ -29,15 +29,15 @@ val Color.Companion.customProperty get() = customColorDelegate
 private val customLinearDimensionDelegate = CustomPropertyDelegate(::LinearDimension)
 val LinearDimension.Companion.customProperty get() = customLinearDimensionDelegate
 
-fun RProps.styleSet(name: String): String
+fun Props.styleSet(name: String): String
   = asDynamic()["classes"][name] as String?
   ?: throw NoSuchElementException("No style $name defined.")
 fun Component<*, *>.styleSet(name: String) = props.styleSet(name)
 
-val RProps.styleSets get() = StyleSetDelegateProvider(this)
+val Props.styleSets get() = StyleSetDelegateProvider(this)
 val Component<*, *>.styleSets get() = StyleSetDelegateProvider(this.props)
 
-class StyleSetDelegateProvider(private val props: RProps) {
+class StyleSetDelegateProvider(private val props: Props) {
   operator fun provideDelegate(thisRef: Any?, property: KProperty<*>) =
     StyleSetDelegate(props.styleSet(property.name))
 }
@@ -46,4 +46,4 @@ class StyleSetDelegate(private val classNames: String) {
 }
 
 // for use with withStyles(withTheme=true)
-val RProps.theme get() = asDynamic()["theme"].unsafeCast<MuiTheme>()
+val Props.theme get() = asDynamic()["theme"].unsafeCast<MuiTheme>()
