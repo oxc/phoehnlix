@@ -5,14 +5,12 @@ import io.ktor.application.install
 import io.ktor.application.log
 import io.ktor.features.XForwardedHeaderSupport
 import io.ktor.util.AttributeKey
-import io.ktor.util.KtorExperimentalAPI
 
 private val attributeKey = AttributeKey<Boolean>("phoehnlixForwardedFor")
 
 /**
  * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
  */
-@KtorExperimentalAPI
 fun Application.setupForwardedFor() {
   if (attributes.getOrNull(attributeKey) == true) {
     return

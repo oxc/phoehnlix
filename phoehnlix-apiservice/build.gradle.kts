@@ -9,8 +9,7 @@ plugins {
 
 repositories {
   mavenLocal()
-  jcenter()
-  maven { url = uri("https://kotlin.bintray.com/ktor") }
+  mavenCentral()
 }
 
 application {
@@ -25,7 +24,7 @@ dependencies {
   api(project(":phoehnlix-api"))
 
   implementation(kotlin("stdlib-jdk8"))
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
 
   implementation("io.ktor:ktor-server-netty")
   implementation("ch.qos.logback:logback-classic")

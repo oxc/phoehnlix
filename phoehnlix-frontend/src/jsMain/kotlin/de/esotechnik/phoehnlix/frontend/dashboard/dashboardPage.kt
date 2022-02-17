@@ -32,23 +32,19 @@ import materialui.components.iconbutton.iconButton
 import materialui.components.typography.typography
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.withStyles
-import react.RBuilder
-import react.RComponent
-import react.RHandler
-import react.RProps
-import react.RState
-import react.setState
+import react.*
+import react.dom.attrs
 import kotlin.collections.List
 import kotlin.js.Date
 
 /**
  * @author Bernhard Frauendienst
  */
-interface DashboardProps : RProps {
+interface DashboardProps : PropsWithChildren {
   var profile: Profile?
 }
 
-interface DashboardState : RState {
+interface DashboardState : State {
   var view: DashboardViewType
   var selectedSince: Date?
   var selectedAt: Date?

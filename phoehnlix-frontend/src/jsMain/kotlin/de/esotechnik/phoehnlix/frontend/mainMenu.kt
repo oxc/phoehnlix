@@ -31,17 +31,14 @@ import materialui.components.typography.typographyH1
 import materialui.components.typography.typographyH2
 import materialui.components.typography.typographyH3
 import materialui.styles.withStyles
-import react.RBuilder
-import react.RComponent
-import react.RHandler
-import react.RProps
-import react.RState
+import react.*
+import react.dom.attrs
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface MainMenuProps : RProps {
+interface MainMenuProps : PropsWithChildren {
 }
 
 private val styledMainMenu = withStyles("MainMenu", {
@@ -104,7 +101,7 @@ private val titleMainMenu = withStyles("TitleMainMenu", {
 
 fun RBuilder.mainMenu(handler: RHandler<TitleMenuProps>) = titleMainMenu(handler)
 
-class LogoMenu(props: MainMenuProps) : RComponent<MainMenuProps, RState>(props) {
+class LogoMenu(props: MainMenuProps) : RComponent<MainMenuProps, State>(props) {
   override fun RBuilder.render() {
     val title by props.styleSets
     baseMainMenu {
@@ -113,7 +110,7 @@ class LogoMenu(props: MainMenuProps) : RComponent<MainMenuProps, RState>(props) 
         +"Phoehnlix"
       }
 
-      children()
+      props.children()
     }
   }
 

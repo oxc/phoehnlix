@@ -1,6 +1,6 @@
 package de.esotechnik.phoehnlix.frontend.util
 
-import kotlinx.css.CSSBuilder
+import kotlinx.css.CssBuilder
 import kotlinx.css.Color
 import kotlinx.css.LinearDimension
 
@@ -18,7 +18,7 @@ import kotlinx.css.LinearDimension
 annotation class CustomProperty
 
 @CustomProperty
-var CSSBuilder.measurementColor by Color.customProperty
+var CssBuilder.measurementColor by Color.customProperty
 
 @CustomProperty
-var CSSBuilder.circleDiameter by LinearDimension.customProperty
+var CssBuilder.circleDiameter by LinearDimension.customProperty

@@ -27,14 +27,15 @@ import materialui.lab.components.skeleton.enums.SkeletonVariant
 import materialui.lab.components.skeleton.skeleton
 import materialui.styles.withStyles
 import react.RBuilder
-import react.RProps
+import react.Props
+import react.PropsWithChildren
 import react.dom.div
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface SkeletonProps : RProps {
+interface SkeletonProps : PropsWithChildren {
   var measureTypeCount: Int
 }
 

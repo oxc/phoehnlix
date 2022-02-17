@@ -35,7 +35,7 @@ import kotlinx.css.width
 import materialui.styles.StylesBuilder
 import react.RBuilder
 import react.RElementBuilder
-import react.RProps
+import react.Props
 import react.ReactElement
 import react.dom.span
 import react.dom.sup
@@ -43,14 +43,14 @@ import react.dom.sup
 /**
  * @author Bernhard Frauendienst
  */
-fun RElementBuilder<RProps>.bullets(
+fun RElementBuilder<Props>.bullets(
   entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>,
-  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
+  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> Unit
 ) = bullets(entry, measureTypes, attrs, component)
 
 fun RBuilder.bullets(
-  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>, props: RProps,
-  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> ReactElement
+  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>, props: Props,
+  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> Unit
 ) {
   val measurementBullet by props.styleSets
   measureTypes.forEach { type ->
@@ -106,4 +106,4 @@ fun StylesBuilder<*>.makeBulletStyles() {
 }
 
 
-val MeasureType.cssClass get() = name.decapitalize().hyphenize()
+val MeasureType.cssClass get() = name.replaceFirstChar { it.lowercase() }.hyphenize()

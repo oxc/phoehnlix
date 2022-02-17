@@ -1,8 +1,8 @@
 package de.esotechnik.phoehnlix.frontend.util
 
 import react.Component
-import react.RProps
-import react.RState
+import react.Props
+import react.State
 import kotlin.reflect.KMutableProperty1
 
 typealias Converter<T> = (String) -> Result<T?>
@@ -30,7 +30,7 @@ interface FormField<T> {
   val typedValue: T?
 }
 
-interface StateFormField<T, S: RState> : FormField<T> {
+interface StateFormField<T, S: State> : FormField<T> {
   fun setStateValue(state: S, value: String?)
 
   fun validate(validator: Validator<T>): StateFormField<T, S>
@@ -51,10 +51,10 @@ interface StateFormField<T, S: RState> : FormField<T> {
   }
 }
 
-operator fun <S : RState> S.set(field: StateFormField<*, S>, value: String?)
+operator fun <S : State> S.set(field: StateFormField<*, S>, value: String?)
   = field.setStateValue(this, value)
 
-class StateFormFieldImpl<T, C: Component<P, S>, P: RProps, S: RState>(
+class StateFormFieldImpl<T, C: Component<P, S>, P: Props, S: State>(
   private val component: C,
   private val stateProperty: KMutableProperty1<S, String?>,
   private val type: FormType<T>,
@@ -92,28 +92,28 @@ class StateFormFieldImpl<T, C: Component<P, S>, P: RProps, S: RState>(
 
 val Iterable<FormField<*>>.isAnyError get() = any { it.isError }
 
-fun <T, C: Component<P, S>, P: RProps, S: RState> C.formField(
+fun <T, C: Component<P, S>, P: Props, S: State> C.formField(
   stateProperty: KMutableProperty1<S, String?>,
   type: FormType<T>,
   initialValue: P.() -> T?
 ): StateFormField<T, S> = StateFormFieldImpl(this, stateProperty, type, initialValue)
 
-fun <C: Component<P, S>, P: RProps, S: RState> C.intField(
+fun <C: Component<P, S>, P: Props, S: State> C.intField(
   stateProperty: KMutableProperty1<S, String?>,
   initialValue: P.() -> Int?
 ) = formField(stateProperty, IntFormType, initialValue)
 
-fun <C: Component<P, S>, P: RProps, S: RState> C.doubleField(
+fun <C: Component<P, S>, P: Props, S: State> C.doubleField(
   stateProperty: KMutableProperty1<S, String?>,
   initialValue: P.() -> Double?
 ) = formField(stateProperty, DoubleFormType, initialValue)
 
-fun <C: Component<P, S>, P: RProps, S: RState> C.stringField(
+fun <C: Component<P, S>, P: Props, S: State> C.stringField(
   stateProperty: KMutableProperty1<S, String?>,
   initialValue: P.() -> String?
 ) = formField(stateProperty, StringFormType, initialValue)
 
-inline fun <reified T : Enum<T>, C: Component<P, S>, P: RProps, S: RState> C.enumField(
+inline fun <reified T : Enum<T>, C: Component<P, S>, P: Props, S: State> C.enumField(
   stateProperty: KMutableProperty1<S, String?>,
   noinline initialValue: P.() -> T?
 ) = formField(stateProperty, enumFormType(), initialValue)

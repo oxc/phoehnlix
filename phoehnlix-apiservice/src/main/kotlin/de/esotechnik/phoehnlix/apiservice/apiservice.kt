@@ -17,6 +17,7 @@ import de.esotechnik.phoehnlix.apiservice.auth.oauth2RequestAccessToken
 import de.esotechnik.phoehnlix.apiservice.data.CsvImport
 import de.esotechnik.phoehnlix.apiservice.data.GoogleAccount
 import de.esotechnik.phoehnlix.apiservice.data.GoogleAccounts
+import de.esotechnik.phoehnlix.apiservice.data.GoogleAccounts.accessToken
 import de.esotechnik.phoehnlix.apiservice.data.Measurement
 import de.esotechnik.phoehnlix.apiservice.data.Measurements
 import de.esotechnik.phoehnlix.apiservice.data.Profile
@@ -62,16 +63,9 @@ import io.ktor.routing.application
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
-import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.getOrFail
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.enumFromOrdinal
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.int
+import kotlinx.serialization.json.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
@@ -81,6 +75,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.LocalDate
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToInt
 
 private val log = LoggerFactory.getLogger("de.esotechnik.phoehnlix.apiservice")
@@ -88,7 +83,6 @@ private val log = LoggerFactory.getLogger("de.esotechnik.phoehnlix.apiservice")
 /**
  * @author Bernhard Frauendienst
  */
-@KtorExperimentalAPI
 fun Route.apiservice(jwt: SimpleJWT) {
   authenticate("phoehnlix-jwt") {
     route("/profile") {
@@ -163,6 +157,9 @@ fun Route.apiservice(jwt: SimpleJWT) {
                   // don't dispose this part
                   return@forEachPart
                 }
+                is PartData.BinaryItem -> {
+                  throw BadRequestException("Binary parts are currently not supported.")
+                }
               }
               part.dispose()
             }
@@ -179,7 +176,7 @@ fun Route.apiservice(jwt: SimpleJWT) {
             val profileId = call.profileId()
             newSuspendedTransaction {
               val profile = loadProfile(profileId)
-              val count = atomic(0)
+              val count = AtomicInteger(0)
               Measurement.find {
                 Measurements.profile eq profile.id and
                   Measurements.imp50.isNotNull() and
@@ -284,23 +281,25 @@ private suspend fun createProfileDraft(http: HttpClient, accessToken: String): P
       } ?: false
     }?.let {
       val date = it["date"]!!.jsonObject
-      val year = date["year"]!!.int
-      val month = date["month"]!!.int
-      val day = date["day"]!!.int
+      val year = date["year"]!!.jsonPrimitive.int
+      val month = date["month"]!!.jsonPrimitive.int
+      val day = date["day"]!!.jsonPrimitive.int
       LocalDate.of(year, month, day)
     }
   }
   log.info("User birthday is $birthday")
   val gender = personInfo["genders"]?.let { genders ->
-    genders.jsonArray.filterIsInstance<JsonObject>().firstOrNull {
-      it["value"]?.contentOrNull?.takeUnless { it == "unspecified" } != null
-    }?.let {
-      when (it["value"]?.contentOrNull) {
-        "female" -> Sex.Female
-        "male" -> Sex.Male
-        else -> null
+    genders.jsonArray.asSequence()
+      .filterIsInstance<JsonObject>()
+      .mapNotNull { it["value"]?.jsonPrimitive?.contentOrNull }
+      .firstOrNull { it != "unspecified" }
+      .let {
+        when (it) {
+          "female" -> Sex.Female
+          "male" -> Sex.Male
+          else -> null
+        }
       }
-    }
   }
   log.info("User gender is $gender")
 
@@ -315,10 +314,10 @@ private suspend fun createProfileDraft(http: HttpClient, accessToken: String): P
     header("Authorization", "Bearer $accessToken")
   }
   val height = heightInfo["point"]?.jsonArray?.let {
-    it.getObjectOrNull(0)
-      ?.getArrayOrNull("value")
-      ?.getObjectOrNull(0)
-      ?.getPrimitiveOrNull("fpVal")
+    it.getOrNull(0)?.jsonObject
+      ?.get("value")?.jsonArray
+      ?.get(0)?.jsonObject
+      ?.get("fpVal")?.jsonPrimitive
       ?.doubleOrNull?.times(100)?.roundToInt()
   }
   return ProfileDraft(
@@ -338,7 +337,6 @@ private fun GoogleAccount.updateFrom(tokenResponse: OAuthAccessTokenResponse.OAu
   // TODO: save scopes?
 }
 
-@KtorExperimentalAPI
 suspend fun ApplicationCall.profileId(): Int {
   val principal = principal<UserIdPrincipal>() ?: error("Missing principal, should have been caught by authenticate")
 
@@ -360,19 +358,17 @@ suspend fun loadProfile(profileId: Int): Profile {
 }
 
 
-suspend fun <T, A> ApplicationCall.respondDb(converter: (T) -> A, statement: suspend Transaction.() -> T?) {
+suspend inline fun <T, reified A> ApplicationCall.respondDb(converter: (T) -> A, crossinline statement: suspend Transaction.() -> T?) {
   respond(db { statement() }?.let {
     converter(it)
   } ?: throw NotFoundException())
 }
 
-suspend fun <T, A> ApplicationCall.respondDbList(
-  converter: (T) -> A,
-  statement: suspend Transaction.() -> Iterable<T>
+suspend inline fun <T, reified A> ApplicationCall.respondDbList(
+  crossinline converter: (T) -> A,
+  crossinline statement: suspend Transaction.() -> Iterable<T>
 ) {
-  respond(db { statement() }.map {
-    converter(it)
-  })
+  respond(db { statement().map(converter) })
 }
 
 suspend inline fun <T> db(crossinline statement: suspend Transaction.() -> T) =

@@ -41,9 +41,9 @@ dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$kotlinx_coroutines_version")
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$kotlinx_coroutines_version")
 
-    api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinx_serialization_version")
-    api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$kotlinx_serialization_version")
-    api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$kotlinx_serialization_version")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinx_serialization_version")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json-js:$kotlinx_serialization_version")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json-common:$kotlinx_serialization_version")
 
     api("org.jetbrains.kotlinx:kotlinx-html:$kotlinx_html_version")
     api("org.jetbrains.kotlinx:kotlinx-html-js:$kotlinx_html_version")

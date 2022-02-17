@@ -10,10 +10,10 @@ import org.w3c.dom.HTMLScriptElement
 import org.w3c.dom.get
 import react.RBuilder
 import react.RComponent
-import react.RProps
-import react.RState
-import kotlin.browser.document
-import kotlin.browser.window
+import react.Props
+import react.State
+import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -21,11 +21,11 @@ import kotlin.coroutines.suspendCoroutine
  * @author Bernhard Frauendienst
  */
 
-interface GoogleAuth2LoaderProps : RProps {
+interface GoogleAuth2LoaderProps : Props {
   var onAuthApiLoaded: GapiAuth2.() -> Unit
 }
 
-class GoogleAuth2Loader : RComponent<GoogleAuth2LoaderProps, RState>() {
+class GoogleAuth2Loader : RComponent<GoogleAuth2LoaderProps, State>() {
   override fun componentDidMount() {
     val script = document.createElement("script").unsafeCast<HTMLScriptElement>().apply {
       src = "https://apis.google.com/js/platform.js"

@@ -27,24 +27,21 @@ import materialui.lab.components.alerttitle.alertTitle
 import materialui.lab.components.skeleton.enums.SkeletonVariant
 import materialui.lab.components.skeleton.skeleton
 import materialui.styles.withStyles
-import react.RBuilder
-import react.RComponent
-import react.RProps
-import react.RState
-import react.setState
-import kotlin.browser.window
+import react.dom.attrs
+import kotlinx.browser.window
+import react.*
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface LoginPageState : RState {
+interface LoginPageState : State {
   var auth2loaded: Boolean
   var error: String?
   var errorInfo: String?
 }
 
-class LoginPageComponent : RComponent<RProps, LoginPageState>() {
+class LoginPageComponent : RComponent<PropsWithChildren, LoginPageState>() {
   companion object {
     init {
       usePhoehnlixContext<LoginPageComponent>()

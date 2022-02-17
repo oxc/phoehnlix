@@ -1,5 +1,6 @@
 package de.esotechnik.phoehnlix.frontend
 
+import csstype.HtmlAttributes
 import de.esotechnik.phoehnlix.api.client.ApiClient
 import de.esotechnik.phoehnlix.api.client.ProfileId
 import de.esotechnik.phoehnlix.api.model.LoginResponse
@@ -16,24 +17,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.css.CSSBuilder
-import kotlinx.css.Color
-import kotlinx.css.Display
-import kotlinx.css.FlexDirection
-import kotlinx.css.backgroundColor
-import kotlinx.css.body
-import kotlinx.css.color
-import kotlinx.css.display
-import kotlinx.css.flexDirection
-import kotlinx.css.height
-import kotlinx.css.html
-import kotlinx.css.margin
-import kotlinx.css.minHeight
-import kotlinx.css.padding
-import kotlinx.css.pct
-import kotlinx.css.px
-import kotlinx.css.vh
-import kotlinx.css.width
 import materialui.components.cssbaseline.cssBaseline
 import materialui.components.grid.enums.GridDirection
 import materialui.components.grid.enums.GridStyle
@@ -52,24 +35,19 @@ import materialui.styles.palette.options.text
 import materialui.styles.palette.paper
 import materialui.styles.themeprovider.themeProvider
 import materialui.styles.withStyles
-import react.Fragment
-import react.RBuilder
-import react.RComponent
-import react.RProps
-import react.RState
-import react.createContext
-import react.setState
-import kotlin.browser.localStorage
+import kotlinx.browser.localStorage
+import kotlinx.css.*
+import react.*
 
 /**
  * @author Bernhard Frauendienst
  */
-interface AppProps : RProps {
+interface AppProps : Props {
   var apiUrl: String
   var googleClientId: String
 }
 
-interface AppState : RState {
+interface AppState : State {
   var phoehnlixState: PhoehnlixState
   var apiAccessToken: PhoehnlixApiToken?
   var profile: Profile?
@@ -168,7 +146,7 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
         }
       }
       mixins {
-        toolbar = CSSBuilder().apply {
+        toolbar = CssBuilder().apply {
           backgroundColor = Color("#fff")
           color = defaultTheme.palette.primary.main
         }
@@ -197,7 +175,7 @@ private val flexRoot = withStyles("phoehnlix-flex-root", {
       flexDirection = FlexDirection.column
     }
   }
-}) { props: RProps ->
+}) { props: PropsWithChildren ->
   Fragment {
     props.children()
   }
