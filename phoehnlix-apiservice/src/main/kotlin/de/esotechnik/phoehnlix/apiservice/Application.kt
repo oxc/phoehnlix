@@ -32,10 +32,6 @@ fun Application.module(testing: Boolean = false) {
   setupForwardedFor()
   setupDatabase()
 
-  val hostname = environment.config.propertyOrNull("phoehnlix.host")?.getString() ?: run {
-    error("No host configured. Please specify your domain as phoehnlix.host")
-  }
-
   install(CORS) {
     method(HttpMethod.Options)
     method(HttpMethod.Get)
@@ -45,7 +41,18 @@ fun Application.module(testing: Boolean = false) {
     method(HttpMethod.Patch)
     header(HttpHeaders.Authorization)
     allowCredentials = true
-    host(hostname)
+
+    val corsHosts = environment.config.propertyOrNull("phoehnlix.corsHosts")?.getList() ?: run {
+      error("No CORS hosts configured. Please specify your domains as phoehnlix.corsHosts")
+    }
+    corsHosts.forEach {
+      if (it.startsWith("http://") || it.startsWith("https://")) {
+        val (scheme, host) = it.split("://")
+        host(host, schemes = listOf(scheme))
+      } else {
+        host(it)
+      }
+    }
   }
   install(ContentNegotiation) {
     json(
