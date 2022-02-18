@@ -27,7 +27,7 @@ kotlin {
       dependencies {
         implementation(kotlin("stdlib-jdk8"))
         implementation("io.ktor:ktor-server-core")
-
+        implementation("io.ktor:ktor-server-forwarded-header")
       }
     }
     val jvmTest by getting {

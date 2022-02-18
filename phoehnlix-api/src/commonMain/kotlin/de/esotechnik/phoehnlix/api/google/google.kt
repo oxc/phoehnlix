@@ -12,5 +12,6 @@ val SCOPE_FITNESS_BODY_WRITE = "https://www.googleapis.com/auth/fitness.body.wri
 
 @Serializable
 class LoginRequest(
-  val code: String
+  val code: String,
+  val state: String = "",
 )

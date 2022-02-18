@@ -1,9 +1,9 @@
 package de.esotechnik.phoehnlix.frontend.util
 
-import react.Component
-import react.Props
-import react.State
-import kotlin.reflect.KMutableProperty1
+import react.StateSetter
+import react.useEffect
+import react.useMemo
+import react.useState
 
 typealias Converter<T> = (String) -> Result<T?>
 typealias Validator<T> = (String, Result<T?>) -> Result<T?>
@@ -24,96 +24,80 @@ val DoubleFormType = FormType({ Result.runCatching { it.toDouble() } })
 inline fun <reified E : Enum<E>> enumFormType() = FormType({ Result.runCatching { enumValueOf<E>(it) } },
   serializer = { it?.name ?: "" })
 
+fun <T> FormType<T>.validate(validator: Validator<T>) = copy(validator = { raw, result ->
+  // chain this validator to the existing one
+  validator(raw, this.validator(raw, result))
+})
+fun <T> FormType<T>.validate(validator: (T) -> String?) = validate validator@{ _, result ->
+  if (result.isSuccess) {
+    result.getOrNull()?.let { validator(it) }?.let { error ->
+      return@validator Result.failure(IllegalArgumentException(error))
+    }
+  }
+  return@validator result
+}
+
+val <T> FormType<T>.optional: FormType<T> get() = validate { raw, result ->
+  if (result.isFailure && raw.isBlank()) {
+    Result.success(null)
+  } else {
+    result
+  }
+}
+
+
 interface FormField<T> {
   val fieldValue: String
+  val setFieldValue: (String) -> Unit
   val isError: Boolean
   val typedValue: T?
 }
 
-interface StateFormField<T, S: State> : FormField<T> {
-  fun setStateValue(state: S, value: String?)
-
-  fun validate(validator: Validator<T>): StateFormField<T, S>
-  fun validate(validator: (T) -> String?) = validate validator@{ _, result ->
-    if (result.isSuccess) {
-      result.getOrNull()?.let { validator(it) }?.let { error ->
-        return@validator Result.failure(IllegalArgumentException(error))
-      }
-    }
-    return@validator result
-  }
-  fun optional() = validate { raw, result ->
-    if (result.isFailure && raw.isBlank()) {
-      Result.success(null)
-    } else {
-      result
-    }
-  }
-}
-
-operator fun <S : State> S.set(field: StateFormField<*, S>, value: String?)
-  = field.setStateValue(this, value)
-
-class StateFormFieldImpl<T, C: Component<P, S>, P: Props, S: State>(
-  private val component: C,
-  private val stateProperty: KMutableProperty1<S, String?>,
-  private val type: FormType<T>,
-  private val valueInitializer: P.() -> T?
-) : StateFormField<T, S> {
-  private val initialValue by memoizeOne(
-    { props -> type.serializer(valueInitializer(props)) },
-    { component.props }
-  )
-
-  override val fieldValue by memoizeOne(
-    { state, initialValue -> stateProperty.get(state) ?: initialValue },
-    { component.state }, { initialValue }
-  )
-
-  private val result by memoizeOne(
-    { v -> type.validator(v, type.converter(v)) },
-    { fieldValue }
-  )
+class FormFieldImpl<T>(
+  override val fieldValue: String,
+  override val setFieldValue: (String) -> Unit,
+  type: FormType<T>,
+) : FormField<T> {
+  private val result = type.validator(fieldValue, type.converter(fieldValue))
 
   override val isError get() = result.isFailure
 
   override val typedValue get() = result.getOrNull()
-
-  override fun setStateValue(state: S, value: String?) {
-    stateProperty.set(state, value)
-  }
-
-  override fun validate(validator: Validator<T>): StateFormField<T, S> =
-    StateFormFieldImpl(component, stateProperty, type.copy(validator = { raw, result ->
-      // chain this validator to the existing one
-      validator(raw, type.validator(raw, result))
-    }), valueInitializer)
 }
 
 val Iterable<FormField<*>>.isAnyError get() = any { it.isError }
 
-fun <T, C: Component<P, S>, P: Props, S: State> C.formField(
-  stateProperty: KMutableProperty1<S, String?>,
-  type: FormType<T>,
-  initialValue: P.() -> T?
-): StateFormField<T, S> = StateFormFieldImpl(this, stateProperty, type, initialValue)
+inline fun <reified T> formType(): FormType<T> = when (T::class) {
+  String::class -> StringFormType
+  Int::class -> IntFormType
+  Double::class -> DoubleFormType
+  else -> error("No form type for ${T::class}")
+} as FormType<T>
 
-fun <C: Component<P, S>, P: Props, S: State> C.intField(
-  stateProperty: KMutableProperty1<S, String?>,
-  initialValue: P.() -> Int?
-) = formField(stateProperty, IntFormType, initialValue)
+inline fun <reified T> useFormField(initialValue: T?, noinline validator: ((T) -> String?)? = null): FormField<T> {
+  return useFormField(initialValue, formType(), validator)
+}
+inline fun <reified E: Enum<E>> useFormField(initialValue: E?, noinline validator: ((E) -> String?)? = null): FormField<E> {
+  return useFormField(initialValue, enumFormType(), validator)
+}
 
-fun <C: Component<P, S>, P: Props, S: State> C.doubleField(
-  stateProperty: KMutableProperty1<S, String?>,
-  initialValue: P.() -> Double?
-) = formField(stateProperty, DoubleFormType, initialValue)
-
-fun <C: Component<P, S>, P: Props, S: State> C.stringField(
-  stateProperty: KMutableProperty1<S, String?>,
-  initialValue: P.() -> String?
-) = formField(stateProperty, StringFormType, initialValue)
-
-inline fun <reified T : Enum<T>, C: Component<P, S>, P: Props, S: State> C.enumField(
-  stateProperty: KMutableProperty1<S, String?>,
-  noinline initialValue: P.() -> T?
-) = formField(stateProperty, enumFormType(), initialValue)
+fun <T> useFormField(initialValue: T?, type: FormType<T>, validator: ((T) -> String?)? = null): FormField<T> {
+  val formType = if (validator != null) type.validate(validator) else type
+  return useFormFieldImpl(formType) { initialValue }
+}
+private fun <T> useFormFieldImpl(type: FormType<T>, initialValue: () -> T?): FormField<T> {
+  var modified by useState(false)
+  var state by useState { type.serializer(initialValue()) }
+  useEffect(initialValue) {
+    if (!modified) {
+      state = type.serializer(initialValue())
+    }
+  }
+  fun setFieldValue(value: String) {
+    state = value
+    modified = true
+  }
+  return useMemo(state, type) {
+    FormFieldImpl(state, ::setFieldValue, type)
+  }
+}

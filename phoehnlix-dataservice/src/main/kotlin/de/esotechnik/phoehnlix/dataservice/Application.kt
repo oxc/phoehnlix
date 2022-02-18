@@ -3,29 +3,13 @@ package de.esotechnik.phoehnlix.dataservice
 import de.esotechnik.phoehnlix.api.client.ApiClient
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.ktor.setupForwardedFor
-import io.ktor.application.Application
-import io.ktor.application.ApplicationCall
-import io.ktor.application.application
-import io.ktor.application.call
-import io.ktor.application.log
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.logging.DEFAULT
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logger
-import io.ktor.client.features.logging.Logging
-import io.ktor.client.request.get
-import io.ktor.features.BadRequestException
-import io.ktor.http.ContentType
-import io.ktor.http.takeFrom
-import io.ktor.request.ApplicationRequest
-import io.ktor.request.uri
-import io.ktor.response.respondText
-import io.ktor.routing.Route
-import io.ktor.routing.get
-import io.ktor.routing.route
-import io.ktor.routing.routing
-import io.ktor.util.*
+import io.ktor.client.engine.apache.*
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.util.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 

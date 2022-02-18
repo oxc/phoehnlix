@@ -1,52 +1,54 @@
 package de.esotechnik.phoehnlix.frontend
 
+import csstype.AlignItems
+import csstype.JustifyContent
+import csstype.number
 import de.esotechnik.phoehnlix.api.google.SCOPE_FITNESS_BODY_WRITE
 import de.esotechnik.phoehnlix.api.google.SCOPE_USERINFO_PROFILE
 import de.esotechnik.phoehnlix.api.google.SCOPE_USER_BIRTHDAY_READ
-import de.esotechnik.phoehnlix.frontend.dashboard.new
-import de.esotechnik.phoehnlix.frontend.google.loadGoogleAuth2
+import de.esotechnik.phoehnlix.frontend.google.GoogleAuth2Loader
+import de.esotechnik.phoehnlix.frontend.google.GoogleSignInButton
 import de.esotechnik.phoehnlix.frontend.google.authorize
-import de.esotechnik.phoehnlix.frontend.google.googleSignInButton
-import de.esotechnik.phoehnlix.frontend.util.styleSets
+import emotion.react.css
 import gapi.gapi
+import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.css.flexGrow
-import materialui.components.grid.enums.GridAlignItems
-import materialui.components.grid.enums.GridDirection
-import materialui.components.grid.enums.GridJustify
-import materialui.components.grid.enums.GridStyle
-import materialui.components.grid.grid
-import materialui.components.paper.paper
-import materialui.lab.components.alert.alert
-import materialui.lab.components.alert.enums.AlertSeverity
-import materialui.lab.components.alerttitle.alertTitle
-import materialui.lab.components.skeleton.enums.SkeletonVariant
-import materialui.lab.components.skeleton.skeleton
-import materialui.styles.withStyles
-import react.dom.attrs
-import kotlinx.browser.window
-import org.w3c.dom.events.Event
-import react.*
+import kotlinx.js.jso
+import mui.material.Alert
+import mui.material.AlertColor
+import mui.material.AlertTitle
+import mui.material.Grid
+import mui.material.GridDirection
+import mui.material.Paper
+import mui.material.Skeleton
+import mui.material.SkeletonVariant
+import mui.system.responsive
+import react.FC
+import react.Props
+import react.dom.events.MouseEventHandler
+import react.useCallback
+import react.useContext
+import react.useState
 
 /**
  * @author Bernhard Frauendienst
  */
 
-val LoginPage = withStyles(fc("LoginPageComponent") { props ->
+val LoginPage = FC<Props>("LoginPageComponent") { props ->
   val context = useContext(PhoehnlixContext)
 
   var auth2loaded: Boolean by useState(false)
   var error: String? by useState(null)
   var errorInfo: String? by useState(null)
 
-  val onGoogleSignInClick: (Event) -> Unit = useCallback(context) {
+  val onGoogleSignInClick: MouseEventHandler<*> = useCallback(context) {
     with (context) {
       val mainScope = MainScope() + CoroutineName("Dashboard")
       mainScope.launch {
-        val response = window.gapi.auth2.authorize(new {
+        val response = window.gapi.auth2.authorize(jso {
           client_id = googleClientId
           scope = listOf(
             SCOPE_USERINFO_PROFILE,
@@ -66,55 +68,47 @@ val LoginPage = withStyles(fc("LoginPageComponent") { props ->
     }
   }
 
-  loadGoogleAuth2 {
-    auth2loaded = true
-  }
-  logoMenu {
-  }
-  val fullPage by props.styleSets
-  grid(GridStyle.container to fullPage) {
-    attrs {
-      container = true
-      direction = GridDirection.column
-      alignItems = GridAlignItems.center
-      justify = GridJustify.center
+  GoogleAuth2Loader {
+    onAuthApiLoaded = {
+      auth2loaded = true
     }
-    grid {
-      attrs {
-        item = true
-      }
-      paper {
+  }
+  LogoMenu {
+  }
+  Grid {
+    container = true
+    direction = responsive(GridDirection.column)
+    css {
+      flexGrow = number(1.0)
+      alignItems = AlignItems.center
+      justifyContent = JustifyContent.center
+    }
+    Grid {
+      item = true
+      Paper {
         if (auth2loaded) {
-          googleSignInButton {
-            attrs {
-              onClickFunction = onGoogleSignInClick
-            }
+          GoogleSignInButton {
+            onClickFunction = onGoogleSignInClick
           }
         } else {
-          skeleton {
-            attrs {
-              variant = SkeletonVariant.rect
-              height = "40px"
-              width = "140px"
-            }
+          Skeleton {
+            variant = SkeletonVariant.rectangular
+            height = "40px"
+            width = "140px"
           }
         }
       }
     }
     error?.let { errorMessage ->
-      grid {
-        attrs {
-          item = true
-        }
-        alert {
-          attrs {
-            severity = AlertSeverity.error
-            onClose = {
-                error = null
-                errorInfo = null
-            }
+      Grid {
+        item = true
+        Alert {
+          severity = AlertColor.error
+          onClose = {
+              error = null
+              errorInfo = null
           }
-          alertTitle { +"Fehler" }
+          AlertTitle { +"Fehler" }
           +errorMessage
           errorInfo?.let { errorInfo ->
             +" ($errorInfo)"
@@ -123,8 +117,4 @@ val LoginPage = withStyles(fc("LoginPageComponent") { props ->
       }
     }
   }
-}, {
-  "fullPage" {
-    flexGrow = 1.0
-  }
-})
+}

@@ -1,13 +1,8 @@
 package de.esotechnik.phoehnlix.apiservice.data
 
-import io.ktor.application.Application
-import io.ktor.application.ApplicationFeature
-import io.ktor.application.featureOrNull
-import io.ktor.application.install
-import io.ktor.config.ApplicationConfig
-import io.ktor.routing.Routing
-import io.ktor.util.AttributeKey
-import io.ktor.util.pipeline.ContextDsl
+import io.ktor.server.application.*
+import io.ktor.server.config.*
+import io.ktor.util.*
 import org.jetbrains.exposed.sql.Database as ExposedDatabase
 
 /**
@@ -34,7 +29,7 @@ class Database(configuration: Configuration) {
     println("Connected to ${it.url}")
   }
 
-  companion object Feature : ApplicationFeature<Application, Configuration, Database> {
+  companion object DatabasePlugin : Plugin<Application, Configuration, Database> {
     override val key = AttributeKey<Database>("PhoehnlixDatasource")
 
     override fun install(pipeline: Application, configure: Configuration.() -> Unit): Database {
@@ -53,7 +48,7 @@ class Database(configuration: Configuration) {
 /**
  * Gets or installs a [Routing] feature for the this [Application] and runs a [configuration] script on it
  */
-@ContextDsl
+@KtorDsl
 fun Application.setupDatabase(): Database =
-  featureOrNull(Database) ?: install(Database)
+  pluginOrNull(Database) ?: install(Database)
 

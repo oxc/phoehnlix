@@ -1,27 +1,31 @@
 package de.esotechnik.phoehnlix.apiservice
 
+import de.esotechnik.phoehnlix.apiservice.auth.GoogleJson
 import de.esotechnik.phoehnlix.apiservice.auth.SimpleJWT
+import de.esotechnik.phoehnlix.apiservice.auth.createGoogleOAuth2Provider
 import de.esotechnik.phoehnlix.apiservice.data.setupDatabase
 import de.esotechnik.phoehnlix.ktor.setupForwardedFor
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.auth.Authentication
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.jwt.jwt
-import io.ktor.features.CORS
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.StatusPages
+import io.ktor.client.*
+import io.ktor.client.engine.apache.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.server.auth.jwt.jwt
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.routing.route
-import io.ktor.routing.routing
-import io.ktor.serialization.json
+import io.ktor.http.content.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.apache.commons.codec.binary.Base64
-import java.nio.charset.StandardCharsets
+import java.net.URLEncoder
 import java.security.SecureRandom
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -33,36 +37,35 @@ fun Application.module(testing: Boolean = false) {
   setupDatabase()
 
   install(CORS) {
-    method(HttpMethod.Options)
-    method(HttpMethod.Get)
-    method(HttpMethod.Post)
-    method(HttpMethod.Put)
-    method(HttpMethod.Delete)
-    method(HttpMethod.Patch)
-    header(HttpHeaders.Authorization)
+    allowMethod(HttpMethod.Options)
+    allowMethod(HttpMethod.Get)
+    allowMethod(HttpMethod.Post)
+    allowMethod(HttpMethod.Put)
+    allowMethod(HttpMethod.Delete)
+    allowMethod(HttpMethod.Patch)
+    allowHeader(HttpHeaders.Authorization)
+    allowNonSimpleContentTypes = true
     allowCredentials = true
 
-    val corsHosts = environment.config.propertyOrNull("phoehnlix.corsHosts")?.getList() ?: run {
+    val corsHosts = this@module.environment.config.propertyOrNull("phoehnlix.corsHosts")?.getList() ?: run {
       error("No CORS hosts configured. Please specify your domains as phoehnlix.corsHosts")
     }
     corsHosts.forEach {
       if (it.startsWith("http://") || it.startsWith("https://")) {
         val (scheme, host) = it.split("://")
-        host(host, schemes = listOf(scheme))
+        allowHost(host, schemes = listOf(scheme))
       } else {
-        host(it)
+        allowHost(it)
       }
     }
   }
   install(ContentNegotiation) {
-    json(
-      json = Json {
+    json(Json {
         prettyPrint = true
-      }
-    )
+    })
   }
   install(StatusPages) {
-    exception<UnauthorizedException> { exception ->
+    exception<UnauthorizedException> { call, exception ->
       call.respond(HttpStatusCode.Unauthorized, mapOf("error" to exception.message))
     }
   }
@@ -76,6 +79,17 @@ fun Application.module(testing: Boolean = false) {
 
     error("No JWT secret configured. Here is a random value you might use: $suggestedSecret")
   }
+
+  val googleHttpClient = HttpClient(Apache) {
+    install(Logging) {
+      logger = Logger.DEFAULT
+      level = LogLevel.ALL
+    }
+    install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+      json(GoogleJson)
+    }
+  }
+
   val simpleJwt = SimpleJWT(secret)
   install(Authentication) {
     jwt("phoehnlix-jwt") {
@@ -86,11 +100,17 @@ fun Application.module(testing: Boolean = false) {
         }
       }
     }
+
+    oauth("auth-oauth-google") {
+      urlProvider = { "https://phoehnlix.obeliks.de" }
+      providerLookup = { application.createGoogleOAuth2Provider() }
+      client = googleHttpClient
+    }
   }
 
   routing {
     route("/api") {
-      apiservice(simpleJwt)
+      apiservice(jwt = simpleJwt, googleHttpClient = googleHttpClient)
     }
   }
 }

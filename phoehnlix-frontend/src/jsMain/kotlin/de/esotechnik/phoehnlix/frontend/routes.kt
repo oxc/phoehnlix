@@ -1,57 +1,62 @@
 package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.api.model.toProfileDraft
-import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
-import react.*
-import react.router.*
-import react.router.dom.*
+import de.esotechnik.phoehnlix.frontend.dashboard.DashboardPage
+import react.FC
+import react.Fragment
+import react.Props
+import react.create
+import react.createElement
+import react.router.Navigate
+import react.router.Route
+import react.router.Routes
+import react.router.dom.BrowserRouter
+import react.useContext
 
 /**
  * @author Bernhard Frauendienst
  */
 
-val routingRoot = fc<Props>("routingRoot") {
+val routingRoot = FC<Props>("routingRoot") {
   val ctx = useContext(PhoehnlixContext)
 
   BrowserRouter {
     Routes {
 
       Route {
-        attrs.path = "/"
-        attrs.element = createElement(IndexPage)
+        path = "/"
+        element = createElement(IndexPage)
       }
       Route {
-        attrs {
-          path = "/login"
-          element = createElement {
-            if (ctx.isLoggedIn) {
-              Navigate { attrs.to = "/" }
-            }
-            LoginPage()
+        path = "/login"
+        element = Fragment.create {
+          if (ctx.isLoggedIn) {
+            Navigate { to = "/" }
           }
+          LoginPage()
         }
       }
       if (!ctx.isLoggedIn) {
         Route {
-          attrs.path = "/*"
-          attrs.element = createElement {
-            Navigate { attrs.to = "/login" }
+          path = "/*"
+          element = Fragment.create {
+            Navigate { to = "/login" }
           }
         }
       }
       Route {
-        attrs.path = "/myprofile"
-        attrs.element = createElement {
-          myProfilePage {
-            attrs.profileDraft = ctx.currentProfileDraft ?: ctx.currentProfile?.toProfileDraft()
+        path = "/myprofile"
+        element = Fragment.create {
+          MyProfilePage {
+            profileDraft = ctx.currentProfileDraft ?: ctx.currentProfile?.toProfileDraft()
           }
         }
       }
       Route {
-        attrs.path = "/dashboard"
-        attrs.element = createElement {
-          dashboardPage {
-            attrs.profile = ctx.currentProfile
+        path = "/dashboard"
+        element = Fragment.create {
+          DashboardPage {
+            profile = ctx.currentProfile
           }
         }
       }

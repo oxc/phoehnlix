@@ -1,5 +1,3 @@
-const webpack = require('webpack');
-
 var supportedLocales = ["de"];
 
 config.plugins = config.plugins || [];

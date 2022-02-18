@@ -1,55 +1,32 @@
 package de.esotechnik.phoehnlix.frontend.dashboard
 
+import csstype.number
+import csstype.px
 import date_fns.subDays
 import date_fns.subMonths
 import date_fns.subWeeks
 import date_fns.subYears
-import de.esotechnik.phoehnlix.frontend.phoehnlix
 import de.esotechnik.phoehnlix.frontend.dashboard.DashboardViewType.*
-import de.esotechnik.phoehnlix.frontend.logoMenu
-import de.esotechnik.phoehnlix.frontend.usePhoehnlixContext
 import de.esotechnik.phoehnlix.frontend.util.isBefore
 import de.esotechnik.phoehnlix.frontend.util.subYears
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
-import de.esotechnik.phoehnlix.frontend.Application.Companion.whiteToolbarTheme
-import de.esotechnik.phoehnlix.frontend.util.styleSets
+import de.esotechnik.phoehnlix.frontend.*
+import de.esotechnik.phoehnlix.frontend.dashboard.DashboardViewType.List
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.css.flexGrow
-import kotlinx.css.marginTop
-import kotlinx.css.px
-import kotlinx.html.Tag
-import kotlinx.html.js.onClickFunction
-import materialui.components.button.enums.ButtonColor
-import materialui.components.grid.enums.GridStyle
-import materialui.components.grid.grid
-import materialui.components.icon.icon
-import materialui.components.iconbutton.iconButton
-import materialui.components.typography.typography
-import materialui.styles.themeprovider.themeProvider
-import materialui.styles.withStyles
+import mui.icons.material.Visibility
+import mui.material.*
+import mui.system.ThemeProvider
+import mui.system.sx
 import react.*
-import react.dom.attrs
-import kotlin.collections.List
 import kotlin.js.Date
 
-/**
- * @author Bernhard Frauendienst
- */
-interface DashboardProps : PropsWithChildren {
+external interface DashboardProps : PropsWithChildren {
   var profile: Profile?
-}
-
-interface DashboardState : State {
-  var view: DashboardViewType
-  var selectedSince: Date?
-  var selectedAt: Date?
-  var selectedRange: DateRange
-  var measurements: List<ProfileMeasurement>
 }
 
 enum class DashboardViewType {
@@ -73,38 +50,21 @@ object Everything : DateRange() {
 
 private val MEASURE_TYPES = MeasureType.values().asList()
 
-class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, DashboardState>(props) {
-  companion object {
-    init {
-      usePhoehnlixContext<DashboardComponent>()
-    }
-  }
+val DashboardPage = FC<DashboardProps> { props ->
+  val phoehnlix = useContext(PhoehnlixContext)
 
-  override fun DashboardState.init(props: DashboardProps) {
-    view = Loading
+  var view: DashboardViewType by useState(Loading)
+  var selectedSince: Date? by useState(null)
+  var selectedAt: Date? by useState(null)
+  var selectedRange: DateRange by useState(Days(10))
+  var selectedMeasurements by useState(listOf<ProfileMeasurement>())
 
-    measurements = listOf()
-    selectedRange = Days(10)
-  }
-
-  override fun componentDidMount() {
-    loadData()
-  }
-
-  override fun componentDidUpdate(prevProps: DashboardProps, prevState: DashboardState, snapshot: Any) {
-    if (prevProps.profile?.id !== props.profile?.id) {
-      loadData()
-    }
-  }
-
-  private fun loadData(dateRange: DateRange = state.selectedRange) {
+  fun loadData(dateRange: DateRange = selectedRange) {
     console.log("Loading with profile = %o", props.profile)
     val profile = props.profile ?: return run {
-      if (state.view != Loading) {
-        setState {
-          view = Loading
-          selectedRange = dateRange
-        }
+      if (view != Loading) {
+        view = Loading
+        selectedRange = dateRange
       }
     }
     val mainScope = MainScope() + CoroutineName("Dashboard")
@@ -113,87 +73,27 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
       // we always load with open-ended to, so we have the newest measurement for the bullets
       // but save the current date for adjusting the graph x-axis
       val now = Date()
-      val measurements = phoehnlix.api.profile[profile.id].measurements(
+      val newMeasurements = phoehnlix.api.profile[profile.id].measurements(
         from = from?.toISOString()
       ).sortedBy { it.timestamp }
-      setState {
-        this.measurements = measurements
-        this.selectedSince = from
-        this.selectedAt = now
-        this.selectedRange = dateRange
-        this.view = when {
-          measurements.isEmpty() -> Empty
-          state.view == List -> List
+        selectedMeasurements = newMeasurements
+        selectedSince = from
+        selectedAt = now
+        selectedRange = dateRange
+        view = when {
+          newMeasurements.isEmpty() -> Empty
+          view == List -> List
           else -> Graph
-        }
       }
     }
   }
 
-  override fun RBuilder.render() {
-    val root by styleSets
-    themeProvider(whiteToolbarTheme) {
-      logoMenu {
-        iconButton {
-          attrs {
-            attrs["edge"] = "end"
-            color = ButtonColor.inherit
-            onClickFunction = {
-              setState {
-                view = when (state.view) {
-                  Graph -> List
-                  else -> Graph
-                }
-              }
-            }
-            (this as Tag).disabled = when (state.view) {
-              Graph, List -> false
-              else -> true
-            }
-          }
-          icon {
-            +"visibility"
-          }
-        }
-      }
-      grid(GridStyle.item to root) {
-        attrs {
-          item = true
-
-        }
-        when (state.view) {
-          Graph -> graphFragment {
-            attrs {
-              profile = props.profile
-              measureTypes = MEASURE_TYPES
-              measurements = state.measurements
-              selectionDate = state.selectedAt
-              requestMoreData = ::onMoreDataRequested
-            }
-          }
-          List -> {
-            measurementList {
-              attrs {
-                measurements = state.measurements.asReversed()
-                requestMoreData = if (state.selectedRange != Everything) {
-                  { loadData(Everything) }
-                } else null
-              }
-            }
-          }
-          Empty -> {
-            typography {
-              +"Keine Messwerte vorhanden."
-            }
-          }
-          Loading -> graphSkeletonFragment(MEASURE_TYPES.size)
-        }
-      }
-    }
+  useEffect(props.profile?.id) {
+    loadData()
   }
 
-  private fun onMoreDataRequested(dateRange: DateRange, callback: (Boolean) -> Unit) {
-    val selectedRange = state.selectedRange
+  fun onMoreDataRequested(dateRange: DateRange, callback: (Boolean) -> Unit) {
+    val selectedRange = selectedRange
     if (selectedRange == Everything) {
       return callback(false)
     }
@@ -204,7 +104,7 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
         loadData(Everything)
       }
     }
-    if (state.selectedSince?.isBefore(from) == true) {
+    if (selectedSince?.isBefore(from) == true) {
       return callback(false)
     }
     return callback(true).also {
@@ -215,13 +115,60 @@ class DashboardComponent(props: DashboardProps) : RComponent<DashboardProps, Das
       }
     }
   }
-}
 
-private val styledComponent = withStyles(DashboardComponent::class, {
-  "root" {
-    flexGrow = 1.0
-    marginTop = 10.px
+  ThemeProvider {
+    theme = whiteToolbarTheme
+    LogoMenu {
+      IconButton {
+        edge = IconButtonEdge.end
+        color = IconButtonColor.inherit
+        onClick = {
+          view = when (view) {
+            Graph -> List
+            else -> Graph
+          }
+        }
+        disabled = when (view) {
+          Graph, List -> false
+          else -> true
+        }
+        Visibility()
+      }
+    }
+
+    Grid {
+      item = true
+      sx {
+        flexGrow = number(1.0)
+        marginTop = 10.px
+      }
+      when (view) {
+        Graph -> {
+          GraphComponent {
+            profile = props.profile
+            measureTypes = MEASURE_TYPES
+            measurements = selectedMeasurements
+            selectionDate = selectedAt
+            requestMoreData = ::onMoreDataRequested
+          }
+        }
+        List -> {
+          MeasurementList {
+            measurements = selectedMeasurements.asReversed()
+            requestMoreData = if (selectedRange != Everything) {
+              { loadData(Everything) }
+            } else null
+          }
+        }
+        Empty -> {
+          Typography {
+            +"Keine Messwerte vorhanden."
+          }
+        }
+        Loading -> {
+          GraphSkeleton { measureTypeCount = MEASURE_TYPES.size }
+        }
+      }
+    }
   }
-})
-
-fun RBuilder.dashboardPage(handler: RHandler<DashboardProps>) = styledComponent(handler)
+}

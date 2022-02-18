@@ -2,7 +2,7 @@ package de.esotechnik.phoehnlix.apiservice.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.ktor.auth.jwt.JWTCredential
+import io.ktor.server.auth.jwt.*
 import org.apache.commons.codec.binary.Base64
 
 /**

@@ -1,101 +1,89 @@
 package de.esotechnik.phoehnlix.frontend
 
+import csstype.AlignItems
+import csstype.JustifyContent
+import csstype.px
 import de.esotechnik.phoehnlix.api.client.ProfileId
 import de.esotechnik.phoehnlix.api.model.ActivityLevel
-import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.Sex
-import de.esotechnik.phoehnlix.frontend.util.StateFormField
-import de.esotechnik.phoehnlix.frontend.util.doubleField
-import de.esotechnik.phoehnlix.frontend.util.enumField
-import de.esotechnik.phoehnlix.frontend.util.intField
+import de.esotechnik.phoehnlix.frontend.util.DoubleFormType
+import de.esotechnik.phoehnlix.frontend.util.FormField
+import de.esotechnik.phoehnlix.frontend.util.className
 import de.esotechnik.phoehnlix.frontend.util.isAnyError
-import de.esotechnik.phoehnlix.frontend.util.set
-import de.esotechnik.phoehnlix.frontend.util.stringField
-import de.esotechnik.phoehnlix.frontend.util.styleSets
+import de.esotechnik.phoehnlix.frontend.util.optional
+import de.esotechnik.phoehnlix.frontend.util.useFormField
+import emotion.react.css
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.css.minHeight
-import kotlinx.css.minWidth
-import kotlinx.css.px
-import kotlinx.html.DIV
-import kotlinx.html.Tag
-import kotlinx.html.js.onChangeFunction
-import kotlinx.html.js.onClickFunction
-import materialui.components.button.enums.ButtonColor
-import materialui.components.formcontrol.enums.FormControlVariant.outlined
-import materialui.components.grid.enums.GridAlignItems.center
-import materialui.components.grid.enums.GridAlignItems.flexStart
-import materialui.components.grid.enums.GridDirection.column
-import materialui.components.grid.enums.GridJustify
-import materialui.components.grid.enums.GridStyle
-import materialui.components.grid.grid
-import materialui.components.icon.enums.IconFontSize
-import materialui.components.icon.icon
-import materialui.components.iconbutton.enums.IconButtonEdge
-import materialui.components.iconbutton.iconButton
-import materialui.components.menuitem.menuItem
-import materialui.components.textfield.TextFieldElementBuilder
-import materialui.components.textfield.textField
-import materialui.styles.withStyles
+import kotlinx.js.jso
+import mui.icons.material.Clear
+import mui.icons.material.DirectionsRun
+import mui.icons.material.Done
+import mui.icons.material.Event
+import mui.icons.material.Height
+import mui.icons.material.OutlinedFlag
+import mui.icons.material.PermIdentity
+import mui.icons.material.SvgIconComponent
+import mui.icons.material.Wc
+import mui.material.FormControlVariant
+import mui.material.Grid
+import mui.material.GridDirection
+import mui.material.IconButton
+import mui.material.IconButtonColor
+import mui.material.IconButtonEdge
+import mui.material.MenuItem
+import mui.material.SvgIconSize
+import mui.material.TextField
+import mui.material.TextFieldProps
+import mui.system.responsive
 import react.*
-import react.dom.attrs
+import react.dom.aria.ariaLabel
+import react.dom.onChange
 
 /**
  * @author Bernhard Frauendienst
  */
 
-interface MyProfileProps : PropsWithChildren {
+external interface MyProfileProps : PropsWithChildren {
   var profileDraft: ProfileDraft?
 }
 
-interface MyProfileState : State {
-  var name: String?
-  var sex: String?
-  var birthday: String?
-  var height: String?
-  var activityLevel: String?
-  var targetWeight: String?
-}
+val MyProfilePage = FC<MyProfileProps> { props ->
+  val phoehnlix = useContext(PhoehnlixContext)
 
-class MyProfileComponent(props: MyProfileProps) : RComponent<MyProfileProps, MyProfileState>(props) {
-  companion object {
-    init {
-      usePhoehnlixContext<MyProfileComponent>()
-    }
-  }
-
-  private val nameField = stringField(MyProfileState::name, initialValue = { profileDraft?.name }).validate { name ->
+  val nameField = useFormField(props.profileDraft?.name) { name ->
     when {
       name.isBlank() -> "Ungültiger Name"
       else -> null
     }
   }
-  private val sexField = enumField(MyProfileState::sex, initialValue = { profileDraft?.sex })
-  private val birthdayField = stringField(MyProfileState::birthday, initialValue = { profileDraft?.birthday })
-  private val heightField = intField(MyProfileState::height, initialValue = { profileDraft?.height }).validate { height ->
+  val sexField = useFormField(props.profileDraft?.sex)
+  val birthdayField = useFormField(props.profileDraft?.birthday)
+  val heightField = useFormField(props.profileDraft?.height) { height ->
     when (height) {
       in 0..300 -> null
       else -> "Ungültige Größe"
     }
   }
-  private val activityLevelField = enumField(MyProfileState::activityLevel, initialValue = { profileDraft?.activityLevel })
-  private val targetWeightField = doubleField(MyProfileState::targetWeight, initialValue = { profileDraft?.targetWeight }).optional().validate { targetWeight: Double ->
-    when (targetWeight) {
-      in 0.0..500.0 -> null
-      else -> "Ungültiges Gewicht"
+  val activityLevelField = useFormField(props.profileDraft?.activityLevel)
+  val targetWeightField =
+    useFormField(props.profileDraft?.targetWeight, DoubleFormType.optional) { targetWeight ->
+      when (targetWeight) {
+        in 0.0..500.0 -> null
+        else -> "Ungültiges Gewicht"
+      }
     }
-  }
 
-  private val allFields = listOf(
+  val allFields = listOf(
     nameField, sexField, birthdayField, heightField,
     activityLevelField, targetWeightField
   )
 
 
-  private fun saveProfile() {
+  fun saveProfile() {
     require(!allFields.isAnyError)
     val profileUpload = ProfileDraft(
       name = nameField.typedValue,
@@ -105,7 +93,7 @@ class MyProfileComponent(props: MyProfileProps) : RComponent<MyProfileProps, MyP
       activityLevel = activityLevelField.typedValue,
       targetWeight = targetWeightField.typedValue
     )
-    with (phoehnlix) {
+    with(phoehnlix) {
       val mainScope = MainScope() + CoroutineName("Application")
       mainScope.launch {
         val profile = api.profile[ProfileId.Me].update(profileUpload)
@@ -114,132 +102,109 @@ class MyProfileComponent(props: MyProfileProps) : RComponent<MyProfileProps, MyP
     }
   }
 
-  private fun <T> FormRowProps.field(field: StateFormField<T, MyProfileState>) {
+  fun <T> FormRowProps.field(field: FormField<T>) {
     value = field.fieldValue
     error = field.isError
-    onChangeFunction = { setState { this[field] = it } }
+    onChangeFunction = { field.setFieldValue(it) }
   }
 
-  private inline fun <reified E: Enum<E>> FormRowProps.field(field: StateFormField<E, MyProfileState>, labelGenerator: (E) -> String) {
+  inline fun <reified E : Enum<E>> FormRowProps.field(
+    field: FormField<E>,
+    labelGenerator: (E) -> String
+  ) {
     field(field)
     selectOptions(labelGenerator)
   }
 
-  override fun RBuilder.render() {
-    mainMenu {
-      attrs {
-        title = "Profil bearbeiten"
-      }
-      iconButton {
-        attrs {
-          edge = IconButtonEdge.end
-          color = ButtonColor.inherit
-          (this as Tag).disabled = allFields.isAnyError
-          this["aria-label"] = "save"
-          onClickFunction = { saveProfile() }
-        }
-        icon {
-          +"done"
+  TitleMainMenu {
+    title = "Profil bearbeiten"
+    IconButton {
+      edge = IconButtonEdge.end
+      color = IconButtonColor.inherit
+      disabled = allFields.isAnyError
+      ariaLabel = "save"
+      onClick = { saveProfile() }
+      Done {}
+    }
+  }
+
+  Grid {
+    container = true
+    direction = responsive(GridDirection.column)
+    spacing = responsive(3)
+
+    FormRow {
+      id = "name"
+      label = "Name"
+      required = true
+      icon = PermIdentity
+      field(nameField)
+    }
+
+    FormRow {
+      id = "birthday"
+      label = "Geburtstag"
+      required = true
+      icon = Event
+      field(birthdayField)
+      // TODO: date picker
+    }
+
+    FormRow {
+      id = "sex"
+      label = "Geschlecht"
+      required = true
+      icon = Wc
+      field(sexField) {
+        when (it) {
+          Sex.Male -> "Männlich"
+          Sex.Female -> "Weiblich"
         }
       }
     }
 
-    grid {
-      attrs {
-        container = true
-        direction = column
-        spacing(3)
-      }
-
-      formRow {
-        attrs {
-          id = "name"
-          label = "Name"
-          required = true
-          icon = "perm_identity"
-          field(nameField)
-        }
-      }
-
-      formRow {
-        attrs {
-          id = "birthday"
-          label = "Geburtstag"
-          required = true
-          icon = "event"
-          field(birthdayField)
-          // TODO: date picker
-        }
-      }
-
-      formRow {
-        attrs {
-          id = "sex"
-          label = "Geschlecht"
-          required = true
-          icon = "wc"
-          field(sexField) {
-            when (it) {
-              Sex.Male -> "Männlich"
-              Sex.Female -> "Weiblich"
-            }
+    FormRow {
+      id = "height"
+      label = "Körpergröße"
+      required = true
+      icon = Height
+      field(heightField)
+      FormTextField {
+        SelectProps = jso {
+          endAdornment = Fragment.create {
+            +"cm"
           }
         }
       }
+    }
 
-      formRow {
-        attrs {
-          id = "height"
-          label = "Körpergröße"
-          required = true
-          icon = "height"
-          field(heightField)
-          textField {
-            attrs {
-              inputProps {
-                endAdornment {
-                  +"cm"
-                }
-              }
-            }
-          }
+    FormRow {
+      id = "activity-level"
+      label = "Aktivitätsgrad"
+      required = true
+      icon = DirectionsRun
+      field(activityLevelField) {
+        when (it) {
+          ActivityLevel.VeryLow -> "sehr gering: 1"
+          ActivityLevel.Low -> "gering: 2"
+          ActivityLevel.Normal -> "normal: 3"
+          ActivityLevel.High -> "sportlich: 4"
+          ActivityLevel.VeryHigh -> "sehr sportlich: 5"
         }
       }
+    }
 
-      formRow {
-        attrs {
-          id = "activity-level"
-          label = "Aktivitätsgrad"
-          required = true
-          icon = "directions_run"
-          field(activityLevelField) {
-            when (it) {
-              ActivityLevel.VeryLow -> "sehr gering: 1"
-              ActivityLevel.Low -> "gering: 2"
-              ActivityLevel.Normal -> "normal: 3"
-              ActivityLevel.High -> "sportlich: 4"
-              ActivityLevel.VeryHigh -> "sehr sportlich: 5"
-            }
-          }
-        }
-      }
-
-      formRow {
-        attrs {
-          id = "target-weight"
-          label = "Zielgewicht"
-          icon = "outlined_flag"
-          field(targetWeightField)
-          clearable = true
-          textField {
-            attrs {
-              helperText = buildElement { +"Rote Linie im Diagramm" }
-              inputProps {
-                endAdornment {
-                  +"kg"
-                }
-              }
-            }
+    FormRow {
+      id = "target-weight"
+      label = "Zielgewicht"
+      icon = OutlinedFlag
+      field(targetWeightField)
+      clearable = true
+      FormTextField {
+        helperText = Fragment.create { +"Rote Linie im Diagramm" }
+        SelectProps = jso {
+          endAdornment = Fragment.create {
+            +"kg"
           }
         }
       }
@@ -247,24 +212,21 @@ class MyProfileComponent(props: MyProfileProps) : RComponent<MyProfileProps, MyP
   }
 }
 
-private val styledComponent = withStyles(MyProfileComponent::class, {
 
-})
-
-private interface FormRowProps : PropsWithChildren {
+private external interface FormRowProps : PropsWithChildren {
   var id: String
   var label: String
-  var icon: String?
+  var icon: SvgIconComponent?
   var value: Any?
   var error: Boolean
   var required: Boolean
   var clearable: Boolean
   var selectOptions: List<Pair<String, String>>?
-  var textField: (TextFieldElementBuilder<DIV>.() -> Unit)?
+  var textField: ((TextFieldProps) -> Unit)?
   var onChangeFunction: (String) -> Unit
 }
 
-private fun FormRowProps.textField(block: TextFieldElementBuilder<DIV>.() -> Unit) {
+private fun FormRowProps.FormTextField(block: TextFieldProps.() -> Unit) {
   this.textField = block
 }
 
@@ -272,82 +234,90 @@ private inline fun <reified T : Enum<T>> FormRowProps.selectOptions(labelGenerat
   selectOptions = enumValues<T>().map { it.name to labelGenerator(it) }
 }
 
-private val MyProfileFormRow = fc { props: FormRowProps ->
-  val gridIcon by props.styleSets
-  grid {
-    attrs {
+private val FormRow = FC<FormRowProps> { props ->
+  val gridIcon by className
+  Grid {
+    item = true
+    container = true
+    spacing = responsive(1)
+    sx = jso {
+      alignItems = AlignItems.flexStart
+    }
+    css {
+      gridIcon {
+        minHeight = 64.px
+        minWidth = 64.px
+      }
+    }
+
+
+    Grid {
+      classes = jso {
+        item = gridIcon
+      }
       item = true
       container = true
-      alignItems = flexStart
-      spacing(1)
-    }
-
-    grid(GridStyle.item to gridIcon) {
-      attrs {
-        item = true
-        container = true
-        justify = GridJustify.center
-        alignItems = center
-        xs(2)
+      sx = jso {
+        justifyContent = JustifyContent.center
+        alignItems = AlignItems.center
       }
-      props.icon?.let { iconName ->
+      asDynamic().xs = 2
+      //xs(2)
+      props.icon?.let { icon ->
         icon {
-          attrs.fontSize = IconFontSize.large
-          +iconName
+          fontSize = SvgIconSize.large
         }
       }
     }
 
-    grid {
-      attrs {
-        item = true
-        xs(8)
-      }
+    Grid {
+      item = true
+      asDynamic().xs = 8
 
-      textField {
-        attrs {
-          id = attrs.id
-          variant = outlined
-          label { +props.label }
-          value = props.value ?: ""
-          error = props.error
-          required = props.required
-          fullWidth = true
-          onChangeFunction = { event ->
-            props.onChangeFunction(event.target.asDynamic().value.unsafeCast<String>())
-          }
+      //xs(8)
+
+      TextField {
+        id = props.id
+        variant = FormControlVariant.outlined
+        label = Fragment.create { +props.label }
+        value = props.value ?: ""
+        error = props.error
+        required = props.required
+        fullWidth = true
+        onChange = { event ->
+          props.onChangeFunction(event.target.asDynamic().value.unsafeCast<String>())
         }
         props.selectOptions?.let { options ->
-          attrs.select = true
-          for ((option, label) in options) {
-            menuItem {
-              attrs {
-                key = option
-                value = option
-              }
-              +label
+          select = true
+          for ((option, optionLabel) in options) {
+            MenuItem {
+              key = option
+              value = option
+              +optionLabel
             }
           }
         }
-        props.textField?.let { it() }
+        props.textField?.let { it(this) }
       }
     }
 
-    grid(GridStyle.item to gridIcon) {
-      attrs {
-        item = true
-        container = true
-        justify = GridJustify.center
-        alignItems = center
-        xs(2)
+    Grid {
+      classes = jso {
+        item = gridIcon
       }
+      item = true
+      container = true
+      sx = jso {
+        justifyContent = JustifyContent.center
+        alignItems = AlignItems.center
+      }
+      // xs(2)
+      asDynamic().xs = 2
 
       if (props.clearable) {
-        iconButton {
-          icon {
-            +"clear"
-          }
-          attrs.onClickFunction = {
+        IconButton {
+          Clear {}
+          onClick = {
             props.onChangeFunction("")
           }
         }
@@ -355,11 +325,3 @@ private val MyProfileFormRow = fc { props: FormRowProps ->
     }
   }
 }
-private val formRow = withStyles(MyProfileFormRow, {
-  "gridIcon" {
-    minHeight = 64.px
-    minWidth = 64.px
-  }
-});
-
-fun RBuilder.myProfilePage(handler: RHandler<MyProfileProps>) = styledComponent(handler)

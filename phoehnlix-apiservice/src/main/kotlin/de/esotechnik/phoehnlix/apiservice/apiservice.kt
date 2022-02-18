@@ -1,23 +1,18 @@
 package de.esotechnik.phoehnlix.apiservice
 
-import de.esotechnik.phoehnlix.api.google.LoginRequest
 import de.esotechnik.phoehnlix.api.model.ActivityLevel
 import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.MeasurementData
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.Sex
-import de.esotechnik.phoehnlix.apiservice.auth.GoogleJson
 import de.esotechnik.phoehnlix.apiservice.auth.SimpleJWT
 import de.esotechnik.phoehnlix.apiservice.auth.TokenInfo
 import de.esotechnik.phoehnlix.apiservice.auth.Userinfo
-import de.esotechnik.phoehnlix.apiservice.auth.createGoogleOAuth2Provider
 import de.esotechnik.phoehnlix.apiservice.auth.hasFitWriteScope
-import de.esotechnik.phoehnlix.apiservice.auth.oauth2RequestAccessToken
 import de.esotechnik.phoehnlix.apiservice.data.CsvImport
 import de.esotechnik.phoehnlix.apiservice.data.GoogleAccount
 import de.esotechnik.phoehnlix.apiservice.data.GoogleAccounts
-import de.esotechnik.phoehnlix.apiservice.data.GoogleAccounts.accessToken
 import de.esotechnik.phoehnlix.apiservice.data.Measurement
 import de.esotechnik.phoehnlix.apiservice.data.Measurements
 import de.esotechnik.phoehnlix.apiservice.data.Profile
@@ -28,44 +23,27 @@ import de.esotechnik.phoehnlix.apiservice.data.insertNewMeasurement
 import de.esotechnik.phoehnlix.apiservice.data.setBIAResults
 import de.esotechnik.phoehnlix.apiservice.util.getValue
 import de.esotechnik.phoehnlix.apiservice.util.toInstant
-import io.ktor.application.ApplicationCall
-import io.ktor.application.call
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authenticate
-import io.ktor.auth.principal
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.json.Json
-import io.ktor.client.features.json.serializer.KotlinxSerializer
-import io.ktor.client.features.logging.DEFAULT
-import io.ktor.client.features.logging.LogLevel
-import io.ktor.client.features.logging.Logger
-import io.ktor.client.features.logging.Logging
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
-import io.ktor.features.BadRequestException
-import io.ktor.features.MissingRequestParameterException
-import io.ktor.features.NotFoundException
-import io.ktor.features.origin
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLProtocol
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.http.content.streamProvider
-import io.ktor.request.ApplicationRequest
-import io.ktor.request.receive
-import io.ktor.request.receiveMultipart
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.application
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.route
-import io.ktor.util.getOrFail
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.util.*
+import io.ktor.util.pipeline.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
@@ -83,7 +61,7 @@ private val log = LoggerFactory.getLogger("de.esotechnik.phoehnlix.apiservice")
 /**
  * @author Bernhard Frauendienst
  */
-fun Route.apiservice(jwt: SimpleJWT) {
+fun Route.apiservice(jwt: SimpleJWT, googleHttpClient: HttpClient) {
   authenticate("phoehnlix-jwt") {
     route("/profile") {
       get {
@@ -157,6 +135,7 @@ fun Route.apiservice(jwt: SimpleJWT) {
                   // don't dispose this part
                   return@forEachPart
                 }
+                is PartData.BinaryChannelItem,
                 is PartData.BinaryItem -> {
                   throw BadRequestException("Binary parts are currently not supported.")
                 }
@@ -200,80 +179,74 @@ fun Route.apiservice(jwt: SimpleJWT) {
     insertNewMeasurement(data)
     call.respond(HttpStatusCode.Created, "New measurement created")
   }
-  val googleOAuthProvider = application.createGoogleOAuth2Provider()
-  post("login/google") call@{
-    val code = call.receive<LoginRequest>().code
+  authenticate("auth-oauth-google") {
+    post("login/google") call@{
+      val principal: OAuthAccessTokenResponse.OAuth2 = call.principal() ?: throw OAuth2Exception.MissingAccessToken()
+      val accessToken = principal.accessToken
 
-    val http = HttpClient(Apache) {
-      install(Logging) {
-        logger = Logger.DEFAULT
-        level = LogLevel.ALL
-      }
-      Json {
-        serializer = KotlinxSerializer(GoogleJson)
-      }
-    }
+      val accessTokenInfo: TokenInfo = googleHttpClient.get("https://oauth2.googleapis.com/tokeninfo") {
+        parameter("access_token", accessToken)
+      }.body()
+      log.info("Access token info: $accessTokenInfo")
 
-
-    val response =
-      oauth2RequestAccessToken(code, http, Dispatchers.IO, googleOAuthProvider, "https://phoehnlix.obeliks.de")
-    val accessToken = response.accessToken
-    val accessTokenInfo = http.get<TokenInfo>("https://oauth2.googleapis.com/tokeninfo") {
-      parameter("access_token", accessToken)
-    }
-    log.info("Access token info: $accessTokenInfo")
-
-    newSuspendedTransaction {
-      Users.innerJoin(GoogleAccounts).leftJoin(Profiles)
-        .select {
-          GoogleAccounts.googleId eq accessTokenInfo.subject
-        }.firstOrNull()?.let { row ->
-          val user = User.wrapRow(row)
-          val profile = row.getOrNull(Profiles.id)?.let { Profile.wrapRow(row) }
-          val googleAccount = GoogleAccount.wrapRow(row).apply {
-            updateFrom(response, accessTokenInfo)
-            if (syncWithFit && !accessTokenInfo.hasFitWriteScope()) {
-              syncWithFit = false
+      newSuspendedTransaction {
+        Users.innerJoin(GoogleAccounts).leftJoin(Profiles)
+          .select {
+            GoogleAccounts.googleId eq accessTokenInfo.subject
+          }.firstOrNull()?.let { row ->
+            val user = User.wrapRow(row)
+            val profile = row.getOrNull(Profiles.id)?.let { Profile.wrapRow(row) }
+            val googleAccount = GoogleAccount.wrapRow(row).apply {
+              updateFrom(principal, accessTokenInfo)
+              if (syncWithFit && !accessTokenInfo.hasFitWriteScope()) {
+                syncWithFit = false
+              }
             }
+            user to profile
           }
-          user to profile
-        }
-    }?.let { (user, profile) ->
-      val apiToken = PhoehnlixApiToken(jwt.sign(user.id.toString()))
-      val profileDraft = if (profile == null) {
-        createProfileDraft(http, accessToken)
-      } else null
-      call.respond(LoginResponse(apiToken, profile = profile?.toProfile(), profileDraft = profileDraft))
-      return@call
-    }
-
-    val user = newSuspendedTransaction {
-      User.new {}
-    }
-    val googleAccount = newSuspendedTransaction {
-      GoogleAccount.new(user) {
-        googleId = accessTokenInfo.subject
-        updateFrom(response, accessTokenInfo)
-        syncWithFit = accessTokenInfo.hasFitWriteScope()
+      }?.let { (user, profile) ->
+        val apiToken = PhoehnlixApiToken(jwt.sign(user.id.toString()))
+        val profileDraft = if (profile == null) {
+          createProfileDraft(googleHttpClient, accessToken)
+        } else null
+        call.respond(
+          LoginResponse(
+            apiToken,
+            profile = profile?.toProfile(),
+            profileDraft = profileDraft
+          )
+        )
+        return@call
       }
-    }
 
-    val apiToken = PhoehnlixApiToken(jwt.sign(user.id.toString()))
-    val profileDraft = createProfileDraft(http, accessToken)
-    call.respond(LoginResponse(apiToken, profileDraft = profileDraft))
+      val user = newSuspendedTransaction {
+        User.new {}
+      }
+      val googleAccount = newSuspendedTransaction {
+        GoogleAccount.new(user) {
+          googleId = accessTokenInfo.subject
+          updateFrom(principal, accessTokenInfo)
+          syncWithFit = accessTokenInfo.hasFitWriteScope()
+        }
+      }
+
+      val apiToken = PhoehnlixApiToken(jwt.sign(user.id.toString()))
+      val profileDraft = createProfileDraft(googleHttpClient, accessToken)
+      call.respond(LoginResponse(apiToken, profileDraft = profileDraft))
+    }
   }
 }
 
 private suspend fun createProfileDraft(http: HttpClient, accessToken: String): ProfileDraft {
-  val userInfo = http.get<Userinfo>("https://www.googleapis.com/oauth2/v3/userinfo") {
+  val userInfo: Userinfo = http.get("https://www.googleapis.com/oauth2/v3/userinfo") {
     header("Authorization", "Bearer $accessToken")
-  }
+  }.body()
   log.info("Got userinfo from Google: $userInfo")
 
-  val personInfo = http.get<JsonObject>("https://people.googleapis.com/v1/people/me") {
+  val personInfo: JsonObject = http.get("https://people.googleapis.com/v1/people/me") {
     header("Authorization", "Bearer $accessToken")
     parameter("personFields", "birthdays,genders")
-  }
+  }.body()
   val birthday = personInfo["birthdays"]?.let { birthdays ->
     birthdays.jsonArray.filterIsInstance<JsonObject>().firstOrNull {
       it["date"]?.jsonObject?.let { date ->
@@ -303,7 +276,7 @@ private suspend fun createProfileDraft(http: HttpClient, accessToken: String): P
   }
   log.info("User gender is $gender")
 
-  val heightInfo = http.get<JsonObject>("https://www.googleapis.com/") {
+  val heightInfo: JsonObject= http.get("https://www.googleapis.com/") {
     url.path(
       "fitness", "v1", "users", "me", "dataSources",
       "derived:com.google.height:com.google.android.gms:merge_height",
@@ -312,7 +285,7 @@ private suspend fun createProfileDraft(http: HttpClient, accessToken: String): P
     )
     parameter("limit", 1)
     header("Authorization", "Bearer $accessToken")
-  }
+  }.body()
   val height = heightInfo["point"]?.jsonArray?.let {
     it.getOrNull(0)?.jsonObject
       ?.get("value")?.jsonArray

@@ -1,14 +1,12 @@
 package de.esotechnik.phoehnlix.apiservice.util
 
-import io.ktor.features.ParameterConversionException
-import io.ktor.http.content.PartData
-import io.ktor.util.DefaultConversionService
-import java.lang.reflect.Type
+import io.ktor.http.content.*
+import io.ktor.server.plugins.*
+import io.ktor.util.converters.*
+import io.ktor.util.reflect.*
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
-import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmName
-import kotlin.reflect.typeOf
 
 /**
  * @author Bernhard Frauendienst
@@ -18,13 +16,13 @@ import kotlin.reflect.typeOf
  * @throws ParameterConversionException when conversion from String to [R] fails
  */
 inline fun <reified R : Any> PartData.FormItem.getValue(): R {
-  return getValueImpl(R::class, typeOf<R>().javaType)
+  return getValueImpl(R::class, typeInfo<R>())
 }
 
 @PublishedApi
-internal fun <R : Any> PartData.FormItem.getValueImpl(type: KClass<R>, javaType: Type): R {
+internal fun <R : Any> PartData.FormItem.getValueImpl(type: KClass<R>, typeInfo: TypeInfo): R {
   return try {
-    type.cast(DefaultConversionService.fromValues(listOf(value), javaType))
+    type.cast(DefaultConversionService.fromValues(listOf(value), typeInfo))
   } catch (cause: Exception) {
     throw ParameterConversionException(name ?: "<unnamed>", type.jvmName, cause)
   }
