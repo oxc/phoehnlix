@@ -27,7 +27,7 @@ val routingRoot = fc<Props>("routingRoot") {
             if (ctx.isLoggedIn) {
               Navigate { attrs.to = "/" }
             }
-            loginPage()
+            LoginPage()
           }
         }
       }
