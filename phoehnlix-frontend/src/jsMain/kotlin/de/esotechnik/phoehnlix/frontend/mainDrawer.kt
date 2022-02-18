@@ -14,15 +14,12 @@ import materialui.components.toolbar.toolbar
 import materialui.styles.withStyles
 import react.RBuilder
 import react.RHandler
+import react.fc
 
 /**
  * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
  */
-private val styledMainDrawer = withStyles("MainDrawer", {
-  "appbar" {
-
-  }
-}) { props: MainMenuProps ->
+val MainDrawer = withStyles(fc("MainDrawer") { props: MainMenuProps ->
   val appbar by props.styleSets
   drawer {
     list{
@@ -43,6 +40,8 @@ private val styledMainDrawer = withStyles("MainDrawer", {
       props.children()
     }
   }
-}
+}, {
+  "appbar" {
 
-fun RBuilder.mainDrawer(handler: RHandler<MainMenuProps>) = styledMainDrawer(handler)
+  }
+})
