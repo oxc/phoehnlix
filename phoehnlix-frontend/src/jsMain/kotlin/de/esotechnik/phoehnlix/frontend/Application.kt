@@ -1,56 +1,43 @@
 package de.esotechnik.phoehnlix.frontend
 
-import csstype.HtmlAttributes
+import csstype.Color
+import csstype.Display
+import csstype.FlexDirection
+import csstype.Margin
+import csstype.Padding
+import csstype.PropertiesBuilder
+import csstype.pct
+import csstype.px
 import de.esotechnik.phoehnlix.api.client.ApiClient
 import de.esotechnik.phoehnlix.api.client.ProfileId
-import de.esotechnik.phoehnlix.api.model.LoginResponse
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.frontend.util.attribute
 import de.esotechnik.phoehnlix.frontend.util.getValue
 import de.esotechnik.phoehnlix.frontend.util.setValue
-import de.esotechnik.phoehnlix.frontend.util.styleSets
-import io.ktor.client.engine.js.Js
-import io.ktor.utils.io.core.Closeable
+import emotion.react.Global
+import io.ktor.client.engine.js.*
+import io.ktor.utils.io.core.*
+import kotlinx.browser.localStorage
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import materialui.components.cssbaseline.cssBaseline
-import materialui.components.grid.enums.GridDirection
-import materialui.components.grid.enums.GridStyle
-import materialui.components.grid.grid
-import materialui.styles.createMuiTheme
-import materialui.styles.mixins.options.toolbar
-import materialui.styles.muitheme.options.mixins
-import materialui.styles.muitheme.options.palette
-import materialui.styles.palette.main
-import materialui.styles.palette.options.background
-import materialui.styles.palette.options.default
-import materialui.styles.palette.options.main
-import materialui.styles.palette.options.paper
-import materialui.styles.palette.options.primary
-import materialui.styles.palette.options.text
-import materialui.styles.palette.paper
-import materialui.styles.themeprovider.themeProvider
-import materialui.styles.withStyles
-import kotlinx.browser.localStorage
-import kotlinx.css.*
-import react.*
+import kotlinx.js.jso
+import mui.material.CssBaseline
+import mui.material.styles.ThemeProvider
+import mui.material.styles.createTheme
+import react.FC
+import react.Props
+import react.RComponent
+import react.createContext
+import react.useEffect
+import react.useState
 
-/**
- * @author Bernhard Frauendienst
- */
-interface AppProps : Props {
+external interface AppProps : Props {
   var apiUrl: String
   var googleClientId: String
-}
-
-interface AppState : State {
-  var phoehnlixState: PhoehnlixState
-  var apiAccessToken: PhoehnlixApiToken?
-  var profile: Profile?
 }
 
 private var storedApiAccessToken by localStorage.attribute(PhoehnlixApiToken.serializer())
@@ -84,26 +71,58 @@ data class PhoehnlixState(
 
 val PhoehnlixState.isLoggedIn get() = apiToken != null
 
-class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
-  override fun AppState.init(props: AppProps) {
-    val apiToken = storedApiAccessToken
-    val loadProfile = apiToken != null
-    val state = PhoehnlixState(
-      apiUrl = props.apiUrl,
-      googleClientId = props.googleClientId,
-      apiToken = apiToken,
-      currentProfile = null,
-      currentProfileDraft = null,
-      profileIsLoading = loadProfile,
-      updateState = { newState ->
-        val oldState = state.phoehnlixState
-        setState { phoehnlixState = newState }
-        oldState.close()
+val defaultTheme = createTheme(
+  jso {
+    palette = jso {
+      text = jso {
+        primary = Color("#757575")
       }
-    )
-    phoehnlixState = state
+      primary = jso {
+        main = Color("#b52319")
+      }
+    }
+  }
+)
 
-    if (loadProfile) with(state) {
+val whiteToolbarTheme = createTheme(
+  jso {
+    palette = jso {
+      background = jso {
+        default = "#fff"
+      }
+    }
+    mixins = jso<dynamic> {
+      toolbar = jso {
+        backgroundColor = Color("#fff")
+        color = defaultTheme.palette.primary.main
+      }
+    }
+  }
+)
+
+val Application = FC<AppProps> { props ->
+  val apiToken = storedApiAccessToken
+  val loadProfile = apiToken != null
+
+  var phoehnlixState by useState(PhoehnlixState(
+    apiUrl = props.apiUrl,
+    googleClientId = props.googleClientId,
+    apiToken = apiToken,
+    currentProfile = null,
+    currentProfileDraft = null,
+    profileIsLoading = loadProfile,
+    updateState = { newState ->
+      /*
+      val oldState = phoehnlixState
+      phoehnlixState = newState
+      oldState.close()
+
+       */
+    }
+  ))
+
+  useEffect {
+    if (loadProfile) with(phoehnlixState) {
       // load profile if we're already logged in
       val mainScope = MainScope() + CoroutineName("Application")
       mainScope.launch {
@@ -113,71 +132,33 @@ class Application(props: AppProps) : RComponent<AppProps, AppState>(props) {
     }
   }
 
-  override fun RBuilder.render() {
-    Fragment {
-      cssBaseline { }
-      themeProvider(defaultTheme) {
-        PhoehnlixContext.Provider(state.phoehnlixState) {
-          flexRoot {
-            routingRoot {}
+  CssBaseline {}
+  ThemeProvider {
+    theme = defaultTheme
+    PhoehnlixContext.Provider(phoehnlixState) {
+      Global {
+        styles = jso<PropertiesBuilder>().apply {
+          "html" {
+            display = Display.table
+            height = 100.pct
+          }
+          "body" {
+            display = Display.tableCell
+          }
+          "html, body" {
+            width = 100.pct
+            margin = Margin(0.px, 0.px)
+            padding = Padding(0.px, 0.px)
+          }
+          "div#root" {
+            minHeight = 100.pct
+            display = Display.flex
+            flexDirection = FlexDirection.column
           }
         }
       }
+      routingRoot {}
     }
-  }
-
-  companion object {
-    val defaultTheme = createMuiTheme {
-      palette {
-        text {
-          primary = Color("#757575")
-
-        }
-        primary {
-          main = Color("#b52319")
-        }
-      }
-    }
-
-    val whiteToolbarTheme = createMuiTheme {
-      palette {
-        background {
-          default = Color("#fff")
-        }
-      }
-      mixins {
-        toolbar = CssBuilder().apply {
-          backgroundColor = Color("#fff")
-          color = defaultTheme.palette.primary.main
-        }
-      }
-    }
-  }
-}
-
-private val flexRoot = withStyles("phoehnlix-flex-root", {
-  global {
-    html {
-      display = Display.table
-      height = 100.pct
-    }
-    body {
-      display = Display.tableCell
-    }
-    "html, body" {
-      width = 100.pct
-      margin(0.px)
-      padding(0.px)
-    }
-    "div#root" {
-      minHeight = 100.pct
-      display = Display.flex
-      flexDirection = FlexDirection.column
-    }
-  }
-}) { props: PropsWithChildren ->
-  Fragment {
-    props.children()
   }
 }
 

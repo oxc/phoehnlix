@@ -1,44 +1,22 @@
 package de.esotechnik.phoehnlix.frontend.dashboard
 
+import csstype.*
+import csstype.JustifyContent.Companion.spaceEvenly
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
-import de.esotechnik.phoehnlix.frontend.util.styleSets
-import kotlinx.css.Align
-import kotlinx.css.Display
-import kotlinx.css.FlexDirection
-import kotlinx.css.JustifyContent
-import kotlinx.css.alignItems
-import kotlinx.css.display
-import kotlinx.css.em
-import kotlinx.css.flexDirection
-import kotlinx.css.flexGrow
-import kotlinx.css.height
-import kotlinx.css.justifyContent
-import kotlinx.css.margin
-import kotlinx.css.marginLeft
-import kotlinx.css.marginRight
-import kotlinx.css.marginTop
-import kotlinx.css.padding
-import kotlinx.css.px
-import kotlinx.css.vw
-import kotlinx.css.width
-import materialui.lab.components.skeleton.enums.SkeletonStyle
-import materialui.lab.components.skeleton.enums.SkeletonVariant
-import materialui.lab.components.skeleton.skeleton
-import materialui.styles.withStyles
-import react.RBuilder
-import react.Props
+import emotion.react.css
+import mui.material.Skeleton
+import mui.material.SkeletonVariant
+import mui.material.SkeletonVariant.*
+import react.FC
 import react.PropsWithChildren
-import react.dom.div
+import react.dom.html.ReactHTML.div
 
-/**
- * @author Bernhard Frauendienst
- */
-
-interface SkeletonProps : PropsWithChildren {
+external interface SkeletonProps : PropsWithChildren {
   var measureTypeCount: Int
 }
 
+/*
 private val graphSkeleton = withStyles("GraphSkeleton", {
   "root" {
     circleDiameter = 100.vw.div(MeasureType.values().size + 1)
@@ -66,76 +44,118 @@ private val graphSkeleton = withStyles("GraphSkeleton", {
     width = circleDiameter/2
   }
   "skeletonTimeButton" {
-    flexGrow = 1.0
-    height = 40.px
-    margin(0.px, 1.px)
-    firstChild {
-      marginLeft = 0.px
-    }
-    lastChild {
-      marginRight = 0.px
-    }
   }
   "skeletonGraph" {
     flexGrow = 1.0
     height = 100.vw/2
   }
 }) { props: SkeletonProps ->
-  val root by props.styleSets
-  val skeletonContainer by props.styleSets
-  val skeletonHeadline by props.styleSets
-  val skeletonBulletContainer by props.styleSets
-  val skeletonBullet by props.styleSets
-  val skeletonBulletCaption by props.styleSets
-  val skeletonTimeButton by props.styleSets
-  val skeletonGraph by props.styleSets
+}
 
-  div(root) {
-    div(skeletonContainer) {
-      skeleton(SkeletonStyle.root to skeletonHeadline) {
-        attrs.variant = SkeletonVariant.text
+ */
+
+val skeletonContainer = ClassName("skeletonContainer")
+val skeletonButton = ClassName("skeletonButton")
+val skeletonBulletCaption = ClassName("skeletonBulletCaption")
+val skeletonBullet = ClassName("skeletonBullet")
+
+val GraphSkeleton = FC<SkeletonProps> { props ->
+  div {
+    css {
+      skeletonContainer {
+        display = Display.flex
+        justifyContent = spaceEvenly
+        padding = Padding(2.px, 10.px)
+      }
+
+      skeletonButton {
+        flexGrow = number(1.0)
+        height = 40.px
+        margin = Margin(0.px, 1.px)
+        firstChild {
+          marginLeft = 0.px
+        }
+        lastChild {
+          marginRight = 0.px
+        }
+      }
+
+      circleDiameter = 100.vw / (MeasureType.values().size + 1)
+
+      skeletonBulletCaption {
+        width = circleDiameter / 2
+      }
+      skeletonBullet {
+        width = circleDiameter
+        height = circleDiameter
       }
     }
-    div(skeletonContainer) {
+    div {
+      className = skeletonContainer
+      Skeleton {
+        css {
+          marginTop = 10.px
+          width = 20.em
+        }
+        variant = text
+      }
+    }
+    div {
+      className = skeletonContainer
       repeat(props.measureTypeCount) {
-        div(skeletonBulletContainer) {
-          skeleton(SkeletonStyle.root to skeletonBulletCaption) {
-            attrs.variant = SkeletonVariant.text
+        div {
+          Skeleton {
+            className = skeletonBulletCaption
+            variant = text
           }
-          skeleton(SkeletonStyle.root to skeletonBullet) {
-            attrs.variant = SkeletonVariant.circle
+          Skeleton {
+            className = skeletonBullet
+            variant = circular
           }
         }
       }
     }
-    div(skeletonContainer) {
+    div {
+      className = skeletonContainer
       // buttons
       repeat(5) {
-        skeleton(SkeletonStyle.root to skeletonTimeButton) {
-          attrs.variant = SkeletonVariant.rect
+        Skeleton {
+          className = skeletonButton
+          variant = rectangular
         }
       }
     }
-    div(skeletonContainer) {
+    div {
+      className = skeletonContainer
+
       // graph
-      skeleton(SkeletonStyle.root to skeletonGraph) {
-        attrs.variant = SkeletonVariant.rect
+      Skeleton {
+        css {
+          flexGrow = number(1.0)
+          height = 100.vw/2
+        }
+        variant = SkeletonVariant.rectangular
       }
     }
-    div(skeletonContainer) {
+    div {
+      className = skeletonContainer
+
       repeat(props.measureTypeCount) {
-        div(skeletonBulletContainer) {
-          skeleton(SkeletonStyle.root to skeletonBulletCaption) {
-            attrs.variant = SkeletonVariant.text
+        div {
+          css {
           }
-          skeleton(SkeletonStyle.root to skeletonBullet) {
-            attrs.variant = SkeletonVariant.circle
+          Skeleton {
+            css {
+              width = circleDiameter.div(2)
+            }
+            variant = text
+          }
+          Skeleton {
+            className = skeletonBullet
+            variant = circular
           }
         }
       }
     }
   }
 }
-
-fun RBuilder.graphSkeletonFragment(measureTypeCount: Int)
-  = graphSkeleton { attrs.measureTypeCount = measureTypeCount }

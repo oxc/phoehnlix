@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackOutput.Target
 
 plugins {
   kotlin("multiplatform")
@@ -19,7 +20,7 @@ kotlin {
   sourceSets {
     all {
       languageSettings.enableLanguageFeature("NewInference")
-      languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+      languageSettings.optIn("kotlin.RequiresOptIn")
     }
     jvm()
     js {
@@ -30,7 +31,7 @@ kotlin {
           keep("ktor-ktor-io.\$\$importsForInline\$\$.ktor-ktor-io.io.ktor.utils.io")
         }
         webpackTask {
-          output.libraryTarget = "umd2"
+          output.libraryTarget = Target.UMD2
           report = true
         }
       }
@@ -49,7 +50,8 @@ kotlin {
         implementation("io.ktor:ktor-server-netty")
         implementation("ch.qos.logback:logback-classic")
         implementation("io.ktor:ktor-server-core")
-        implementation("io.ktor:ktor-html-builder")
+        implementation("io.ktor:ktor-server-html-builder")
+        implementation("io.ktor:ktor-server-call-logging")
       }
     }
     val jvmTest by getting {
@@ -59,7 +61,7 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        val kotlinWrappersBuild = "pre.301-kotlin-$kotlin_version"
+        val kotlinWrappersBuild = "pre.381"
 
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
@@ -72,19 +74,19 @@ kotlin {
         implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")
 
-        val reactVersion = "17.0.2"
-        val reactRouterVersion = "6.2.1"
+        val reactVersion = "18.2.0"
+        val reactRouterVersion = "6.3.0"
         implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion-$kotlinWrappersBuild")
         implementation("org.jetbrains.kotlin-wrappers:kotlin-react-legacy:$reactVersion-$kotlinWrappersBuild")
         implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom-legacy:$reactVersion-$kotlinWrappersBuild")
         implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:$reactRouterVersion-$kotlinWrappersBuild")
 
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:5.3.3-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:5.9.1-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:5.8.4-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:11.10.0-$kotlinWrappersBuild")
 
-        val kotlinMuiVersion = "0.7.0-oxc"
-        implementation("net.subroh0508.kotlinmaterialui:core:$kotlinMuiVersion")
-        implementation("net.subroh0508.kotlinmaterialui:lab:$kotlinMuiVersion")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:5.3.5-$kotlinWrappersBuild")
 
         implementation(npm("chart.js", "^2.9.3"))
         implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))

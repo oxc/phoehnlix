@@ -16,8 +16,6 @@ import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.api.model.get
 import de.esotechnik.phoehnlix.util.roundToDigits
 import kotlinx.html.id
-import materialui.styles.palette.primary
-import materialui.styles.withStyles
 import org.w3c.dom.BOTTOM
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.CanvasTextAlign
@@ -38,7 +36,7 @@ external val chartsJsAdapterDateFns: dynamic
 @JsModule("chartjs-plugin-downsample")
 external val chartjsPluginDownsample: dynamic
 
-interface MeasurementChartProps : PropsWithChildren {
+external interface MeasurementChartProps : PropsWithChildren {
   var skipUpdate: Boolean
   var measurements: List<ChartMeasurement>
   var measureTypes: List<MeasureType>
@@ -49,7 +47,7 @@ interface MeasurementChartProps : PropsWithChildren {
   var downsampleMethod: DownsampleMethod
 }
 
-interface MeasurementChartState : State {
+external interface MeasurementChartState : State {
 }
 
 private val MEASURE_TYPES = values().toList()
@@ -345,10 +343,6 @@ var Chart.ChartDataSets.measureType: MeasureType
   get() = asDynamic().measureType
   set(value) { asDynamic().measureType = value }
 
-
-private val styledComponent = withStyles(MeasurementChartComponent::class, {}, withTheme = true)
-
-fun RBuilder.measurementChart(handler: RHandler<MeasurementChartProps>) = styledComponent(handler)
 
 data class ChartMeasurement(
   val timestamp: Date,

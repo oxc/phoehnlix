@@ -1,47 +1,36 @@
 package de.esotechnik.phoehnlix.frontend
 
-import de.esotechnik.phoehnlix.frontend.util.styleSets
-import materialui.components.appbar.appBar
-import materialui.components.appbar.enums.AppBarPosition
-import materialui.components.appbar.enums.AppBarStyle
-import materialui.components.button.enums.ButtonColor
-import materialui.components.drawer.drawer
-import materialui.components.icon.icon
-import materialui.components.iconbutton.enums.IconButtonEdge
-import materialui.components.iconbutton.iconButton
-import materialui.components.list.list
-import materialui.components.toolbar.toolbar
-import materialui.styles.withStyles
-import react.RBuilder
-import react.RHandler
-import react.fc
+import mui.icons.material.Menu
+import mui.material.AppBar
+import mui.material.AppBarPosition
+import mui.material.Drawer
+import mui.material.IconButton
+import mui.material.IconButtonColor
+import mui.material.IconButtonEdge
+import mui.material.List
+import mui.material.Toolbar
+import react.FC
+import react.dom.aria.ariaLabel
 
 /**
  * @author Bernhard Frauendienst <bernhard.frauendienst@markt.de>
  */
-val MainDrawer = withStyles(fc("MainDrawer") { props: MainMenuProps ->
-  val appbar by props.styleSets
-  drawer {
-    list{
+val MainDrawer = FC { props: MainMenuProps ->
+  Drawer {
+    List {
 
     }
   }
-  appBar(AppBarStyle.positionSticky to appbar) {
-    attrs.position = AppBarPosition.sticky
-    toolbar {
-      iconButton {
-        attrs.edge = IconButtonEdge.start
-        attrs.color = ButtonColor.inherit
-        attrs["aria-label"] = "menu"
-        icon {
-          +"menu"
-        }
+  AppBar {
+    position = AppBarPosition.sticky
+    Toolbar {
+      IconButton {
+        edge = IconButtonEdge.start
+        color = IconButtonColor.inherit
+        ariaLabel = "menu"
+        Menu {}
       }
-      props.children()
+      +props.children
     }
   }
-}, {
-  "appbar" {
-
-  }
-})
+}

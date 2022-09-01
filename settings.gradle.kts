@@ -11,13 +11,6 @@ pluginManagement {
     kotlin("plugin.serialization") version kotlin_version
     id("com.github.johnrengelman.shadow") version shadow_version
   }
-  resolutionStrategy {
-    eachPlugin {
-      when (requested.id.id) {
-        "org.jetbrains.kotlin.plugin.serialization" -> useModule("org.jetbrains.kotlin:kotlin-serialization:${requested.version ?: kotlin_version}")
-      }
-    }
-  }
 }
 
 rootProject.name = "phoehnlix"

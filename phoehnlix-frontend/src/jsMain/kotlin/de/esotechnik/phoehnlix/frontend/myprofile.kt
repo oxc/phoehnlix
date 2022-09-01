@@ -362,4 +362,4 @@ private val formRow = withStyles(MyProfileFormRow, {
   }
 });
 
-fun RBuilder.myProfilePage(handler: RHandler<MyProfileProps>) = styledComponent(handler)
+val myProfilePage = styledComponent(handler)

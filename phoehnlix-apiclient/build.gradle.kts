@@ -23,29 +23,10 @@ kotlin {
         implementation(kotlin("stdlib-common"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
         api("io.ktor:ktor-client-core")
+        implementation("io.ktor:ktor-client-content-negotiation")
+        implementation("io.ktor:ktor-serialization-kotlinx-json")
         implementation("io.ktor:ktor-client-json")
         implementation("io.ktor:ktor-client-serialization")
-      }
-    }
-    val jvmMain by getting {
-      dependencies {
-        implementation(project(":phoehnlix-util"))
-        api(project(":phoehnlix-api"))
-
-        implementation(kotlin("stdlib-jdk8"))
-
-        implementation("io.ktor:ktor-server-netty")
-        implementation("ch.qos.logback:logback-classic")
-        implementation("io.ktor:ktor-server-core")
-        implementation("io.ktor:ktor-serialization")
-        implementation("io.ktor:ktor-auth")
-        implementation("io.ktor:ktor-client-json-jvm")
-        implementation("io.ktor:ktor-client-serialization-jvm")
-      }
-    }
-    val jvmTest by getting {
-      dependencies {
-        implementation("io.ktor:ktor-server-tests")
       }
     }
     val jsMain by getting {

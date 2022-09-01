@@ -1,18 +1,13 @@
 package de.esotechnik.phoehnlix.frontend
 
 import de.esotechnik.phoehnlix.ktor.setupForwardedFor
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.features.CallLogging
-import io.ktor.html.respondHtml
-import io.ktor.http.content.resource
-import io.ktor.http.content.static
-import io.ktor.http.content.staticBasePackage
-import io.ktor.response.respondRedirect
-import io.ktor.routing.get
-import io.ktor.routing.routing
-import io.ktor.util.getValue
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.html.*
+import io.ktor.server.http.content.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.html.body
 import kotlinx.html.div
 import kotlinx.html.head
@@ -39,7 +34,7 @@ fun Application.module(testing: Boolean = false) {
       resource("/js/phoehnlix-frontend.js.map")
     }
     get("/") {
-      val jsUrl = call.parameters.get("jsUrl") ?: "/static/js/phoehnlix-frontend.js"
+      val jsUrl = call.parameters["jsUrl"] ?: "/static/js/phoehnlix-frontend.js"
       call.respondHtml {
         head {
           meta(name = "viewport", content = "minimum-scale=1, initial-scale=1, width=device-width")
@@ -58,7 +53,7 @@ fun Application.module(testing: Boolean = false) {
       }
     }
     get("/{path...}") {
-      val path: String by call.parameters
+      val path = call.parameters["path"]
       call.respondRedirect {
         encodedPath = "/"
         fragment = "!/$path"

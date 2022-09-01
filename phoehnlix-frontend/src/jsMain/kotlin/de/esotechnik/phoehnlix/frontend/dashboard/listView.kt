@@ -1,5 +1,13 @@
 package de.esotechnik.phoehnlix.frontend.dashboard
 
+import csstype.ClassName
+import csstype.Color
+import csstype.NamedColor
+import csstype.None.none
+import csstype.Position
+import csstype.TextAlign
+import csstype.pct
+import csstype.px
 import date_fns.FormatOptions
 import date_fns.format
 import date_fns.locale.de
@@ -7,45 +15,23 @@ import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.frontend.parseTimestamp
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
-import de.esotechnik.phoehnlix.frontend.util.styleSets
-import kotlinx.css.Color
-import kotlinx.css.Display
-import kotlinx.css.Position
-import kotlinx.css.TextAlign
-import kotlinx.css.backgroundColor
-import kotlinx.css.display
-import kotlinx.css.left
-import kotlinx.css.margin
-import kotlinx.css.padding
-import kotlinx.css.paddingLeft
-import kotlinx.css.pct
-import kotlinx.css.position
-import kotlinx.css.px
-import kotlinx.css.textAlign
-import kotlinx.css.top
-import kotlinx.html.js.onClickFunction
-import materialui.components.button.button
-import materialui.components.circularprogress.circularProgress
-import materialui.components.circularprogress.enums.CircularProgressStyle
-import materialui.components.icon.icon
-import materialui.components.iconbutton.iconButton
-import materialui.components.table.TableProps
-import materialui.components.table.table
-import materialui.components.tablebody.tableBody
-import materialui.components.tablecell.tdCell
-import materialui.components.tablefooter.tableFooter
-import materialui.components.tablerow.enums.TableRowStyle
-import materialui.components.tablerow.tableRow
-import materialui.styles.withStyles
+import emotion.react.css
+import kotlinx.js.jso
+import mui.icons.material.MoreVert
+import mui.material.Button
+import mui.material.CircularProgress
+import mui.material.IconButton
+import mui.material.Table
+import mui.material.TableBody
+import mui.material.TableCell
+import mui.material.TableFooter
+import mui.material.TableProps
+import mui.material.TableRow
 import org.w3c.dom.HTMLElement
-import react.RBuilder
-import react.RComponent
-import react.RHandler
-import react.State
+import react.FC
 import react.createRef
-import react.dom.attrs
-import react.dom.div
-import react.dom.span
+import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.span
 
 /**
  * @author Bernhard Frauendienst
@@ -53,74 +39,101 @@ import react.dom.span
 
 private val MEASURE_TYPES = MeasureType.values().toList()
 
-interface MeasurementListProps : TableProps {
+external interface MeasurementListProps : TableProps {
   var requestMoreData: (() -> Unit)?
   var measurements: List<ProfileMeasurement>
 }
 
-class MeasurementListComponent : RComponent<MeasurementListProps, State>() {
-  override fun RBuilder.render() {
-    val root by styleSets
-    val bulletRow by styleSets
+val MeasurementList = FC<MeasurementListProps> { props ->
 
-    val formatOptions = new<FormatOptions> {
-      locale = de
+  val formatOptions = jso<FormatOptions> {
+    locale = de
+  }
+
+  val bulletRow = ClassName("bulletRow")
+  val loadMoreProgress = ClassName("loadMoreProgress")
+  Table {
+    css {
+      circleDiameter = 40.px
+      backgroundColor = Color("#E6E6E6")
+      bulletRow {
+        "> td" {
+          padding = 2.px
+          firstOfType {
+            backgroundColor = NamedColor.white
+            paddingLeft = 10.px
+            paddingRight = 10.px
+          }
+          not(":first-of-type") {
+            textAlign = TextAlign.center
+          }
+          nthOfType("2") {
+            paddingLeft = 10.px
+          }
+        }
+      }
+      bulletStyles()
+      loadMoreProgress {
+        display = none
+        position = Position.absolute
+        top = 50.pct
+        left = 50.pct
+        marginTop = (-12).px
+        marginLeft = (-12).px
+      }
     }
 
-    table(root) {
-      tableBody {
-        props.measurements.forEach { entry ->
-          tableRow(TableRowStyle.root to bulletRow) {
-            tdCell {
-              val timestamp = entry.parseTimestamp()
-              +format(timestamp, "EE dd.MM.yyyy", formatOptions)
-              +"\n"
-              span {
-                +(format(timestamp, "HH.mm", formatOptions) + " Uhr")
-              }
+    TableBody {
+      props.measurements.forEach { entry ->
+        TableRow {
+          className = bulletRow
+          TableCell {
+            val timestamp = entry.parseTimestamp()
+            +format(timestamp, "EE dd.MM.yyyy", formatOptions)
+            +"\n"
+            span {
+              +(format(timestamp, "HH.mm", formatOptions) + " Uhr")
             }
-            bullets(entry, MEASURE_TYPES, props) { _, classes, content ->
-              tdCell {
-                div(classes) {
-                  content()
+          }
+          Bullets {
+            measurement = entry
+            measureTypes = MEASURE_TYPES
+            component = FC { bullet ->
+              TableCell {
+                div {
+                  className = bullet.classNames
+                  +bullet.children
                 }
               }
             }
-            tdCell {
-              iconButton {
-                icon { +"more_vert" }
-              }
+          }
+          TableCell {
+            IconButton {
+              MoreVert {}
             }
           }
         }
       }
-      props.requestMoreData?.let { requestMoreData ->
-        val loadMoreProgress by styleSets
-
-        tableFooter {
-          tableRow {
-            tdCell {
-              attrs {
-                colSpan = (MEASURE_TYPES.size + 2).toString()
+    }
+    props.requestMoreData?.let { requestMoreData ->
+      TableFooter {
+        TableRow {
+          TableCell {
+            colSpan = (MEASURE_TYPES.size + 2)
+            Button {
+              val progressRef = createRef<HTMLElement>()
+                fullWidth = true
+                onClick = {
+                  this.disabled = true
+                  progressRef.current!!.style.display = "block"
+                  requestMoreData()
               }
-              button {
-                val progressRef = createRef<HTMLElement>()
-                attrs {
-                  fullWidth = true
-                  onClickFunction = {
-                    this.disabled = true
-                    progressRef.current!!.style.display = "block"
-                    requestMoreData()
-                  }
-                }
-                circularProgress(CircularProgressStyle.root to loadMoreProgress) {
-                  ref = progressRef
-                  attrs {
-                    size(24)
-                  }
-                }
-                +"Alle Einträge anzeigen"
+              CircularProgress {
+                className = loadMoreProgress
+                ref = progressRef
+                size = 24
               }
+              +"Alle Einträge anzeigen"
             }
           }
         }
@@ -128,36 +141,3 @@ class MeasurementListComponent : RComponent<MeasurementListProps, State>() {
     }
   }
 }
-
-private val styledComponent = withStyles(MeasurementListComponent::class, {
-  "root" {
-    circleDiameter = 40.px
-    backgroundColor = Color("#E6E6E6")
-  }
-  "bulletRow" {
-    children("td") {
-      padding(2.px)
-      firstOfType {
-        backgroundColor = Color.white
-        padding(horizontal = 10.px)
-      }
-      !firstOfType {
-        textAlign = TextAlign.center
-      }
-      nthOfType("2") {
-        paddingLeft = 10.px
-      }
-    }
-  }
-  makeBulletStyles()
-  "loadMoreProgress" {
-    display = Display.none
-    position = Position.absolute
-    top = 50.pct
-    left = 50.pct
-    margin(top = (-12).px, left = (-12).px)
-  }
-})
-
-fun RBuilder.measurementList(handler: RHandler<MeasurementListProps>) =
-  styledComponent(handler)

@@ -1,7 +1,6 @@
 package de.esotechnik.phoehnlix.frontend
 
-import de.esotechnik.phoehnlix.api.model.toProfileDraft
-import de.esotechnik.phoehnlix.frontend.dashboard.dashboardPage
+import de.esotechnik.phoehnlix.frontend.dashboard.DashboardPage
 import react.*
 import react.router.*
 import react.router.dom.*
@@ -23,9 +22,9 @@ val routingRoot = fc<Props>("routingRoot") {
       Route {
         attrs {
           path = "/login"
-          element = createElement {
+          element = Fragment.create {
             if (ctx.isLoggedIn) {
-              Navigate { attrs.to = "/" }
+              Navigate { to = "/" }
             }
             LoginPage()
           }
@@ -34,24 +33,26 @@ val routingRoot = fc<Props>("routingRoot") {
       if (!ctx.isLoggedIn) {
         Route {
           attrs.path = "/*"
-          attrs.element = createElement {
-            Navigate { attrs.to = "/login" }
+          attrs.element = Fragment.create {
+            Navigate { to = "/login" }
           }
         }
       }
       Route {
         attrs.path = "/myprofile"
-        attrs.element = createElement {
-          myProfilePage {
-            attrs.profileDraft = ctx.currentProfileDraft ?: ctx.currentProfile?.toProfileDraft()
+        attrs.element = Fragment.create {
+          /*
+          myProfilePage.create {
+            profileDraft = ctx.currentProfileDraft ?: ctx.currentProfile?.toProfileDraft()
           }
+           */
         }
       }
       Route {
         attrs.path = "/dashboard"
-        attrs.element = createElement {
-          dashboardPage {
-            attrs.profile = ctx.currentProfile
+        attrs.element = Fragment.create {
+          DashboardPage {
+            profile = ctx.currentProfile
           }
         }
       }

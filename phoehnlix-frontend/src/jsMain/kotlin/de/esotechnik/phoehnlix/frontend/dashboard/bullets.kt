@@ -1,5 +1,19 @@
 package de.esotechnik.phoehnlix.frontend.dashboard
 
+import csstype.ClassName
+import csstype.Color
+import csstype.Display
+import csstype.FontWeight
+import csstype.NamedColor
+import csstype.Overflow
+import csstype.PropertiesBuilder
+import csstype.TextAlign
+import csstype.VerticalAlign
+import csstype.div
+import csstype.pct
+import csstype.plus
+import csstype.px
+import csstype.unaryMinus
 import de.esotechnik.phoehnlix.api.model.MeasureType
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import de.esotechnik.phoehnlix.api.model.get
@@ -7,93 +21,52 @@ import de.esotechnik.phoehnlix.frontend.color
 import de.esotechnik.phoehnlix.frontend.unit
 import de.esotechnik.phoehnlix.frontend.util.circleDiameter
 import de.esotechnik.phoehnlix.frontend.util.measurementColor
-import de.esotechnik.phoehnlix.frontend.util.styleSets
 import de.esotechnik.phoehnlix.util.formatDecimalDigits
-import kotlinx.css.Color
-import kotlinx.css.Display
-import kotlinx.css.FontWeight
-import kotlinx.css.Overflow
-import kotlinx.css.TextAlign
-import kotlinx.css.VerticalAlign
-import kotlinx.css.backgroundColor
-import kotlinx.css.borderRadius
-import kotlinx.css.color
-import kotlinx.css.display
-import kotlinx.css.fontSize
-import kotlinx.css.fontWeight
-import kotlinx.css.height
 import kotlinx.css.hyphenize
-import kotlinx.css.lineHeight
-import kotlinx.css.marginTop
-import kotlinx.css.overflow
-import kotlinx.css.pct
-import kotlinx.css.properties.lh
-import kotlinx.css.px
-import kotlinx.css.textAlign
-import kotlinx.css.verticalAlign
-import kotlinx.css.width
-import materialui.styles.StylesBuilder
-import react.RBuilder
-import react.RElementBuilder
+import react.ComponentType
+import react.FC
 import react.Props
-import react.ReactElement
-import react.dom.span
-import react.dom.sup
+import react.PropsWithChildren
+import react.dom.html.ReactHTML.span
+import react.dom.html.ReactHTML.sup
 
-/**
- * @author Bernhard Frauendienst
- */
-fun RElementBuilder<Props>.bullets(
-  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>,
-  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> Unit
-) = bullets(entry, measureTypes, attrs, component)
-
-fun RBuilder.bullets(
-  entry: ProfileMeasurement, measureTypes: Iterable<MeasureType>, props: Props,
-  component: RBuilder.(measureType: MeasureType, classNames: String, content: RBuilder.() -> Unit) -> Unit
-) {
-  val measurementBullet by props.styleSets
-  measureTypes.forEach { type ->
-    component(type, "$measurementBullet ${type.cssClass}") {
-      span {
-        val value = entry[type]
-        if (value != null) {
-          +value.formatDecimalDigits(1)
-          type.unit?.let {
-            sup { +it }
-          }
-        } else {
-          +"—"
-        }
-      }
-    }
-  }
+external interface BulletComponentProps : PropsWithChildren {
+  var measureType: MeasureType
+  var classNames: ClassName
+}
+external interface BulletProps : Props {
+  var measurement: ProfileMeasurement
+  var measureTypes: Iterable<MeasureType>
+  var component: ComponentType<in BulletComponentProps>
 }
 
-fun StylesBuilder<*>.makeBulletStyles() {
-  "measurementBullet" {
+val measurementBullet = ClassName("measurementBullet")
+
+fun PropertiesBuilder.bulletStyles() {
+  measurementBullet {
     display = Display.inlineBlock
     overflow = Overflow.hidden
-    color = Color.white
+    color = NamedColor.white
     backgroundColor = measurementColor
     width = circleDiameter
     height = circleDiameter
     borderRadius = 50.pct
-    lineHeight = circleDiameter.lh
+    lineHeight = circleDiameter
     val fontSize = circleDiameter / 5 + 4.px
     this.fontSize = fontSize
     textAlign = TextAlign.center
     verticalAlign = VerticalAlign.baseline
     fontWeight = FontWeight.bold
-    descendants("sup") {
+
+    "> sup" {
       fontWeight = FontWeight.normal
-      lineHeight = 0.px.lh
+      lineHeight = 0.px
     }
     MeasureType.values().forEach { type ->
-      +type.cssClass {
+      type.cssClass {
         measurementColor = Color(type.color)
         if ((type.unit?.length ?: 0) > 2) {
-          descendants("sup") {
+          "> sup" {
             display = Display.block
             marginTop = -fontSize
             verticalAlign = VerticalAlign.top
@@ -105,5 +78,29 @@ fun StylesBuilder<*>.makeBulletStyles() {
   }
 }
 
+/**
+ * @author Bernhard Frauendienst
+ */
+val Bullets = FC<BulletProps> { props ->
+    props.measureTypes.forEach { type ->
+      props.component {
+        measureType = type
+        classNames = ClassName("$measurementBullet ${type.cssClass}")
+        span {
+          val value = props.measurement[type]
+          if (value != null) {
+            +value.formatDecimalDigits(1)
+            type.unit?.let {
+              sup { +it }
+            }
+          } else {
+            +"—"
+          }
+        }
+      }
+    }
+}
 
-val MeasureType.cssClass get() = name.replaceFirstChar { it.lowercase() }.hyphenize()
+
+
+val MeasureType.cssClass get() = ClassName(name.replaceFirstChar { it.lowercase() }.hyphenize())

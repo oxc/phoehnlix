@@ -9,20 +9,17 @@ import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.call.*
 import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.engine.HttpClientEngineFactory
-import io.ktor.client.features.defaultRequest
-import io.ktor.client.features.json.Json
-import io.ktor.client.features.json.serializer.KotlinxSerializer
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.http.ContentType
-import io.ktor.http.ParametersBuilder
-import io.ktor.http.URLBuilder
-import io.ktor.http.contentType
-import io.ktor.http.takeFrom
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.kotlinx.serializer.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.core.Closeable
+import kotlinx.serialization.json.Json
 
 sealed class ProfileId(private val id: String) {
   override fun toString() = id
@@ -45,8 +42,10 @@ class ApiClient private constructor(
       apiToken: PhoehnlixApiToken?,
       block: HttpClientConfig<T>.() -> Unit = {}
     ) = ApiClient(HttpClient(engineFactory) {
-      Json {
-        serializer = KotlinxSerializer()
+      install(ContentNegotiation) {
+        json(Json {
+          prettyPrint = true
+        })
       }
       defaultRequest {
         apiToken?.let {
@@ -70,7 +69,7 @@ class ApiClient private constructor(
   ): T = http.get {
     url.appendPath(*components)
     url.parameters.apply(params)
-  }
+  }.body()
 
   private suspend inline fun <reified T> post(
     vararg  components: String,
@@ -81,9 +80,9 @@ class ApiClient private constructor(
     url.parameters.apply(params)
     body?.let {
       contentType(ContentType.Application.Json)
-      this.body = it
+      setBody(it)
     }
-  }
+  }.body()
 
   val profile = ProfilesClient()
 
