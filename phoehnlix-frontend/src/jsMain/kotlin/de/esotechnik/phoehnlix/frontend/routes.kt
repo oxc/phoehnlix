@@ -28,6 +28,10 @@ val routingRoot = FC<Props>("routingRoot") {
         element = createElement(IndexPage)
       }
       Route {
+        path = "/login/shibboleth/:profileId"
+        element = createElement(ShibbolethLoginPage)
+      }
+      Route {
         path = "/login"
         element = Fragment.create {
           if (ctx.isLoggedIn) {

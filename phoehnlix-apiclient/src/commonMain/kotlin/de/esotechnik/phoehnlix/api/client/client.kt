@@ -7,6 +7,7 @@ import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.Profile
 import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.ProfileMeasurement
+import de.esotechnik.phoehnlix.api.model.ShibbolethLoginRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.*
@@ -118,6 +119,10 @@ class ApiClient private constructor(
       append("code", code)
       append("state", "")
     }
+
+    suspend fun shibboleth(profileId: Int): LoginResponse = post("login", "shibboleth",
+      body = ShibbolethLoginRequest(profileId)
+    )
   }
 
   val measurement = MeasurementClient()

@@ -6,6 +6,7 @@ import de.esotechnik.phoehnlix.api.model.MeasurementData
 import de.esotechnik.phoehnlix.api.model.PhoehnlixApiToken
 import de.esotechnik.phoehnlix.api.model.ProfileDraft
 import de.esotechnik.phoehnlix.api.model.Sex
+import de.esotechnik.phoehnlix.api.model.ShibbolethLoginRequest
 import de.esotechnik.phoehnlix.apiservice.auth.SimpleJWT
 import de.esotechnik.phoehnlix.apiservice.auth.TokenInfo
 import de.esotechnik.phoehnlix.apiservice.auth.Userinfo
@@ -178,6 +179,21 @@ fun Route.apiservice(jwt: SimpleJWT, googleHttpClient: HttpClient) {
     val data = call.receive<MeasurementData>()
     insertNewMeasurement(data)
     call.respond(HttpStatusCode.Created, "New measurement created")
+  }
+  post("login/shibboleth") {
+    log.info("Attempting fake login")
+    val profileId = call.receive<ShibbolethLoginRequest>().profileId
+    log.info("Performing fake login for profile $profileId")
+    val profile = db { loadProfile(profileId) }
+
+    val apiToken = PhoehnlixApiToken(jwt.sign(profileId.toString()))
+
+    call.respond(
+      LoginResponse(
+        apiToken,
+        profile = profile.toProfile(),
+      )
+    )
   }
   authenticate("auth-oauth-google") {
     post("login/google") call@{

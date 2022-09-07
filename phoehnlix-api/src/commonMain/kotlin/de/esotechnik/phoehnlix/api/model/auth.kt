@@ -16,3 +16,8 @@ class LoginResponse(
   val profile: Profile? = null,
   val profileDraft: ProfileDraft? = null
 )
+
+@Serializable
+class ShibbolethLoginRequest(
+  val profileId: Int
+)
