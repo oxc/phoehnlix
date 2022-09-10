@@ -17,10 +17,12 @@ import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.h1
 import react.dom.html.ReactHTML.h2
 import react.dom.html.ReactHTML.h3
+import react.useState
 
 external interface MainMenuProps : PropsWithChildren
 
 val BaseMainMenu = FC<MainMenuProps>("MainMenu") { props ->
+  var drawerOpen by useState(false)
   AppBar {
     position = AppBarPosition.sticky
     Toolbar {
@@ -28,9 +30,16 @@ val BaseMainMenu = FC<MainMenuProps>("MainMenu") { props ->
         edge = start
         color = inherit
         ariaLabel = "menu"
+        onClick = { drawerOpen = true }
         Menu {}
       }
       +props.children
+    }
+  }
+  MainDrawer {
+    open = drawerOpen
+    onClose = { _, _ ->
+      drawerOpen = false
     }
   }
 }
