@@ -49,6 +49,7 @@ dependencies {
   implementation("org.jetbrains.exposed:exposed-java-time")
 
   runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly("org.xerial:sqlite-jdbc")
 
   testImplementation("io.ktor:ktor-server-tests")
 }

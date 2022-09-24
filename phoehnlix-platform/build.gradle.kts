@@ -17,6 +17,7 @@ val ktor_version: String by project
 val testng_version: String by project
 val exposed_version: String by project
 val postgresql_version: String by project
+val sqlite_version: String by project
 
 dependencies {
   constraints {
@@ -54,6 +55,7 @@ dependencies {
     api("commons-codec:commons-codec:1.14")
 
     api("org.postgresql:postgresql:$postgresql_version")
+    api("org.xerial:sqlite-jdbc:$sqlite_version")
 
     api("org.testng:testng:$testng_version")
   }
