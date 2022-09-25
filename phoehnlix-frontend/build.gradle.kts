@@ -62,30 +62,30 @@ kotlin {
     }
     val jsMain by getting {
       dependencies {
-        val kotlinWrappersBuild = "pre.381"
-
         implementation(project(":phoehnlix-util"))
         implementation(project(":phoehnlix-apiclient"))
+
 
         implementation(kotlin("stdlib-js"))
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions:1.0.1-$kotlinWrappersBuild")
 
         implementation("org.jetbrains.kotlinx:kotlinx-html-js")
         implementation("io.ktor:ktor-client-js")
 
-        val reactVersion = "18.2.0"
-        val reactRouterVersion = "6.3.0"
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-react:$reactVersion-$kotlinWrappersBuild")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom:$reactRouterVersion-$kotlinWrappersBuild")
+        val kotlinWrappersVersion = "1.0.0-pre.390"
+        implementation(dependencies.enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:$kotlinWrappersVersion"))
 
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui:5.9.1-$kotlinWrappersBuild")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons:5.8.4-$kotlinWrappersBuild")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:11.10.0-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-extensions")
 
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-css-js:1.0.0-$kotlinWrappersBuild")
-        implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:5.3.5-$kotlinWrappersBuild")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-react-router-dom")
+
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-mui-icons")
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
+
+        implementation("org.jetbrains.kotlin-wrappers:kotlin-css")
 
         implementation(npm("chart.js", "^2.9.3"))
         implementation(npm("chartjs-adapter-date-fns", "^1.0.0"))
