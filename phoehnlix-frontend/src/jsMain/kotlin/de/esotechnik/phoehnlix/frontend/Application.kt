@@ -85,6 +85,9 @@ val defaultTheme = createTheme(
       primary = jso {
         main = Color("#b52319")
       }
+      secondary = jso {
+        main = Color("#b3ebec")
+      }
     }
   }
 )
@@ -95,6 +98,8 @@ val whiteToolbarTheme = createTheme(
       background = jso {
         default = "#fff"
       }
+      primary = defaultTheme.palette.primary
+      secondary = defaultTheme.palette.secondary
     }
     mixins = jso<dynamic> {
       toolbar = jso {
