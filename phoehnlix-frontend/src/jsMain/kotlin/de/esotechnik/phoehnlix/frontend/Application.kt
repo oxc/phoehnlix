@@ -66,6 +66,12 @@ data class PhoehnlixState(
   override fun close() {
     api.close()
   }
+
+  fun logout() {
+    if (isLoggedIn) {
+      update(apiToken = null)
+    }
+  }
 }
 
 val PhoehnlixState.isLoggedIn get() = apiToken != null

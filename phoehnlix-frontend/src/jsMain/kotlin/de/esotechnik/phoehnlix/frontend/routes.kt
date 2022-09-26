@@ -40,6 +40,10 @@ val routingRoot = FC<Props>("routingRoot") {
           LoginPage()
         }
       }
+      Route {
+        path = "/logout"
+        element = createElement(LogoutPage)
+      }
       if (!ctx.isLoggedIn) {
         Route {
           path = "/*"
