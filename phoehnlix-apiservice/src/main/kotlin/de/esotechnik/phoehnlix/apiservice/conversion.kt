@@ -16,12 +16,12 @@ val TIMESTAMP_FORMATTER: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
 fun DbProfile.toProfile() = Profile(
     id = id.value,
     name = name,
-    imageUrl = null,
+    imageUrl = imageUrl,
     sex = sex,
     birthday = BIRTHDAY_FORMATTER.format(birthday),
     height = height,
     activityLevel = activityLevel,
-    targetWeight = targetWeight
+    targetWeight = targetWeight,
 )
 val ProfileResponse = { it: DbProfile -> it.toProfile() }
 

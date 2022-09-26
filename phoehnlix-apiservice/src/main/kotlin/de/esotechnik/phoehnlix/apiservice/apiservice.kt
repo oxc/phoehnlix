@@ -211,12 +211,19 @@ fun Route.apiservice(jwt: SimpleJWT, googleHttpClient: HttpClient) {
             GoogleAccounts.googleId eq accessTokenInfo.subject
           }.firstOrNull()?.let { row ->
             val user = User.wrapRow(row)
-            val profile = row.getOrNull(Profiles.id)?.let { Profile.wrapRow(row) }
+            val profile = row.getOrNull(Profiles.id)?.let {Profile.wrapRow(row) }
             val googleAccount = GoogleAccount.wrapRow(row).apply {
               updateFrom(principal, accessTokenInfo)
               if (syncWithFit && !accessTokenInfo.hasFitWriteScope()) {
                 syncWithFit = false
               }
+              if (imageUrl == null) {
+                val userinfo = loadUserInfo(googleHttpClient, accessToken)
+                imageUrl = userinfo.pictureUrl
+              }
+            }
+            if (profile != null && profile.imageUrl == null && googleAccount.imageUrl != null) {
+              profile.imageUrl = googleAccount.imageUrl
             }
             user to profile
           }
@@ -253,12 +260,16 @@ fun Route.apiservice(jwt: SimpleJWT, googleHttpClient: HttpClient) {
   }
 }
 
-private suspend fun createProfileDraft(http: HttpClient, accessToken: String): ProfileDraft {
+private suspend fun loadUserInfo(http: HttpClient, accessToken: String): Userinfo {
   val userInfo: Userinfo = http.get("https://www.googleapis.com/oauth2/v3/userinfo") {
     header("Authorization", "Bearer $accessToken")
   }.body()
   log.info("Got userinfo from Google: $userInfo")
+  return userInfo
+}
 
+private suspend fun createProfileDraft(http: HttpClient, accessToken: String): ProfileDraft {
+  val userInfo = loadUserInfo(http, accessToken)
   val personInfo: JsonObject = http.get("https://people.googleapis.com/v1/people/me") {
     header("Authorization", "Bearer $accessToken")
     parameter("personFields", "birthdays,genders")
@@ -313,7 +324,8 @@ private suspend fun createProfileDraft(http: HttpClient, accessToken: String): P
     name = userInfo.givenName,
     sex = gender,
     height = height,
-    birthday = birthday?.let { BIRTHDAY_FORMATTER.format(it) }
+    birthday = birthday?.let { BIRTHDAY_FORMATTER.format(it) },
+    imageUrl = userInfo.pictureUrl
   )
 }
 

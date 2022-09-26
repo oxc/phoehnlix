@@ -52,6 +52,7 @@ object GoogleAccounts : IdTable<Int>() {
   val expiresAt = timestamp("expires_at")
   val refreshToken = varchar("refresh_token", 512).nullable()
   val syncWithFit = bool("sync_fit")
+  val imageUrl = varchar("image_url", 4096).nullable()
 
   override val primaryKey = PrimaryKey(id)
 }
@@ -66,6 +67,7 @@ class GoogleAccount(userId: EntityID<Int>) : IntEntity(userId) {
   var expiresAt by GoogleAccounts.expiresAt
   var refreshToken by GoogleAccounts.refreshToken
   var syncWithFit by GoogleAccounts.syncWithFit
+  var imageUrl by GoogleAccounts.imageUrl
 
   val user by User referencedOn GoogleAccounts.id
 }
@@ -78,6 +80,7 @@ object Profiles : IdTable<Int>() {
   val height = integer("height")
   val activityLevel = enumeration("activity_level", ActivityLevel::class)
   val targetWeight = double("target_weight").nullable()
+  val imageUrl = varchar("image_url", 4096).nullable()
 
   override val primaryKey = PrimaryKey(id)
 }
@@ -94,6 +97,7 @@ class Profile(userId: EntityID<Int>) : IntEntity(userId) {
   var height by Profiles.height
   var activityLevel by Profiles.activityLevel
   var targetWeight by Profiles.targetWeight
+  var imageUrl by Profiles.imageUrl
 
   val user by User referencedOn Profiles.id
   var connectedScales by Scale via ProfileScales
